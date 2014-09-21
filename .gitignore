@@ -1,0 +1,9 @@
+bin
+build
+release
+docs/api
+*~
+.externalToolBuilders
+.project
+.classpath
+.settings

@@ -1,0 +1,5 @@
+envDimension=400,300
+viewers=turtlekit.termites.TermiteViewer
+turtles=turtlekit.termites.Termite,4000
+startSimu=true
+fastRendering=true

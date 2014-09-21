@@ -1,0 +1,23 @@
+----------------------------------------------------------------------------------
+------------------------------- TurtleKit ${turtlekit.version} ----------------------------------
+------------------------------- Build ID ${build.id} ---------------------------
+----------------------------------------------------------------------------------
+
+- Short description:
+
+TurtleKit is an open source library for simulating artificial life models based on the Logo programming language.
+TurtleKit is not an IDE but provides a flexible API that allows to freely extend the platform default possibilities.
+TurtleKit is built on top of the MaDKit library and thus benefits from all the multi-agent programming 
+possibilities provided by this library.
+
+
+----------------------------------------------------------------------------------
+------------------------------- Release notes ------------------------------------
+----------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------
+------------------------------- TurtleKit 3.0.0.1 (alpha-1)--------------------------
+----------------------------------------------------------------------------------
+
+First third version distributed online on November 2013.

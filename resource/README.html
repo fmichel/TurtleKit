@@ -1,0 +1,168 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta http-equiv="content-type"
+ content="text/html; charset=ISO-8859-1">
+  <title>TurtleKit ${turtlekit.version} general documentation</title>
+  <meta content="Fabien Michel" name="author">
+  <meta content="TurtleKit ${turtlekit.version} general documentation"
+ name="artificial life">
+</head>
+<body style="background-color: white;">
+<h1>TurtleKit ${turtlekit.version}</h1>
+<!--
+<h1 style="text-align: right;"><a href="${madkit.web}/"><img style="border: 0px solid ; width: 100px; height: 100px;" src="docs/api/doc-files/MaDKit.png" alt="MDK" align="right"></a></h1>
+-->
+<h3>Artificial Life using MaDKit</h3>
+by Fabien Michel<br>
+<br>
+<a href="$%7Bturtlekit.web%7D/">www.turtlekit.org</a><br>
+<br>
+<span style="font-style: italic;">${TODAY}</span><br>
+<br>
+TurtleKit is an open source library for simulating artificial life
+models based on the Logo programming language.
+TurtleKit is not an IDE but provides a flexible API that allows to
+freely extend the platform default possibilities.
+TurtleKit is built on top of the MaDKit library and thus benefits of
+all the multi-agent programming possibilities provided by this library.
+<br>
+<br>
+TurtleKit is free software, licensed under the GNU GPL, featuring:<br>
+<ul>
+  <li>Artificial agents creation and life cycle management.</li>
+  <li>An organizational infrastructure for communication between agents
+(MaDKit feature).</li>
+  <li>Fast Multi-Agent Based Simulation and simulator authoring tools.</li>
+  <li>GPGPU only for Linux users for now<br>
+  </li>
+</ul>
+<h2><br>
+</h2>
+<hr><span style="font-weight: bold;"></span>
+<h2><span style="font-weight: bold;"></span>Documentation and resources
+</h2>
+<ul>
+  <li><big><a style="font-weight: bold;" href="docs/api/index.html">API</a></big>:
+Javadoc
+detailing
+the
+TurtleKit
+programming interface<br>
+  </li>
+</ul>
+<ul>
+  <li>A <big><a href="$%7Bdocs.dir%7D/build.xml"><span
+ style="font-weight: bold;">build.xml</span></a></big>
+ant file for easing the development and deployment of TurtleKit
+projects.</li>
+</ul>
+<ul>
+  <li>TurtleKit classes <big style="font-weight: bold;"><a
+ href="$%7Bsrc.zip.location%7D">java source
+code</a></big> as a zip file. It could be used to attach source in an
+IDE for easing the development.</li>
+</ul>
+<ul>
+  <li>The complete <big style="font-weight: bold;"><a
+ href="https://github.com/fmichel/TurtleKit">TurtleKit development
+tree</a></big> is available on github.</li>
+</ul>
+<br>
+<br>
+<hr><span style="font-style: italic;"></span>
+<h2>Testing TurtleKit ${turtlekit.version}<br>
+</h2>
+<ol>
+  <li>unzip the TurtleKit-${turtle.version}.zip file somewhere in your
+file system.</li>
+  <li>using java -jar <span style="font-weight: bold;">${turtlekit.jar.name}</span>
+launches the desktop mode of TurtleKit which could be used to test the
+demos.<br>
+  </li>
+</ol>
+<br>
+<hr><span style="font-style: italic;"></span>
+<h2>Developing with TurtleKit ${turtlekit.version}</h2>
+<span style="font-weight: bold;">${turtlekit.jar.name}</span>
+is a regular
+Java library which could be used by simply having it on the classpath:<br>
+<br>
+<ol>
+  <li>unzip the TurtleKit-${turtlekit.version}.zip file somewhere in
+your
+file system.</li>
+  <li>In a new Java project, add the <span style="font-weight: bold;">${turtlekit.jar.name}</span>
+to the build path (e.g. in your Eclipse project).</li>
+  <li>Now, you can start using the API.<br>
+  </li>
+  <li>Optional: You can use the <a href="docs/build.xml">build.xml</a>
+file in your project to easily build library and deployment files
+(runnable jars, Java Web Start files, etc.)<br>
+  </li>
+</ol>
+<br>
+To launch your TurtleKit turtles, simply either<br>
+&nbsp;<br>
+(1) use, anywhere, a main method with something like&nbsp; :<br>
+<br>
+&nbsp;&nbsp;&nbsp; public static void main(String[] args) {<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; new
+TurtleKit("--turtles","mypackage.myTurtleClass,15");<br>
+&nbsp;&nbsp;&nbsp; }<br>
+<br>
+<br>
+(2) use, in a Turtle sub class, a main method with&nbsp; :<br>
+<br>
+&nbsp;&nbsp;&nbsp; public static void main(String[] args) {<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+executeThisTurtle(10);<br>
+&nbsp;&nbsp;&nbsp; }<br>
+<br>
+<br>
+(3) use a command line such as <br>
+<br>
+java -cp pathTo-${turtlekit.jar.name}:yourClassPath
+turtlekit.kernel.TurtleKit
+--turtles mypackage.myTurtleClass,20<br>
+<br>
+Other command line options are described in the API of the
+turtlekit.kernel.TurtleKit class<br>
+<br>
+<br>
+<hr>
+<h2>Online help<br>
+</h2>
+<h3>
+</h3>
+<ul>
+  <li><a href="$%7Bmadkit.web%7D/forum">MaDKit forum</a></li>
+</ul>
+<br>
+<hr>
+<h2>Release notes<br>
+</h2>
+<h3>
+</h3>
+<ul>
+  <li><a href="docs/VERSION">VERSION ${turtlekit.version}</a></li>
+</ul>
+<br>
+<hr>
+<h2>License</h2>
+<ul>
+  <li>TurtleKit ${turtlekit.version} is free software
+licensed under the&nbsp;<a href="http://www.gnu.org/licenses/gpl.html">GNU
+General
+Public
+License
+v3</a>. </li>
+  <li>
+TurtleKit contains and uses the following libraries : JFreeChart
+(LGPL), JCuda and JCurand (MIT/X11 License)
+  </li>
+</ul>
+<br>
+<hr size="2">
+</body>
+</html>
