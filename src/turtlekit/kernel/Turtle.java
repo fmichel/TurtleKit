@@ -43,14 +43,29 @@ import turtlekit.pheromone.Pheromone;
 
 public class Turtle extends AbstractAgent {
 	
+	/**
+	 * Used in {@link #toString()}
+	 */
 	private static DecimalFormat df = new DecimalFormat("0.#");
 
-	double angle, 
-	x = Double.MAX_VALUE, 
-	y = Double.MAX_VALUE, 
-//			x = 0, 
-//			y = 0, 
-	angleCos = 1, 
+	/**
+	 * turtle's heading
+	 */
+	double angle; 
+	
+	/**
+	 * package visibility : used by TK environment... Ugly in OOP but faster //TODO is this true ?
+	 * 
+	 * Max value is used to detect that default value is used @
+	 */
+	double x = Double.MAX_VALUE;
+	/**
+	 * package visibility : used by TK environment... Ugly in OOP but faster //TODO is this true ?
+	 */
+	double y = Double.MAX_VALUE, 
+	
+			
+			angleCos = 1, 
 	angleSin = 0;//TODO float !!
 	private TKEnvironment environment;
 	private Patch position;
