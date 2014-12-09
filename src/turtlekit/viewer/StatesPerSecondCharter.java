@@ -17,11 +17,17 @@
  ******************************************************************************/
 package turtlekit.viewer;
 
-import java.util.logging.Level;
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.util.Timer;
+import java.util.TimerTask;
 
+import javax.swing.AbstractAction;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
+import madkit.kernel.Watcher;
 import madkit.simulation.probe.SingleAgentProbe;
 
 import org.jfree.chart.ChartPanel;
@@ -29,57 +35,120 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import turtlekit.agr.TKOrganization;
+import turtlekit.gui.util.ChartsUtil;
 import turtlekit.kernel.TKScheduler;
+import turtlekit.kernel.TurtleKit;
 
+/**
+ * A viewer displaying the simulation speed in terms of simulation time units per second
+ * 
+ * @author Fabien Michel
+ * @since TurtleKit 3.0.0.3
+ * @version 0.2
+ * 
+ */
 @GenericViewer
-public class StatesPerSecondCharter extends AbstractChartViewer {
+public class StatesPerSecondCharter extends Watcher {
 
 	private XYSeriesCollection dataset = new XYSeriesCollection();
-	private int timeFrame = 0;
 	private XYSeries serie;
+	private int refreshRate = 1000;
 	private SingleAgentProbe<TKScheduler, Double> probe;
+	private Timer timer;
+
+	public StatesPerSecondCharter() {
+		createGUIOnStartUp();
+	}
 
 	@Override
 	protected void activate() {
-		setLogLevel(Level.ALL);
-		super.activate();
-		probe = new SingleAgentProbe<>(getCommunity(),
-				TKOrganization.ENGINE_GROUP, TKOrganization.SCHEDULER_ROLE,
-				"statesPerSecond");
+		probe = new SingleAgentProbe<TKScheduler, Double>(getMadkitProperty(TurtleKit.Option.community), TKOrganization.ENGINE_GROUP, TKOrganization.SCHEDULER_ROLE, "GVT");
 		addProbe(probe);
 		serie = new XYSeries("States Per Second");
 		dataset.addSeries(serie);
+		initTimer();
+	}
+	
+	@Override
+	protected void end() {
+		stopTimer();
+		super.end();
+	}
+
+	/**
+	 * 
+	 */
+	private void initTimer() {
+		stopTimer();
+		timer = new java.util.Timer(true);
+		timer.scheduleAtFixedRate(new TimerTask() {
+			private double last = 0;
+
+			@Override
+			public void run() {
+				try {
+					final double gvt = probe.getPropertyValue();
+					final double statesPerSecond = (gvt - last);
+					if (logger != null)
+						logger.fine("statesPerSecond =" + statesPerSecond);
+					last = gvt;
+					SwingUtilities.invokeLater(new Runnable() {// avoiding null pointers on the awt thread
+								@Override
+								public void run() {
+									if (statesPerSecond > 0) {
+										serie.add((int) gvt, statesPerSecond);
+									}
+								}
+							});
+				} catch (NullPointerException e) {//ugly but avoids e when quiting
+				}
+			}
+		}, 0, getRefreshRate());
+	}
+
+	/**
+	 * 
+	 */
+	private void stopTimer() {
+		if (timer != null) {
+			timer.cancel();
+			timer = null;
+		}
 	}
 
 	@Override
 	public void setupFrame(JFrame frame) {
-		final ChartPanel chartPanel = createChartPanel(dataset,
-				"States Per Second", null, null);
+		final ChartPanel chartPanel = ChartsUtil.createChartPanel(dataset, "States Per Second", null, null);
 		chartPanel.setPreferredSize(new java.awt.Dimension(550, 250));
-		frame.setContentPane(chartPanel);
+		// frame.setContentPane(chartPanel);
+		frame.add(chartPanel);
+		frame.add(new JButton(new AbstractAction("clear") {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				serie.clear();
+			}
+		}), BorderLayout.SOUTH);
 		frame.setLocation(50, 0);
 	}
 
-	@Override
-	protected void observe() {
-		SwingUtilities.invokeLater(new Runnable() {// avoiding null pointers on
-													// the awt thread
-					@Override
-					public void run() {
-						final double gvt = probe.getProbedAgent().getGVT();
-						final Double propertyValue = probe.getPropertyValue();
-						if (propertyValue > 0) {
-							serie.add(gvt, propertyValue);
-						}
-						if (timeFrame > 0 && gvt % timeFrame == 0) {
-							serie.clear();
-						}
-					}
-				});
+	/**
+	 * @return the refreshRate in ms
+	 */
+	public int getRefreshRate() {
+		return refreshRate;
 	}
 
-	public void setTimeFrame(int interval) {
-		timeFrame = interval;
+	/**
+	 * set the refresh frequency in ms.
+	 * 
+	 * @param refreshRate
+	 *            the refreshRate to set in ms
+	 */
+	public void setRefreshRate(int refreshRate) {
+		if (refreshRate != this.refreshRate && refreshRate > 0) {
+			this.refreshRate = refreshRate;
+			initTimer();
+		}
 	}
 
 }

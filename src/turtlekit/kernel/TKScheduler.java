@@ -17,42 +17,25 @@
  ******************************************************************************/
 package turtlekit.kernel;
 
-import java.util.TimerTask;
-
 import madkit.kernel.Scheduler;
 import madkit.simulation.activator.GenericBehaviorActivator;
 import turtlekit.agr.TKOrganization;
 import turtlekit.cuda.CudaEngine;
-import turtlekit.viewer.AbstractViewer;
+import turtlekit.viewer.AbstractGridViewer;
 
 public class TKScheduler extends Scheduler {
 
 	protected String community;
 	private GenericBehaviorActivator<TKEnvironment> environmentUpdateActivator;
-	GenericBehaviorActivator<AbstractViewer> viewerActivator;
+	GenericBehaviorActivator<AbstractGridViewer> viewerActivator;
 	private TurtleActivator turtleActivator;
 	private GenericBehaviorActivator<TKEnvironment> pheroMaxReset;
-	private java.util.Timer timer;
-	private double statesPerSecond;
 				
 	public TKScheduler() {
 	}
 	
 	@Override
 	protected void activate() {
-//		community = getMadkitProperty(TurtleKit.Option.community);
-		//TODO timer sts
-//		new java.util.Timer(true).schedule(new TimerTask() {
-//			private double last = 0;
-//
-//			@Override
-//			public void run() {
-//				final double gvt = getGVT();
-//				System.err.println(gvt - last);
-//				last = gvt;
-//			}
-//		}, 0, 1000);
-//		setLogLevel(Level.ALL);
 		community = getMadkitProperty(TurtleKit.Option.community);
 		requestRole(
 				community, 
@@ -66,16 +49,13 @@ public class TKScheduler extends Scheduler {
 ////		turtles.setMulticore(4);
 		environmentUpdateActivator = new GenericBehaviorActivator<TKEnvironment>(community, TKOrganization.MODEL_GROUP, TKOrganization.ENVIRONMENT_ROLE, "update");
 		addActivator(environmentUpdateActivator);
-		viewerActivator = new GenericBehaviorActivator<AbstractViewer>(community, TKOrganization.ENGINE_GROUP, TKOrganization.VIEWER_ROLE, "observe");
+		viewerActivator = new GenericBehaviorActivator<AbstractGridViewer>(community, TKOrganization.ENGINE_GROUP, TKOrganization.VIEWER_ROLE, "observe");
 		addActivator(viewerActivator);
 	}
 	
 	@Override
 	protected void end() {
 		super.end();
-		if(timer != null){
-			timer = null;//stops the timer from within its run
-		}
 		if (isMadkitPropertyTrue(TurtleKit.Option.cuda)) {
 			CudaEngine.stop();
 			if (logger != null)
@@ -93,35 +73,6 @@ public class TKScheduler extends Scheduler {
 	}
 	
 	/**
-	 * 
-	 */
-	public void launchStepPerSecondMeter() {
-		if (timer == null) {
-			timer = new java.util.Timer(true);
-			timer.scheduleAtFixedRate(new TimerTask() {
-				private double last = 0;
-
-				@Override
-				public void run() {
-					if (timer == null) {
-						cancel();
-					}
-					final double gvt = getGVT();
-					statesPerSecond = (gvt - last)/2;
-					//			System.err.println("\n\ngvt = "+gvt);
-					//			System.err.println("last = "+last);
-					System.err.println("sps=" + statesPerSecond);
-					//			if (last != 0) {
-					//			}
-					last = gvt;
-					//			System.err.println("last = "+last);
-				}
-			}, 0, 2000);
-		}
-	}
-
-
-	/**
 	 * @return the turtleActivator
 	 */
 	public TurtleActivator getTurtleActivator() {
@@ -138,7 +89,7 @@ public class TKScheduler extends Scheduler {
 	/**
 	 * @return the viewerActivator
 	 */
-	public GenericBehaviorActivator<AbstractViewer> getViewerActivator() {
+	public GenericBehaviorActivator<AbstractGridViewer> getViewerActivator() {
 		return viewerActivator;
 	}
 

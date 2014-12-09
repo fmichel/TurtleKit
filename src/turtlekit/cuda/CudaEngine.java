@@ -138,37 +138,33 @@ public class CudaEngine {
 			try {
 				extractAndLoadNativeLibs();
 				JCudaDriver.setExceptionsEnabled(true);
-			} catch (Throwable e) {
-							e.printStackTrace();
-				return false;
-			}
-			JCudaDriver.cuInit(0);
-			try {
+				JCudaDriver.cuInit(0);
 				compileKernelsPtx();
-			} catch (IOException e) {
-				System.out.println("Cannot initialize Cuda");
+				// Obtain the number of devices
+				int deviceCountArray[] = { 0 };
+				JCudaDriver.cuDeviceGetCount(deviceCountArray);
+				availableDevicesNb = deviceCountArray[0];
+				if (availableDevicesNb == 0)
+					return false;
+				availableDevicesNb = NB_OF_DEVICE_TO_USE;// TODO
+				initialization = Executors.newCachedThreadPool();
+				System.out.println("Found " + availableDevicesNb + " GPU devices");
+				for (int i = 0/*-NB_OF_DEVICE_TO_USE*/; i < availableDevicesNb; i++) {
+					final int index = i;
+					Future<?> initJob = initialization.submit(new Runnable() {
+						public void run() {
+							System.err.println("Initializing device n°" + index);
+							cudaEngines.put(index, new CudaEngine(index));
+						}
+					});
+					initJob.get();
+					initialization.shutdown();
+				}
+			} catch (InterruptedException | ExecutionException | IOException | CudaException | UnsatisfiedLinkError e) {
 				e.printStackTrace();
+				System.err.println("---------Cannot initialize Cuda !!! ----------------");
 				return false;
 			}
-			// Obtain the number of devices
-			int deviceCountArray[] = { 0 };
-			JCudaDriver.cuDeviceGetCount(deviceCountArray);
-			availableDevicesNb = deviceCountArray[0];
-			if (availableDevicesNb == 0)
-				return false;
-			availableDevicesNb = NB_OF_DEVICE_TO_USE;//TODO
-			initialization = Executors.newCachedThreadPool();
-			System.out.println("Found " + availableDevicesNb + " GPU devices");
-			for (int i = 0/*-NB_OF_DEVICE_TO_USE*/; i < availableDevicesNb; i++) {
-				final int index = i;
-				initialization.submit(new Runnable() {
-					public void run() {
-						System.err.println("Initializing device n°"+index);
-						cudaEngines.put(index, new CudaEngine(index));
-					}
-				});
-			}
-			initialization.shutdown();
 			Runtime.getRuntime().addShutdownHook(new Thread() {
 				@Override
 				public void run() {
@@ -225,7 +221,7 @@ public class CudaEngine {
 				}
 			}).get();
 		} catch (InterruptedException | ExecutionException e) {
-			e.printStackTrace();
+			throw new RuntimeException(e.getMessage());
 		}
 		neigborsPtrs = new HashMap<>();
 	}

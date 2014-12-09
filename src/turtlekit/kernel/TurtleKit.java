@@ -268,6 +268,10 @@ public class TurtleKit extends AbstractAgent {
 		 * in asynchronous display mode : faster viewing*/
 		fastRendering,
 		/**
+		 * Set the rendering interval time, e.g. --renderingInterval 500
+		 */
+		renderingInterval,
+		/**
 		 * If set to <code>true</code>, TurtleKit will try to use Nvidia Cuda for 
 		 * computing pheromones dynamics and random numbers, thus optimizing
 		 * the simulation performances, especially when several pheromones are used.

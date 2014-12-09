@@ -19,7 +19,7 @@
 		 Here, you specify a code name for the project.
 		 This name is used to label the generated files
          ================================= -->
-<project name="turtlekit" default="jar">
+<project name="TurtleKit" default="jar">
 
 
 	<!-- =================================
@@ -40,7 +40,10 @@
 	<property file="${resource.dir}/turtlekitBuild.properties" />
 
 	<property name="madkit.lib.dir" value="lib" />
-	<property name="madkit.version" value="5.0.5" />
+	<property name="madkit.version" value="5.0.5.1" />
+
+	<!-- user's specific local properties -->
+	<property name="server.info.dir" value="${user.home}/.mdk_keystore" />
 
 	<!-- =================================
 		OPTIONAL:
@@ -63,9 +66,9 @@
 
 	     ================================= -->
 	<fileset id="third.party.libraries" dir="lib">
-		<include name="jcuda-0.5.5.jar" />
+		<include name="jcuda-0.6.5.jar" />
 		<include name="jcudaUtils-0.0.4.jar" />
-		<include name="jcurand-0.5.5.jar" />
+		<include name="jcurand-0.6.5.jar" />
 		<include name="jfreechart-1.0.19.jar" />
 		<include name="jcommon-1.0.23.jar" />
 	</fileset>
@@ -78,6 +81,16 @@
 			<zipfileset src="${kernel.location}" includes="MDK_ANT.xml,MDKAntTargets.xml,jnlp.template.xml" />
 			<fileset dir="." includes="lib/*.so,lib/*.dll" />
 		</jar>
+		<!-- remove jcuda docs and jfreechart maven files -->
+		<unzip src="${jar.file}" dest="tmpJar"/>
+		<delete file="${jar.file}"/>
+		<jar destfile="${jar.file}"
+			manifest="tmpJar/META-INF/MANIFEST.MF"
+		    basedir="tmpJar"
+		    includes="**/*"
+		    excludes="doc/**,**/maven/**"
+		/>  
+		<delete dir="tmpJar"/>
 	</target>
 
 	<!-- - - - - - - - - - - - - - - - - - 
@@ -229,6 +242,36 @@
 		<zipfileset dir="${src.dir}" includes="**/*.java" excludes="**/package-info.java" />
 	</zip>
 </target>
+
+<!-- - - - - - - - - - - - - - - - - - 
+          target: ftp-release                      
+	<echo>FTP upload of MDK desktop web start files in ${madkit.ftp.dir}/${javaws.ftp.dir}</echo>
+	<ftp server="${ftp.server}" userid="${ftp.user}" password="${ftp.password}" action="put" remotedir="${madkit.ftp.dir}/${javaws.ftp.dir}">
+		<fileset file="${jnlp.jar.gz}" />
+		<fileset file="${demo.dir}/MaDKit-5-Desktop.jnlp" />
+	</ftp>
+         - - - - - - - - - - - - - - - - - -->
+<target name="ftp-release" depends="release">
+	<loadproperties srcFile="${server.info.dir}/MDK.net" />
+	
+	<unzip src="${release.dir}/${distribution.zip.name}" dest="${release.dir}/web" />
+	
+	<echo>FTP uploading new release files in ${release.ftp.dir}</echo>
+	<ftp server="${ftp.server}" userid="${ftp.user}" password="${ftp.password}" action="mkdir" remotedir="${release.ftp.dir}" verbose="yes" />
+	<ftp server="${ftp.server}" userid="${ftp.user}" password="${ftp.password}" action="put" remotedir="${release.ftp.dir}">
+		<fileset dir="${release.dir}/web" />
+	</ftp>
+</target>
+	
+<target name="update_website" description="update MDK website new release">
+	<echo file="${build.dir}/LAST">${turtlekit.version}</echo>
+	<loadproperties srcFile="${server.info.dir}/MDK.net" />
+	<echo>FTP : updating online LAST version</echo>
+	<ftp server="${ftp.server}" userid="${ftp.user}" password="${ftp.password}" action="put" remotedir="${turtlekit.ftp.dir}">
+		<fileset dir="${build.dir}" includes="LAST" />
+	</ftp>
+</target>
+
 
 </project>
 

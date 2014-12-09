@@ -374,3 +374,8 @@ __global__ void TEST(int width, int height, float *values)
 		values[k] = 10;
 		}
 }
+
+
+int main()
+{
+}

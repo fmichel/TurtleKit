@@ -16,14 +16,34 @@ possibilities provided by this library.
 ----------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------
-------------------------------- TurtleKit 3.0.0.3 (alpha-3)--------------------------
+------------------------------- TurtleKit 3.0.0.4 (alpha-4)-----------------------
 ----------------------------------------------------------------------------------
 
-Updating to MaDKit 5.0.5
-Still alpha : dead web links, incomplete javadoc, etc. But functionnal !
+1. Changes:
+	- upgrading to MaDKit 5.0.5.1
+	- upgrading to JCuda 6.5
+	- Various changes : still alpha style
+	
+2. Bug fix:
+	- the statesPerSecond viewer now works in every contexts.
+	- various bug fixes
+
+3. API changes:
+	~ name changed : turtlekit.viewer.AbstractViewer -> turtlekit.viewer.AbstractGridViewer
+	~ name changed : turtlekit.viewer.AbstractChartViewer -> turtlekit.viewer.AbstractObserver
+	+ turtlekit.kernel.TKEnvironment.createTurtle(Turtle, double, double)
+	
+
 
 ----------------------------------------------------------------------------------
-------------------------------- TurtleKit 3.0.0.1 (alpha-1)--------------------------
+------------------------------- TurtleKit 3.0.0.3 (alpha-3)-----------------------
+----------------------------------------------------------------------------------
+
+Upgrading to MaDKit 5.0.5
+Still alpha : dead web links, incomplete javadoc, etc. But functional !
+
+----------------------------------------------------------------------------------
+------------------------------- TurtleKit 3.0.0.1 (alpha-1)-----------------------
 ----------------------------------------------------------------------------------
 
 First third version distributed online on November 2013.

@@ -206,7 +206,8 @@ public class Particule extends AbstractMLEAgent {
 	public static void main(String[] args) {
 //		System.setProperty("sun.java2d.xrender", "true");
 //		String[] args2 = {"128","10","--GPU_gradients"};
-		String[] args2 = {"200","30","--test"};
+		String[] args2 = {"100","10","--test"};
+//		String[] args2 = {"150","110","--GPU_gradients"};
 		args = args2;
 		float percentage = Float.parseFloat(args[1])/100;
 		int size = Integer.parseInt(args[0]);
@@ -219,7 +220,7 @@ public class Particule extends AbstractMLEAgent {
 //				,"--GPU_gradients"
 				,Option.cuda.toString()
 //				,LevelOption.agentLogLevel.toString(),"ALL"
-				,Option.startSimu.toString()
+//				,Option.startSimu.toString()
 //				,Option.endTime.toString(),args[5]
 				,Option.environment.toString(),MLEEnvironment.class.getName()
 				,Option.scheduler.toString(),MLEScheduler.class.getName()

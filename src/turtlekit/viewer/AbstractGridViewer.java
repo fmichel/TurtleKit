@@ -47,8 +47,18 @@ import turtlekit.kernel.Patch;
 import turtlekit.kernel.TKEnvironment;
 import turtlekit.kernel.TKScheduler;
 import turtlekit.kernel.TurtleKit;
+import turtlekit.kernel.TurtleKit.Option;
 
-public abstract class AbstractViewer extends SwingViewer {
+/**
+ * A viewer that probes the patch grid and displays a representation for it. 
+ * It provides a zoom feature.
+ * 
+ * @author Fabien Michel
+ * @since TurtleKit 3.0.0.4
+ * @version 0.1
+ * 
+ */
+public abstract class AbstractGridViewer extends SwingViewer {
 	
 	/**
 	 * 
@@ -59,18 +69,16 @@ public abstract class AbstractViewer extends SwingViewer {
 	private SingleAgentProbe<TKScheduler,Double> timeProbe;
 	private SingleAgentProbe<TKEnvironment, Integer> widthProbe;
 	private SingleAgentProbe<TKEnvironment, Integer> heightProbe;
-	private String community;
 	private JPanel turtlePane;
 	
 	protected void initProbes(){
-		community = getMadkitProperty(TurtleKit.Option.community);
 		gridProbe = new SingleAgentProbe<TKEnvironment, Patch[]>(
 				getCommunity(), 
 				TKOrganization.MODEL_GROUP, 
 				TKOrganization.ENVIRONMENT_ROLE, 
 				"patchGrid");
 		addProbe(gridProbe);
-		timeProbe = new SingleAgentProbe<>(community, TKOrganization.ENGINE_GROUP, TKOrganization.SCHEDULER_ROLE,"GVT");
+		timeProbe = new SingleAgentProbe<>(getCommunity(), TKOrganization.ENGINE_GROUP, TKOrganization.SCHEDULER_ROLE,"GVT");
 		addProbe(timeProbe);
 		widthProbe = new SingleAgentProbe<TKEnvironment, Integer>(
 				getCommunity(), 
@@ -86,20 +94,24 @@ public abstract class AbstractViewer extends SwingViewer {
 		addProbe(heightProbe);
 	}
 
-	public AbstractViewer() {
+	public AbstractGridViewer() {
 		createGUIOnStartUp();
 //		setLogLevel(Level.ALL);
 	}
 	
 	@Override
 	protected void activate() {
+		final int parseInt = Integer.parseInt(getMadkitProperty(Option.renderingInterval));
+		if(parseInt != 1){
+			setRenderingInterval(parseInt);
+		}
 		setSynchronousPainting(! isMadkitPropertyTrue(fastRendering));
-		requestRole(community, TKOrganization.ENGINE_GROUP,TKOrganization.VIEWER_ROLE);
+		requestRole(getCommunity(), TKOrganization.ENGINE_GROUP,TKOrganization.VIEWER_ROLE);
 	}
 	
 	@Override
 	protected void end() {
-		if(getAgentsWithRole(community, TKOrganization.ENGINE_GROUP,TKOrganization.VIEWER_ROLE) == null){
+		if(getAgentsWithRole(getCommunity(), TKOrganization.ENGINE_GROUP,TKOrganization.VIEWER_ROLE) == null){
 			KernelAction.EXIT.getActionFor(this).actionPerformed(null);
 		}
 	}
@@ -119,8 +131,7 @@ public abstract class AbstractViewer extends SwingViewer {
 	@Override
 	public void setupFrame(final JFrame frame) {
 		initProbes();
-		community = getMadkitProperty(TurtleKit.Option.community);
-		SingleAgentProbe<TKScheduler,Double> p = new SingleAgentProbe<>(community, TKOrganization.ENGINE_GROUP, TKOrganization.SCHEDULER_ROLE,"GVT");
+		SingleAgentProbe<TKScheduler,Double> p = new SingleAgentProbe<>(getCommunity(), TKOrganization.ENGINE_GROUP, TKOrganization.SCHEDULER_ROLE,"GVT");
 		addProbe(p);
 		final TKScheduler tkScheduler = p.getCurrentAgentsList().get(0);
 		final JToolBar schedulerToolBar = tkScheduler.getSchedulerToolBar();
@@ -134,7 +145,7 @@ public abstract class AbstractViewer extends SwingViewer {
 			public void windowClosing(WindowEvent e) {
 				//because there may be several viewers
 				if (getAgentsWithRole(getCommunity(), TKOrganization.ENGINE_GROUP, TKOrganization.VIEWER_ROLE) == null) {
-					KernelAction.EXIT.getActionFor(AbstractViewer.this).actionPerformed(null);
+					KernelAction.EXIT.getActionFor(AbstractGridViewer.this).actionPerformed(null);
 				}
 			}
 		});		
@@ -299,10 +310,12 @@ public abstract class AbstractViewer extends SwingViewer {
 	}
 
 	/**
-	 * @return the community
+	 * shortcut for getMadkitProperty(TurtleKit.Option.community)
+	 * 
+	 * @return the community of the simulation this agent is in
 	 */
 	public final String getCommunity() {
-		return community;
+		return getMadkitProperty(TurtleKit.Option.community);
 	}
 	
 

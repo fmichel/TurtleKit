@@ -31,7 +31,7 @@ import turtlekit.kernel.Turtle;
  *
  */
 @GenericViewer
-public class TKDefaultViewer extends AbstractViewer{
+public class TKDefaultViewer extends AbstractGridViewer{
 	
 	@Override
 	protected void render(Graphics g) {

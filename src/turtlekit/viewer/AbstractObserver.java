@@ -15,54 +15,40 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
-package turtlekit.toys;
+package turtlekit.viewer;
 
-import java.awt.Color;
+import madkit.kernel.Watcher;
+import turtlekit.agr.TKOrganization;
+import turtlekit.kernel.TurtleKit;
 
-import turtlekit.kernel.Turtle;
-import turtlekit.kernel.TurtleKit.Option;
-import turtlekit.pheromone.Pheromone;
-import turtlekit.viewer.PheromoneViewer;
-
-public class Runaway extends Turtle {
-	
-	private Pheromone pheromone;
-
-	public Runaway() {
-		super("runaway");
-	}
+/**
+ * An observer that plays the role of viewer in the simulation so that it is
+ * automatically inserted in the simulation process.
+ * 
+ * @author Fabien Michel
+ * @since TurtleKit 3.0.0.4
+ * @version 0.1
+ * 
+ */
+public abstract class AbstractObserver extends Watcher{
 	
 	@Override
 	protected void activate() {
-		super.activate();
-		home();
-		for (int i = 0; i < 2; i++) {
-			launchAgent(new PheroEmmiter());
-		}
-		randomHeading();
-		randomLocation();
-		setColor(Color.BLUE);
-		pheromone = getEnvironment().getPheromone("test",30,30);
+		requestRole(getCommunity(), TKOrganization.ENGINE_GROUP,TKOrganization.VIEWER_ROLE);
 	}
 	
-	
-	@SuppressWarnings("unused")
-	private String runaway() {
-		setHeading(getPheroMinDirection(pheromone));
-		wiggle(30);
-		return "runaway";
-	}
+	/**
+	 * automatically invoked for each time step
+	 */
+	protected abstract void observe();
 
 	/**
-	 * @param args
+	 * shortcut for getMadkitProperty(TurtleKit.Option.community)
+	 * 
+	 * @return the community of the simulation this agent is in
 	 */
-	public static void main(String[] args) {
-		executeThisTurtle(10
-				,Option.viewers.toString(),PheromoneViewer.class.getName()
-				,Option.envHeight.toString(),"200"
-				,Option.envWidth.toString(),"200"
-//				,Option.noCuda.toString()
-				);
+	public final String getCommunity() {
+		return getMadkitProperty(TurtleKit.Option.community);
 	}
-
+	
 }

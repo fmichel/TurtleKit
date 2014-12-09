@@ -19,6 +19,6 @@
 <MDK name="very dense" description="test">
 		<Turtle class="turtlekit.pvequalsnrt.Gas" nbOfInstances="10000" />
 		<Viewer class="turtlekit.pvequalsnrt.GasViewer" />
-		<Agent class="turtlekit.pvequalsnrt.PhysicsChecker"/>
+		<Viewer class="turtlekit.pvequalsnrt.PhysicsChecker"/>
 		<MadkitProperties envDimension="400,100" wallX="20"/>
 </MDK>

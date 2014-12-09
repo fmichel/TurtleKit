@@ -36,10 +36,11 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import turtlekit.agr.TKOrganization;
+import turtlekit.gui.util.ChartsUtil;
 import turtlekit.kernel.Turtle;
 
 @GenericViewer
-public class PopulationCharter extends AbstractChartViewer{
+public class PopulationCharter extends AbstractObserver{
 	
 	private XYSeriesCollection dataset = new XYSeriesCollection();
 	private int index=0;
@@ -47,6 +48,10 @@ public class PopulationCharter extends AbstractChartViewer{
 	private Set<String> handledRoles = new HashSet<>();
 	private int timeFrame = 0;
 	private boolean monitorTurtle;
+	
+	public PopulationCharter() {
+		createGUIOnStartUp(); //prevent inappropriate launching and thus null pointer
+	}
 
 	@Override
 	protected void activate() {
@@ -57,7 +62,7 @@ public class PopulationCharter extends AbstractChartViewer{
 	
 	@Override
 	public void setupFrame(JFrame frame) {
-		final ChartPanel chartPanel = createChartPanel(dataset, "Population", null, null);
+		final ChartPanel chartPanel = ChartsUtil.createChartPanel(dataset, "Population", null, null);
 		chartPanel.setPreferredSize(new java.awt.Dimension(550, 250));
 		frame.setContentPane(chartPanel);
 		frame.setLocation(50, 0);

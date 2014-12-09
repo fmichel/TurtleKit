@@ -84,10 +84,13 @@ public class TKEnvironment extends Watcher {
 //			Turtle.generator = new GPU_PRNG(12134); //TODO
 		}
 		initPatchGrid();
-		// 1 : request my role so that the viewer can probe me 
+		// request my role so that the viewer can probe me 
 		requestRole(community, TKOrganization.MODEL_GROUP, TKOrganization.ENVIRONMENT_ROLE);
+
+		// keeping the turtles group alive
+		requestRole(community, TKOrganization.TURTLES_GROUP, TKOrganization.ENVIRONMENT_ROLE);
 		
-		// 2 : this probe is used to initialize the agents' environment field
+		// this probe is used to initialize the agents' environment field
 		addProbe(new AgentsProbe());
 	}
 
@@ -232,6 +235,31 @@ public class TKEnvironment extends Watcher {
 		}
 	}
 	
+	/**
+	 * Launch a turtle with predefined coordinates
+	 * 
+	 * @param t
+	 * @param x
+	 * @param y
+	 * @return the ID given to the turtle
+	 */
+	public int createTurtle(Turtle t, double x, double y){
+		t.x = x;
+		t.y = y;
+		launchAgent(t);
+		return t.getID();
+	}
+	
+	/**
+	 * Launch a turtle with a random location
+	 * 
+	 * @param t
+	 * @return the ID given to the turtle
+	 */
+	public int createTurtle(Turtle t){
+		return createTurtle(t, Double.MAX_VALUE, Double.MAX_VALUE);
+	}
+	
 	private void executePheromonesInParallel() {
 		final Collection<Pheromone> pheromonesList = getPheromones();
 		if (! pheromonesList.isEmpty()) {
@@ -330,6 +358,8 @@ public class TKEnvironment extends Watcher {
 						phero = createCudaPheromone(name, evaporationPercentage, diffusionPercentage);
 					}
 					else{
+						//TODO experimental
+//						phero = new CPU_SobelPheromone(name, getWidth(),	getHeight(), evaporationPercentage, diffusionPercentage, neighborsIndexes);
 						phero = new JavaPheromone(name, getWidth(),	getHeight(), evaporationPercentage, diffusionPercentage, neighborsIndexes);
 					}
 					pheromones.put(name, phero);
@@ -406,6 +436,8 @@ public class TKEnvironment extends Watcher {
 //		}
 //		
 		protected void adding(Turtle agent) {
+			if(logger != null)
+				logger.finer("adding : "+agent);
 			agent.setID(turtleCounter.incrementAndGet());
 			setPropertyValue(agent, TKEnvironment.this);
 			Patch p;
@@ -417,6 +449,8 @@ public class TKEnvironment extends Watcher {
 				agent.y = p.y;
 			}
 			else{
+				agent.x = normalizeX(agent.x);
+				agent.y = normalizeY(agent.y);
 				p = getPatch((int) agent.x, (int) agent.y);
 			}
 			p.addAgent(agent);

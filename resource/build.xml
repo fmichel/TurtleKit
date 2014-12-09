@@ -25,17 +25,17 @@
 		REQUIRED:
 		 Specify the directory where the MaDKit jar file is in 
 		 e.g. 
-		 <property name="madkit.lib.dir" value="lib"/> relative path or
-		 <property name="madkit.lib.dir" value="/userHome/madkit5"/> absolute path
+		 <property name="turtlekit.lib.dir" value="lib"/> relative path or
+		  <property name="turtlekit.lib.dir" value="/userHome/tk3"/> absolute path
          ================================= -->
-	<property name="madkit.lib.dir" value="${lib.dir}" />
+	<property name="turtlekit.lib.dir" value="${lib.dir}" />
 
 	<!-- =================================
 		REQUIRED:
-		 Please, specify the MaDKit version which should be used.
-		 e.g. ${madkit.version}
+		 Please, specify the TurtleKit version which should be used.
+		 e.g. ${turtlekit.version}
          ================================= -->
-	<property name="madkit.version" value="${madkit.version}" />
+	<property name="turtlekit.version" value="${turtlekit.version}" />
 
 	<!-- =================================
 		OPTIONAL:
@@ -53,8 +53,9 @@
 		OPTIONAL:
 		 Here, you can specify which default options
 		 will be used for the runnable jar file 
+		 Usually used to launch turtles
          ================================= -->
-	<property name="madkit.args" value="--launchAgents project.agents.LauncherAgent" />
+	<property name="turtlekit.args" value="--turtles test.MyTurtle,1000" />
 
 
 	<!-- =================================
@@ -85,16 +86,15 @@
 
 
 	<!-- =================================
-        ================================= -->
-	<!-- =================================
 		DO NOT EDIT WHAT FOLLOWS:
-		 This enables the main targets from the madkit jar file.
+		 This enables the main ant targets from the turtlekit jar file.
          ================================= -->
+	<property name="madkit.args" value="--configFile turtlekit/kernel/turtlekit.properties ${turtlekit.args} --desktop false" />
+	<property name="kernel.location" location="${turtlekit.lib.dir}/turtlekit-${turtlekit.version}.jar" />
 	<import>
 		<javaresource name="MDK_ANT.xml">
-			<classpath location="${madkit.lib.dir}/madkit-$${madkit.version}.jar" />
+			<classpath location="${kernel.location}" />
 		</javaresource>
 	</import>
 
 </project>
-

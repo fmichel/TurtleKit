@@ -30,6 +30,7 @@ import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -44,15 +45,15 @@ import turtlekit.pheromone.Pheromone;
 public class Turtle extends AbstractAgent {
 	
 	/**
+	 * The turtle's environment 
+	 */
+	private TKEnvironment environment;
+	
+	/**
 	 * Used in {@link #toString()}
 	 */
 	private static DecimalFormat df = new DecimalFormat("0.#");
 
-	/**
-	 * turtle's heading
-	 */
-	double angle; 
-	
 	/**
 	 * package visibility : used by TK environment... Ugly in OOP but faster //TODO is this true ?
 	 * 
@@ -62,19 +63,60 @@ public class Turtle extends AbstractAgent {
 	/**
 	 * package visibility : used by TK environment... Ugly in OOP but faster //TODO is this true ?
 	 */
-	double y = Double.MAX_VALUE, 
+	double y = Double.MAX_VALUE;
 	
-			
-			angleCos = 1, 
-	angleSin = 0;//TODO float !!
-	private TKEnvironment environment;
+	
+	/**
+	 * turtle's heading
+	 */
+	double angle; 
+
+	/**
+	 * heading converted into cosinus
+	 */
+	double angleCos = 1;
+	
+	/**
+	 * heading converted into sinus
+	 */
+	double angleSin = 0; //TODO float !!
+	
+	
+	/**
+	 * The patch the turtle is in
+	 */
 	private Patch position;
+	
+	/**
+	 * The turtle's color. Default is red.
+	 */
 	protected Color color = Color.RED;
+	
+	/**
+	 * Count how much time the same behavior has been called in a row
+	 * 
+	 * @see TurtleActivator
+	 */
 	private int currentBehaviorCount = 0;
+	/**
+	 * Used to optimize the display. //TODO is it still used ?
+	 */
 	private boolean changePatch = false;
+	/**
+	 * The next behavior's method to trigger
+	 */
 	private Method nextAction;
+	/**
+	 * The turtle's ID
+	 */
 	private int id;
+	/**
+	 * The turtle's PRNG //TODO have a real model
+	 */
 	protected static Random generator = new Random();//TODO move to model
+	/**
+	 * The community of the simulation see {@link #activate()}
+	 */
 	private static String community;
 
 	@Override
@@ -88,7 +130,7 @@ public class Turtle extends AbstractAgent {
 	}
 	
 	/**one way to identify a kind of turtle: give them a Role in the simulation.*/
-	public  void playRole(String role){
+	public void playRole(String role){
 		bucketModeRequestRole(community,TKOrganization.TURTLES_GROUP,role,null);
 	}
 
@@ -217,6 +259,10 @@ public class Turtle extends AbstractAgent {
 //		System.exit(0);
 		return environment.getPheromone(name, 50, 50);
 	}
+	
+	public Collection<Pheromone> getPheromones(){
+		return environment.getPheromones();
+	}
 
 	/**
 	 * Gets the direction where there is a minimum of this pheromone
@@ -284,14 +330,37 @@ public class Turtle extends AbstractAgent {
 	}
 	
 	/**
-	 * @deprecated use {@link #launchAgent(AbstractAgent)} instead
-	 * create a turtle at the creator position (xcor,ycor)
-    returns the ID of the new turtle*/
-	public  int createTurtle(Turtle t){
-		launchAgent(t);
-		return t.getID();
+	 * launch a turtle at the creator position (xcor,ycor) 
+	 * and returns the given ID to the new turtle
+	 * @param t
+	 * @return the ID given to the turtle
+	 */
+	public int createTurtleHere(Turtle t){
+		return environment.createTurtle(t, x, y);
 		}
 
+	/**
+	 * Launch a turtle with predefined coordinates
+	 * 
+	 * @param t
+	 * @param x
+	 * @param y
+	 * @return the ID given to the turtle
+	 */
+	public int createTurtle(Turtle t, double x, double y){
+		return environment.createTurtle(t, x, y);
+	}
+	
+	/**
+	 * Launch a turtle with a random location.
+	 * 
+	 * @param t
+	 * @return the ID given to the turtle
+	 */
+	public int createTurtle(Turtle t){
+		return environment.createTurtle(t);
+	}
+	
 
 	
 	/**
@@ -944,10 +1013,11 @@ public class Turtle extends AbstractAgent {
 	 * 
 	 * @param args
 	 *           MaDKit or TurtleKit options
+	 * @return 
 	 * @see #executeThisAgent(int, boolean, String...)
 	 * @since TurtleKit 3.0.0.1
 	 */
-	protected static void executeThisTurtle(int nbOfInstances, String... args) {
+	protected static TurtleKit executeThisTurtle(int nbOfInstances, String... args) {
 		StackTraceElement element = null;
 		for (StackTraceElement stackTraceElement : new Throwable().getStackTrace()) {
 			if(stackTraceElement.getMethodName().equals("main")){
@@ -973,7 +1043,7 @@ public class Turtle extends AbstractAgent {
 		}
 		arguments.add(TurtleKit.Option.turtles.toString());
 		arguments.add(turtles);
-		new TurtleKit(arguments.toArray(new String[0]));
+		return new TurtleKit(arguments.toArray(new String[0]));
 	}
 
 	/**

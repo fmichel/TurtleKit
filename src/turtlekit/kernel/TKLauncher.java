@@ -116,9 +116,9 @@ public class TKLauncher extends Agent {
 	}
 	
 	protected void launchViewers() {
-		final String viewerClass = getMadkitProperty(viewers);
-		if (viewerClass != null && ! viewerClass.equals("null")) {
-			for (final String v : viewerClass.split(";")) {
+		final String viewerClasses = getMadkitProperty(viewers);
+		if (viewerClasses != null && ! viewerClasses.equals("null")) {
+			for (final String v : viewerClasses.split(";")) {
 				launchAgent(v, true);
 			}
 		}

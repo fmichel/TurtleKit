@@ -18,6 +18,8 @@
 package turtlekit.pvequalsnrt;
 
 
+import java.util.logging.Level;
+
 import javax.swing.JFrame;
 
 import madkit.kernel.Probe;
@@ -27,22 +29,28 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import turtlekit.agr.TKOrganization;
+import turtlekit.gui.util.ChartsUtil;
 import turtlekit.kernel.Turtle;
-import turtlekit.viewer.AbstractChartViewer;
+import turtlekit.viewer.AbstractObserver;
 
-public class PhysicsChecker extends AbstractChartViewer {
+public class PhysicsChecker extends AbstractObserver {
 	
 	private int wallX;
 	private Probe<Turtle> p;
 	private XYSeries rightSide;
 	private int index = 0;
 	private XYSeries total;
+	
+	public PhysicsChecker() {
+		createGUIOnStartUp(); //prevent inappropriate launching and thus null pointer
+	}
 
 	/**
 	 * Just to do some initialization work
 	 */
 	@Override
 	protected void activate() {
+		setLogLevel(Level.ALL);
 		super.activate();
 		wallX = Integer.parseInt(getMadkitProperty("wallX"));
 		p = new Probe<>(getCommunity(), TKOrganization.TURTLES_GROUP, TKOrganization.TURTLE_ROLE);
@@ -52,7 +60,7 @@ public class PhysicsChecker extends AbstractChartViewer {
 	@Override
 	public void setupFrame(JFrame frame) {
 		XYSeriesCollection dataset = new XYSeriesCollection();
-		final ChartPanel chartPanel = createChartPanel(dataset, "PV = nRT", null, null);
+		final ChartPanel chartPanel = ChartsUtil.createChartPanel(dataset, "PV = nRT", null, null);
 		chartPanel.setPreferredSize(new java.awt.Dimension(550, 250));
 		rightSide = new XYSeries("Gas on the right side");
 		dataset.addSeries(rightSide);

@@ -29,7 +29,6 @@ public class MLEScheduler extends TKScheduler {
 	@Override
 	protected void activate() {
 		super.activate();
-		launchStepPerSecondMeter();
 	}
 
 	
