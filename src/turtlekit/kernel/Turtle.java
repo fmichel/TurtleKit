@@ -118,6 +118,8 @@ public class Turtle extends AbstractAgent {
 	 * The community of the simulation see {@link #activate()}
 	 */
 	private static String community;
+	
+	private boolean visible = true;
 
 	@Override
 	protected void activate() {
@@ -1099,6 +1101,28 @@ public class Turtle extends AbstractAgent {
 	 * @deprecated {@link #activate()} should be overridden instead, beginning by super.activate();
 	 */
 	public void setup() {
+	}
+
+	/**
+	 * Used by default viewers.
+	 * 
+	 * @return <code>true</code> if the turtle should be
+	 * displayed by viewers.
+	 */
+	public boolean isVisible() {
+		return visible;
+	}
+
+	/**
+	 * Can be used to tell viewers that 
+	 * this turtle should not be rendered
+	 * when displayed
+	 * 
+	 * @param visible the turtle will not be visible 
+	 * in default viewers if set to <code>true</code>
+	 */
+	public void setVisible(boolean visible) {
+		this.visible = visible;
 	}
 
 }
