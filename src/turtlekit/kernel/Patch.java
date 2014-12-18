@@ -36,7 +36,7 @@ public class Patch {
 	private HashMap<String, Object> marks;
 
 	public Patch() {
-		color = Color.BLACK;
+		color = Color.RED;
 		neighbors.add(this);// for including this when computing neighbors with true for inclusion
 	}
 	
