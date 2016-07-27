@@ -42,14 +42,6 @@ import java.util.Arrays;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import madkit.action.SchedulingAction;
-import madkit.i18n.ErrorMessages;
-import madkit.kernel.Agent;
-import madkit.kernel.Madkit;
-import madkit.kernel.Madkit.Option;
-import madkit.message.SchedulingMessage;
-import madkit.util.XMLUtilities;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -57,6 +49,13 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import madkit.action.SchedulingAction;
+import madkit.i18n.ErrorMessages;
+import madkit.kernel.Agent;
+import madkit.kernel.Madkit;
+import madkit.kernel.Madkit.Option;
+import madkit.message.SchedulingMessage;
+import madkit.util.XMLUtilities;
 import turtlekit.agr.TKOrganization;
 import turtlekit.cuda.CudaEngine;
 
@@ -203,6 +202,12 @@ public class TKLauncher extends Agent {
 //			setMadkitProperty(communityName.name(), community);
 //		}
 		try {
+			String widthParam = getMadkitProperty(envWidth);
+			String heightParam = getMadkitProperty(envHeight);
+			if (heightParam != null || widthParam != null) {
+				setMadkitProperty(envDimension, (widthParam != null ? widthParam : "200") + ","
+						+ (heightParam != null ? heightParam : "200"));
+			}
 			String[] dimension = getMadkitProperty(envDimension).split(",");
 			setMadkitProperty(envWidth, dimension[0]);
 			if (dimension.length > 1) {

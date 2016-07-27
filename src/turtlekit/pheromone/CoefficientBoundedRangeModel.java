@@ -19,14 +19,14 @@ package turtlekit.pheromone;
 
 import javax.swing.DefaultBoundedRangeModel;
 
-public class PheromoneCoefficientBoundedRangeModel extends DefaultBoundedRangeModel {
+public class CoefficientBoundedRangeModel extends DefaultBoundedRangeModel {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 3828277289372933897L;
 
-	public PheromoneCoefficientBoundedRangeModel(float initialValue) {
+	public CoefficientBoundedRangeModel(float initialValue) {
 		super((int) (initialValue * getPrecision(initialValue)),0,0,getPrecision(initialValue));
 	}
 	

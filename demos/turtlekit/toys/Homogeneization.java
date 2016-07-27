@@ -26,7 +26,7 @@ import turtlekit.viewer.PheromoneViewer;
 
 public class Homogeneization extends Turtle {
 	
-	private Pheromone pheromone;
+	private Pheromone<Float> pheromone;
 
 	public Homogeneization() {
 		super("fly");

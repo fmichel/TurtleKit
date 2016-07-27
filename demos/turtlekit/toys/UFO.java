@@ -26,8 +26,8 @@ import turtlekit.viewer.PheromoneViewer;
 
 public class UFO extends Turtle {
 	
-	private Pheromone pheromone;
-	private Pheromone pheromone2;
+	private Pheromone<?> pheromone;
+	private Pheromone<?> pheromone2;
 
 	public UFO() {
 		super("fly");

@@ -26,7 +26,7 @@ import turtlekit.viewer.PheromoneViewer;
 
 public class Runaway extends Turtle {
 	
-	private Pheromone pheromone;
+	private Pheromone<Float> pheromone;
 
 	public Runaway() {
 		super("runaway");

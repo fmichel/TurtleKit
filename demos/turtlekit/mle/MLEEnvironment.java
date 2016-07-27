@@ -17,10 +17,7 @@
  ******************************************************************************/
 package turtlekit.mle;
 
-import turtlekit.cuda.CudaGPUGradientsPhero;
-import turtlekit.cuda.CudaPheromone;
 import turtlekit.kernel.TKEnvironment;
-import turtlekit.pheromone.Pheromone;
 
 public class MLEEnvironment extends TKEnvironment{
 	
@@ -57,11 +54,11 @@ public class MLEEnvironment extends TKEnvironment{
 //		}
 //	}
 	
-	protected Pheromone createCudaPheromone(String name, int evaporationPercentage, int diffusionPercentage){
-		if(GPU_GRADIENTS && ! name.contains("PRE"))
-			return new CudaGPUGradientsPhero(name, getWidth(), getHeight(), evaporationPercentage, diffusionPercentage);
-		return new CudaPheromone(name, getWidth(),	getHeight(), evaporationPercentage, diffusionPercentage);
-	}
-	
+//	protected Pheromone createCudaPheromone(String name, int evaporationPercentage, int diffusionPercentage){
+//		if(GPU_GRADIENTS && ! name.contains("PRE"))
+//			return new CudaGPUGradientsPhero(name, getWidth(), getHeight(), evaporationPercentage, diffusionPercentage);
+//		return new CudaPheromone(name, getWidth(),	getHeight(), evaporationPercentage, diffusionPercentage);
+//	}
+//	
 
 }

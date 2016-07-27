@@ -20,7 +20,7 @@ package turtlekit.mle;
 import turtlekit.kernel.TurtleKit.Option;
 import turtlekit.viewer.PheromoneViewer;
 import turtlekit.viewer.PopulationCharter;
-import turtlekit.viewer.StatesPerSecondCharter;
+import turtlekit.viewer.TimeUnitsPerSecondCharter;
 
 
 public class Particule extends AbstractMLEAgent {
@@ -206,8 +206,8 @@ public class Particule extends AbstractMLEAgent {
 	public static void main(String[] args) {
 //		System.setProperty("sun.java2d.xrender", "true");
 //		String[] args2 = {"128","10","--GPU_gradients"};
-		String[] args2 = {"100","10","--test"};
-//		String[] args2 = {"150","110","--GPU_gradients"};
+//		String[] args2 = {"100","10","--test"};
+		String[] args2 = {"256","10","--GPU_gradients"};
 		args = args2;
 		float percentage = Float.parseFloat(args[1])/100;
 		int size = Integer.parseInt(args[0]);
@@ -228,7 +228,7 @@ public class Particule extends AbstractMLEAgent {
 				PheromoneViewer.class.getName()
 				+";"+MyPopulationViewer.class.getName()
 				+";"+
-StatesPerSecondCharter.class.getName()
+TimeUnitsPerSecondCharter.class.getName()
 //				,Option.viewers.toString(),"null"
 				);
 

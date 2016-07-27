@@ -66,6 +66,11 @@ public abstract class AbstractGridViewer extends SwingViewer {
 	private static final long serialVersionUID = 671181979144051600L;
 	protected int cellSize = 10;
 	private SingleAgentProbe<TKEnvironment, Patch[]> gridProbe;
+	public SingleAgentProbe<TKEnvironment, Patch[]> getGridProbe() {
+		return gridProbe;
+	}
+
+
 	private SingleAgentProbe<TKScheduler,Double> timeProbe;
 	private SingleAgentProbe<TKEnvironment, Integer> widthProbe;
 	private SingleAgentProbe<TKEnvironment, Integer> heightProbe;

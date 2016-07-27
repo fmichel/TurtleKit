@@ -47,7 +47,7 @@ public class Turtle extends AbstractAgent {
 	/**
 	 * The turtle's environment 
 	 */
-	private TKEnvironment environment;
+	private TKEnvironment environment;// = FakeEnvironment;
 	
 	/**
 	 * Used in {@link #toString()}
@@ -235,7 +235,7 @@ public class Turtle extends AbstractAgent {
 		return null;
 	}
 	
-	public float getFieldValue(Pheromone p){
+	public float getFieldValue(Pheromone<Float> p){
 		return p.get(xcor(), ycor());
 	}
 
@@ -257,12 +257,12 @@ public class Turtle extends AbstractAgent {
 	 * @return the pheromone
 	 * @see TKEnvironment#getPheromone(String, int, int)
 	 */
-	public Pheromone getPheromone(String name){
+	public Pheromone<Float> getPheromone(String name){
 //		System.exit(0);
 		return environment.getPheromone(name, 50, 50);
 	}
 	
-	public Collection<Pheromone> getPheromones(){
+	public Collection<Pheromone<Float>> getPheromones(){
 		return environment.getPheromones();
 	}
 
@@ -272,8 +272,8 @@ public class Turtle extends AbstractAgent {
 	 * @return the direction to take
 	 * @see TKEnvironment#getPheromone(String, int, int)
 	 */
-	public double getPheroMinDirection(Pheromone phero){
-		return phero.getMinDirection(xcor(),ycor());
+	public double getPheroMinDirection(Pheromone<?> pheromone){
+		return pheromone.getMinDirection(xcor(),ycor());
 	}
 
 	/**
@@ -282,8 +282,8 @@ public class Turtle extends AbstractAgent {
 	 * @return the direction to take
 	 * @see TKEnvironment#getPheromone(String, int, int)
 	 */
-	public double getPheroMaxDirection(Pheromone phero){
-		return phero.getMaxDirection(xcor(),ycor());
+	public double getPheroMaxDirection(Pheromone<?> pheromone){
+		return pheromone.getMaxDirection(xcor(),ycor());
 	}
 
 	//For the Python Mode
@@ -610,13 +610,44 @@ public class Turtle extends AbstractAgent {
 	@SuppressWarnings("unchecked")
 	public <T extends Turtle> T getNearestTurtle(int patchRadius, Class<T> turtleType) {
 		for (Patch p : getPatch().getNeighbors(patchRadius, true)) {
-			for (final Turtle t : p.getTurtles(turtleType)) {//TODO could be optimized
+			final List<Turtle> turtles = new ArrayList<Turtle>(p.getTurtles(turtleType));
+			for (final Turtle t : turtles) {//TODO could be optimized
 					if (t != this) {
 						return (T) t;
 					}
 				}
 			}
 		return null;
+	}
+	
+	/**
+	 * Returns the <code>howMany</code> nearest turtles of type T from this one
+	 * according to a patch distance.
+	 * 
+	 * @param patchRadius the side length of the square of patches 
+	 * to look into
+	 * @return the corresponding turtle or <code>null</code> if
+	 * there is no turtle of this type around. In case of equality between 
+	 * turtles (same patch distance or same patch), the first found is returned.
+	 */
+	@SuppressWarnings("unchecked")
+	public <T extends Turtle> List<T> getNearestTurtles(int patchRadius, int howMany, Class<T> turtleType) {
+		List<T> l = getPatch().getTurtles(turtleType);
+		l.remove(this);
+		if (l.size() >= howMany) {
+			return l.subList(0, howMany);
+		}
+		howMany -= l.size();
+		for (Patch p : getPatch().getNeighbors(patchRadius, false)) {
+			List<T> tmp = p.getTurtles(turtleType);
+			for (T t : tmp) {
+				l.add(t);
+				if(--howMany == 0){
+					return l;
+				}
+			}
+		}
+		return l;
 	}
 	
 	/**
@@ -894,7 +925,7 @@ public class Turtle extends AbstractAgent {
 		return environment.getPheromone(pheromoneName).get(xcor() + xOffset, ycor() + yOffset);
 	}
 
-	public float smellAt(Pheromone pheromone, int xOffset, int yOffset) {
+	public float smellAt(Pheromone<Float> pheromone, int xOffset, int yOffset) {
 		return pheromone.get(xcor() + xOffset, ycor() + yOffset);
 	}
 

@@ -31,13 +31,14 @@ import jcuda.driver.CUDA_MEMCPY2D;
 import jcuda.driver.CUarray;
 import jcuda.driver.CUarray_format;
 import jcuda.driver.CUdeviceptr;
-import jcuda.driver.CUfunction;
 import jcuda.driver.CUmemorytype;
 import jcuda.driver.CUstream;
+import jcuda.driver.CUstream_flags;
 import jcuda.driver.JCudaDriver;
-import turtlekit.cuda.CudaEngine.Kernel;
+import turtlekit.pheromone.AbstractPheromoneGrid;
+import turtlekit.pheromone.Pheromone;
 
-public class CudaPheromone extends turtlekit.pheromone.Pheromone implements CudaObject{
+public class CudaPheromone extends AbstractPheromoneGrid<Float> implements CudaObject,Pheromone<Float>{
 	
 	private FloatBuffer values;
 //	private float[] arr;
@@ -64,7 +65,7 @@ public class CudaPheromone extends turtlekit.pheromone.Pheromone implements Cuda
 	private int MAX_THREADS;
 	private int gridSizeX;
 	Runnable diffusionToTmp;
-	CUdeviceptr tmpPtr;
+	CUdeviceptr tmpDeviceDataGrid;
 	private Runnable diffusionUpdate;
 	private Pointer valuesPinnedMemory;
 	private int gridSizeY;
@@ -74,7 +75,24 @@ public class CudaPheromone extends turtlekit.pheromone.Pheromone implements Cuda
 	protected Pointer arrPointer;
 	private Runnable test;
 	protected CUdeviceptr testDevicePtr;
+	protected Pointer heightPtr;
+	protected Pointer dataGridPtr;
+	private turtlekit.cuda.CudaKernel diffusionToTmpKernel;
+	private CudaKernel diffusionUpdateKernel;
+	private CudaKernel diffusionUpdateThenEvaporationKernel;
+	private CudaKernel evaporationKernel;
+	protected Pointer widthPtr;
+	private KernelConfiguration kernelConfiguration;
+	protected Pointer tmpDeviceDataGridPtr;
 	
+
+	public KernelConfiguration getKernelConfiguration() {
+		return kernelConfiguration;
+	}
+
+	public void setKernelConfiguration(KernelConfiguration kernelConfiguration) {
+		this.kernelConfiguration = kernelConfiguration;
+	}
 
 	public CudaPheromone(String name, int width, int height, final int evapPercentage,
 			final int diffPercentage) {
@@ -84,58 +102,47 @@ public class CudaPheromone extends turtlekit.pheromone.Pheromone implements Cuda
 	public CudaPheromone(String name, int width, int height, final float evapPercentage,
 			final float diffPercentage) {
 		super(name, width, height, evapPercentage, diffPercentage);
+		setMaximum(0f);
 		widthParam = new int[]{width};
+		widthPtr = Pointer.to(new int[]{width});
 		heightParam = new int[]{height};
+		heightPtr = Pointer.to(new int[]{height});
 //		arr = new float[width * height];
 //		Arrays.fill(arr, 0);
 		cudaEngine = CudaEngine.getCudaEngine(this);
-		initCuda();
+		tmpDeviceDataGrid = cudaEngine.createDeviceDataGrid(getWidth(), getHeight(), Float.class);
+		tmpDeviceDataGridPtr = Pointer.to(tmpDeviceDataGrid);
+		valuesPtr = new CUdeviceptr();
+		valuesPinnedMemory = new Pointer();
+		values = (FloatBuffer) cudaEngine.getUnifiedBufferBetweenPointer(valuesPinnedMemory, valuesPtr, Float.class, getWidth(), getHeight());
+		dataGridPtr = Pointer.to(valuesPinnedMemory);
+
+//		initCuda();
 		initFunctions();
+
 	}
 	
 	@Override
-	public float get(int index) {
+	public Float get(int index) {
 		return values.get(index);
 	}
 
 	@Override
-	public void set(int index, float value) {
+	public void set(int index, Float value) {
 		if(value > getMaximum())
 			setMaximum(value);
 		values.put(index, value);
 	}
 
-	public void initCuda() {
-		try {
-			initCudaParameters();
-			initCudaStream();
-			initCudaTmpGrid();
-			initCudaValues();
-		} catch (InterruptedException | ExecutionException | NullPointerException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void initCudaValues() throws InterruptedException, ExecutionException {
-		final int floatGridMemorySize = getWidth() * getHeight() * Sizeof.FLOAT;
-			cudaEngine.submit(new Runnable() {
-				public void run() {
-					valuesPtr = new CUdeviceptr();
-					valuesPinnedMemory = new Pointer();
-					values = CudaEngine.getUnifiedFloatBuffer(valuesPinnedMemory,
-							valuesPtr, floatGridMemorySize);
-				}
-			}).get();
-	}
-
 	public void initCudaTmpGrid() throws InterruptedException, ExecutionException {
-		final int floatGridMemorySize = getWidth() * getHeight() * Sizeof.FLOAT;
-			cudaEngine.submit(new Runnable() {
-				public void run() {
-					tmpPtr = new CUdeviceptr();
-					cuMemAlloc(tmpPtr, floatGridMemorySize);
-				}
-			}).get();
+//		tmpPtr = cudaEngine.getDevicePointerToDataGrid(getWidth(), getHeight(), Float.class);
+//		final int floatGridMemorySize = getWidth() * getHeight() * Sizeof.FLOAT;
+//		tmpPtr = new CUdeviceptr();
+//			cudaEngine.submit(new Runnable() {
+//				public void run() {
+//					cuMemAlloc(tmpPtr, floatGridMemorySize);
+//				}
+//			}).get();
 	}
 
 	public void initCudaArray() throws InterruptedException, ExecutionException {
@@ -166,157 +173,67 @@ public class CudaPheromone extends turtlekit.pheromone.Pheromone implements Cuda
 			        testDevicePtr = new CUdeviceptr();
 					JCudaDriver.cuMemHostGetDevicePointer(testDevicePtr, arrPointer, 0);
 					
-					tmpPtr = new CUdeviceptr();
-					cuMemAlloc(tmpPtr, floatGridMemorySize);
+					tmpDeviceDataGrid = new CUdeviceptr();
+					cuMemAlloc(tmpDeviceDataGrid, floatGridMemorySize);
 				}
 			}).get();
 	}
-
-	public void initCudaStream() throws InterruptedException, ExecutionException {
-			cudaEngine.submit(new Runnable() {
-				public void run() {
-					cudaStream = new CUstream();
-					JCudaDriver.cuStreamCreate(cudaStream, 0);
-				}
-			}).get();
-	}
+//
+//	public void initCudaStream() throws InterruptedException, ExecutionException {
+//			cudaEngine.submit(new Runnable() {
+//				public void run() {
+//					cudaStream = new CUstream();
+//					JCudaDriver.cuStreamCreate(cudaStream, CUstream_flags.CU_STREAM_NON_BLOCKING);
+//				}
+//			}).get();
+//	}
 
 	/**
 	 * 
 	 */
-	protected void initCudaParameters() {
-		MAX_THREADS = cudaEngine.getMaxThreads();
-//		MAX_THREADS = 16;
-		gridSizeX = (getWidth() + MAX_THREADS - 1) / MAX_THREADS;
-		gridSizeY = (getHeight() + MAX_THREADS - 1) / MAX_THREADS;
-	}
-	
-	public Pointer getParamterPointer(Pointer... kernelParameters){
-		return Pointer.to(kernelParameters);
-	}
-	
 	public Pointer getPointerToFloat(float f){
 		return Pointer.to(new float[]{f});
 	}
 	
+	
+	
 	protected void initFunctions() {
-		final CUfunction diffusionToTmpFunction = cudaEngine.getKernelFunction(Kernel.DIFFUSION_TO_TMP);
-		diffusionToTmp = new Runnable() {
-			@Override
-			public void run() {
-				launchKernel(diffusionToTmpFunction,
-						Pointer.to(widthParam),
-						Pointer.to(heightParam),
-						Pointer.to(valuesPinnedMemory),
-						Pointer.to(tmpPtr),
-						getPointerToFloat(getDiffusionCoefficient())
-						);
-			}
-		};
-
-		final CUfunction diffusionUpdateFunction = cudaEngine.getKernelFunction(Kernel.DIFFUSION_UPDATE);
-		diffusionUpdate = new Runnable() {
-			@Override
-			public void run() {
-				launchKernel(diffusionUpdateFunction,
-						Pointer.to(widthParam),
-						Pointer.to(heightParam),
-						Pointer.to(valuesPinnedMemory),
-						Pointer.to(tmpPtr)
-						);
-			}
-		};
-
-		final CUfunction diffusionUpdateThenEvaporationFunction = cudaEngine.getKernelFunction(Kernel.DIFFUSION_UPDATE_THEN_EVAPORATION);
-		diffusionUpdateThenEvaporation = new Runnable() {
-			@Override
-			public void run() {
-				launchKernel(diffusionUpdateThenEvaporationFunction,
-						Pointer.to(widthParam),
-						Pointer.to(heightParam),
-						Pointer.to(valuesPinnedMemory),
-						Pointer.to(tmpPtr),
-						getPointerToFloat(getEvaporationCoefficient())
-						);
-			}
-		};
-
-		
-		final CUfunction evaporationFunction = cudaEngine.getKernelFunction(Kernel.EVAPORATION);
-		evaporation = new Runnable() {
-			@Override
-			public void run() {
-				launchKernel(evaporationFunction, 
-						Pointer.to(widthParam),
-						Pointer.to(heightParam),
-						Pointer.to(valuesPinnedMemory),
-						getPointerToFloat(getEvaporationCoefficient())
-						);
-
-//				launchKernel(kernelParameters, evaporationFunction);
-			}
-		};
-		
-		final CUfunction testFunction = cudaEngine.getKernelFunction(Kernel.TEST);
-		test = new Runnable() {
-			@Override
-			public void run() {
-				launchKernel(testFunction, 
-						Pointer.to(widthParam),
-						Pointer.to(heightParam),
-						testDevicePtr
-						);
-			}
-		};
-		
+		kernelConfiguration = cudaEngine.getDefaultKernelConfiguration(getWidth(), getHeight());
+//		kernelConfiguration.setStreamID(cudaEngine.getNewCudaStream());
+		diffusionToTmpKernel = cudaEngine.getKernel("DIFFUSION_TO_TMP", "/turtlekit/cuda/kernels/Diffusion_2D.cu", kernelConfiguration);
+		diffusionUpdateKernel = cudaEngine.getKernel("DIFFUSION_UPDATE", "/turtlekit/cuda/kernels/Diffusion_2D.cu", kernelConfiguration);
+		diffusionUpdateThenEvaporationKernel = cudaEngine.getKernel("DIFFUSION_UPDATE_THEN_EVAPORATION", "/turtlekit/cuda/kernels/DiffusionEvaporation_2D.cu", kernelConfiguration);
+		evaporationKernel = cudaEngine.getKernel("EVAPORATION", "/turtlekit/cuda/kernels/Evaporation_2D.cu", kernelConfiguration);
 }
-
-	protected void launchKernel(CUfunction cUfunction, Pointer... parameters) {
-		JCudaDriver.cuLaunchKernel(cUfunction, //TODO cach
-				gridSizeX , gridSizeY, 1, // Grid dimension
-				MAX_THREADS , MAX_THREADS, 1, // Block dimension
-				0, cudaStream, // Shared memory size and stream
-				Pointer.to(parameters), null // Kernel- and extra parameters
-		);
-	}
 
 	public CudaEngine getCudaEngine(){
 		return cudaEngine;
 	}
 	
-	public void diffusion(){
-		if (getDiffusionCoefficient() != 0) {
-			cudaEngine.submit(diffusionToTmp);
-			cudaEngine.submit(diffusionUpdate);
-		}
-	}
-
-	/**
-	 * This is faster than calling them sequentially: 
-	 * Only one GPU kernel is called.
-	 * 
-	 */
-	@Override
-	public void diffusionAndEvaporation() {
-		if(getDiffusionCoefficient() != 0 && getEvaporationCoefficient() != 0){
-			cudaEngine.submit(diffusionToTmp);
-			cudaEngine.submit(diffusionUpdateThenEvaporation);
-//			System.err.println("arr "+arr[0]);
-//			cudaEngine.submit(test);//TODO
-//			System.err.println(arr[1]);
-		}
-		else{
-			diffusion();
-			evaporation();
-		}
+	protected void diffuseValuesToTmpGridKernel(){
+		diffusionToTmpKernel.run(widthPtr, heightPtr, dataGridPtr, tmpDeviceDataGridPtr, getPointerToFloat(getDiffusionCoefficient()));
 	}
 	
 	@Override
-	public void evaporation() {
-		if (getEvaporationCoefficient() != 0) {
-			cudaEngine.submit(evaporation);
-		}
-//		updateFieldMaxDir();
+	protected void diffusionUpdateKernel() {
+		diffusionUpdateKernel.run(widthPtr,
+				heightPtr,
+				dataGridPtr,
+				tmpDeviceDataGridPtr);
+	}
+
+	@Override
+	public void diffusionAndEvaporationUpdateKernel() {
+		diffusionUpdateThenEvaporationKernel.run(widthPtr,
+				heightPtr,
+				dataGridPtr,
+				tmpDeviceDataGridPtr,
+				getPointerToFloat(getEvaporationCoefficient()));
+	}
+	
+	@Override
+	public void evaporationKernel() {
+		evaporationKernel.run(widthPtr, heightPtr,	dataGridPtr, getPointerToFloat(getEvaporationCoefficient()));
 	}
 	
 //	public void updateFieldMaxDir() {
@@ -327,7 +244,7 @@ public class CudaPheromone extends turtlekit.pheromone.Pheromone implements Cuda
 		cudaEngine.submit(new Runnable() {
 			@Override
 			public void run() {
-				cuMemFree(tmpPtr);
+				cuMemFree(tmpDeviceDataGrid);
 				cuMemFreeHost(valuesPinnedMemory);
 				cuMemFreeHost(valuesPtr);
 			}
@@ -343,10 +260,6 @@ public class CudaPheromone extends turtlekit.pheromone.Pheromone implements Cuda
 //		);
 //	}
 
-	@Override
-	public FloatBuffer getValuesFloatBuffer() {
-		return getValues();
-	}
 
 	/**
 	 * @param cudaEngine the cudaEngine to set
@@ -381,6 +294,124 @@ public class CudaPheromone extends turtlekit.pheromone.Pheromone implements Cuda
 	 */
 	public void setValuesPinnedMemory(Pointer valuesPinnedMemory) {
 		this.valuesPinnedMemory = valuesPinnedMemory;
+	}
+
+	@Override
+	public void incValue(int x, int y, float quantity) {
+			incValue(get1DIndex(x, y), quantity);
+		}
+
+	/**
+	 * Adds <code>inc</code> to the current value of the cell 
+	 * with the corresponding index
+	 * 
+	 * @param index cell's index
+	 * @param inc how much to add
+	 */
+	public void incValue(int index, float inc) {
+//		inc += get(index);
+//		if (inc > maximum)
+//			setMaximum(inc);
+//		set(index, inc);
+		set(index, inc + get(index));
+	}
+
+
+public int getMaxDirection(int xcor, int ycor) {
+		float max = get(normeValue(xcor + 1, getWidth()), ycor);
+		int maxDir = 0;
+
+		float current = get(normeValue(xcor + 1, getWidth()), normeValue(ycor + 1, getHeight()));
+		if (current > max) {
+			max = current;
+			maxDir = 45;
+		}
+
+		current = get(xcor, normeValue(ycor + 1, getHeight()));
+		if (current > max) {
+			max = current;
+			maxDir = 90;
+		}
+
+		current = get(normeValue(xcor - 1, getWidth()), normeValue(ycor + 1, getHeight()));
+		if (current > max) {
+			max = current;
+			maxDir = 135;
+		}
+
+		current = get(normeValue(xcor - 1, getWidth()), ycor);
+		if (current > max) {
+			max = current;
+			maxDir = 180;
+		}
+
+		current = get(normeValue(xcor - 1, getWidth()), normeValue(ycor - 1, getHeight()));
+		if (current > max) {
+			max = current;
+			maxDir = 225;
+		}
+
+		current = get(xcor, normeValue(ycor - 1, getHeight()));
+		if (current > max) {
+			max = current;
+			maxDir = 270;
+		}
+
+		current = get(normeValue(xcor + 1, getWidth()), normeValue(ycor - 1, getHeight()));
+		if (current > max) {
+
+			max = current;
+			maxDir = 315;
+		}
+		return maxDir;
+	}
+
+	public int getMinDirection(int i, int j) {
+		float min = get(normeValue(i + 1, getWidth()), j);
+		int minDir = 0;
+
+		float current = get(normeValue(i + 1, getWidth()), normeValue(j + 1, getHeight()));
+		if (current < min) {
+			min = current;
+			minDir = 45;
+		}
+
+		current = get(i, normeValue(j + 1, getHeight()));
+		if (current < min) {
+			min = current;
+			minDir = 90;
+		}
+
+		current = get(normeValue(i - 1, getWidth()), normeValue(j + 1, getHeight()));
+		if (current < min) {
+			min = current;
+			minDir = 135;
+		}
+
+		current = get(normeValue(i - 1, getWidth()), j);
+		if (current < min) {
+			min = current;
+			minDir = 180;
+		}
+
+		current = get(normeValue(i - 1, getWidth()), normeValue(j - 1, getHeight()));
+		if (current < min) {
+			min = current;
+			minDir = 225;
+		}
+
+		current = get(i, normeValue(j - 1, getHeight()));
+		if (current < min) {
+			min = current;
+			minDir = 270;
+		}
+
+		current = get(normeValue(i + 1, getWidth()), normeValue(j - 1, getHeight()));
+		if (current < min) {
+			min = current;
+			minDir = 315;
+		}
+		return minDir;
 	}
 
 }

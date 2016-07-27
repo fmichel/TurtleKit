@@ -35,8 +35,8 @@
  */
 package turtlekit.kernel;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,7 +67,7 @@ public class TurtleActivator extends Activator<Turtle>
 
 	public TurtleActivator(String community, String group, String role) {
 		super(community, group, role);
-//		useMulticore(Runtime.getRuntime().availableProcessors()); //TODO add the options
+		useMulticore(Runtime.getRuntime().availableProcessors()); //TODO add the options
 	}
 
 //	@SuppressWarnings("unchecked")
@@ -87,7 +87,7 @@ public class TurtleActivator extends Activator<Turtle>
 	}
 	
 	public void execute(final List<Turtle> agents, Object... args) {
-		Collections.shuffle(agents); 
+//		Collections.shuffle(agents); 
 		for (Turtle t : agents) // TODO shuffle or not !!
 		{
 			if (t.getPatch() == null) // killed by another before its turn
@@ -98,9 +98,16 @@ public class TurtleActivator extends Activator<Turtle>
 				nextMethod = (String) nextAction.invoke(t);
 			} catch (NullPointerException e) {
 				throw new SimulationException(t.getClass()+"'s initial behavior not set", null);
-			} catch (Exception e) {
+			} catch (InvocationTargetException e) {
+				Throwable cause = e.getCause();
+				if(! (cause instanceof ThreadDeath)){
+					System.err.println("Can't invoke: " + nextAction + "\n");//let the others go on running : no global exception
+					cause.printStackTrace();
+				}
+			} 
+			catch (Exception e) {
 				System.err.println("Can't invoke: " + nextAction + "\n");//let the others go on running : no global exception
-				e.getCause().printStackTrace();
+				e.printStackTrace();
 			} catch(AssertionError e){
 				throw e;
 			}

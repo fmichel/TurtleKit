@@ -1,301 +1,67 @@
-/*******************************************************************************
- * TurtleKit 3 - Agent Based and Artificial Life Simulation Platform
- * Copyright (C) 2011-2014 Fabien Michel
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
 package turtlekit.pheromone;
 
-import java.nio.FloatBuffer;
-
-public abstract class Pheromone {
-
-	final int width, height;
-	private float maximum = 0;
-	private PheromoneCoefficientBoundedRangeModel diffusionPercentage,
-			evaporationPercentage;
-	private String name;
-	private PheromoneView defaultView;
-
-    public Pheromone(String name, int width, int height, final int evapPercentage,
-			final int diffPercentage
-			) {
-    	this(name,width,height,evapPercentage / 100f, diffPercentage / 100f);
-	}
-
-    public Pheromone(String name, int width, int height, final float evaporationCoeff,
-			final float diffusionCoeff
-			) {
-		this.width = width;
-		this.height = height;
-		this.name = name;
-		diffusionPercentage = new PheromoneCoefficientBoundedRangeModel(diffusionCoeff);
-		evaporationPercentage = new PheromoneCoefficientBoundedRangeModel(evaporationCoeff);
-	}
-    
-	protected int get1DIndex(int x, int y) {
-		return y * width + x;
-	}
+public interface Pheromone<T> {
 	
-//	/**
-//	 * @return the diffusion coefficient as a float between 0 and 1, e.g. 0.33 for 33% 
-//	 */
-//	final public float getDiffusionCoefficient(){
-//		return (float) getDiffusionPercentage().getValue() / 100;
-//	}
-
 	/**
 	 * @return the diffusion coefficient as a float between 0 and 1, e.g. 0.33 for 33% 
 	 */
-	final public float getDiffusionCoefficient(){
-		return diffusionPercentage.getCoefficient();
-	}
+	public float getDiffusionCoefficient();
 
 	/**
 	 * @return the evaporation coefficient as a float between 0 and 1, e.g. 0.33 for 33% 
 	 */
-	final public float getEvaporationCoefficient(){
-		return evaporationPercentage.getCoefficient();
-	}
+	public float getEvaporationCoefficient();
+	
 
-	final public float get(int x, int y) {
-		return get(get1DIndex(x, y));
-	}
+	public CoefficientBoundedRangeModel getDiffusionCoefficientModel();
 
-	public void set(int x, int y, float value) {
-		if (value > maximum)
-			maximum = value;
-		set(get1DIndex(x, y), value);
-	}
+	public CoefficientBoundedRangeModel getEvaporationCoefficientModel();
+	
 
-	public void incValue(int xcor, int ycor, float value) {
-		incValue(get1DIndex(xcor, ycor), value);
-	}
+	
+public int getMaxDirection(int xcor, int ycor) ;
 
-	public abstract FloatBuffer getValuesFloatBuffer();
+	public int getMinDirection(int i, int j);
 
-	/**
-	 * access to underlying buffer
-	 * 
-	 * @param index
-	 * @return
-	 */
-	public abstract float get(int index);
+	public void evaporation();
+	
+	public void diffusion();
+	
+	public void diffusionAndEvaporation();
+	
+	public T get(int x, int y);
 
-	/**
-	 * access to underlying buffer
-	 * 
-	 * @param index
-	 * @return
-	 */
-	protected abstract void set(int index, float value);
+	public abstract T get(int get1dIndex);
+	
+	public abstract T getMaximum();
 
-//	public int getEvaporationPercentage() {
-//		return evaporationPercentage.getValue();
-//	}
-
-	@Deprecated
-	public void setEvaporationPercentage(int evaporationPercentage) {
-		this.evaporationPercentage.setCoefficient(evaporationPercentage / 100f);
-	}
-
-//	/**
-//	 * @param diffusionPercentage an int between 0 and 100
-//	 */
-//	public void setDiffusionPercentage(int diffusionPercentage) {
-//		this.diffusionPercentage.setValue(diffusionPercentage);
-//	}
+	public abstract void setMaximum(T maximum);
 
 	/**
 	 * @return the width
 	 */
-	public int getWidth() {
-		return width;
-	}
+	public int getWidth();
+
 
 	/**
 	 * @return the height
 	 */
-	public int getHeight() {
-		return height;
-	}
+	public int getHeight();
 
-	public abstract void diffusion();
-
-	public abstract void diffusionAndEvaporation();
-
-	public abstract void evaporation();
 
 	/**
-	 * @return the maximum
+	 * @return the name
 	 */
-	public float getMaximum() {
-		return maximum;
-	}
+	public String getName();
 
-	public void updateFieldMaxDir() {
-}
+	public int get1DIndex(int x, int y);
+	
+	public abstract void set(int index, T value);
 
-	/**
-	 * @param maximum
-	 *            the maximum to set
-	 */
-	public void setMaximum(float maximum) {
-		this.maximum = maximum;
-	}
+	public void set(int x, int y, T value);
 
-	@Override
-	public String toString() {
-		return getClass().getSimpleName()+" "+ name + " evap=" + getEvaporationPercentage().getValue() + " diff=" + getDiffusionPercentage().getValue()	+ " max = " + getMaximum();
-	}
+	public void incValue(int x, int y, float quantity);
 
-	int normeValue(int x, int width) {
-		if (x < 0) // -1
-			return width - 1;
-		if (x == width)
-			return 0;
-		return x;
-	}
-
-	public int getMaxDirection(int xcor, int ycor) {
-		float max = get(normeValue(xcor + 1, width), ycor);
-		int maxDir = 0;
-
-		float current = get(normeValue(xcor + 1, width), normeValue(ycor + 1, height));
-		if (current > max) {
-			max = current;
-			maxDir = 45;
-		}
-
-		current = get(xcor, normeValue(ycor + 1, height));
-		if (current > max) {
-			max = current;
-			maxDir = 90;
-		}
-
-		current = get(normeValue(xcor - 1, width), normeValue(ycor + 1, height));
-		if (current > max) {
-			max = current;
-			maxDir = 135;
-		}
-
-		current = get(normeValue(xcor - 1, width), ycor);
-		if (current > max) {
-			max = current;
-			maxDir = 180;
-		}
-
-		current = get(normeValue(xcor - 1, width), normeValue(ycor - 1, height));
-		if (current > max) {
-			max = current;
-			maxDir = 225;
-		}
-
-		current = get(xcor, normeValue(ycor - 1, height));
-		if (current > max) {
-			max = current;
-			maxDir = 270;
-		}
-
-		current = get(normeValue(xcor + 1, width), normeValue(ycor - 1, height));
-		if (current > max) {
-			max = current;
-			maxDir = 315;
-		}
-		return maxDir;
-	}
-
-	public int getMinDirection(int i, int j) {
-		float min = get(normeValue(i + 1, width), j);
-		int minDir = 0;
-
-		float current = get(normeValue(i + 1, width), normeValue(j + 1, height));
-		if (current < min) {
-			min = current;
-			minDir = 45;
-		}
-
-		current = get(i, normeValue(j + 1, height));
-		if (current < min) {
-			min = current;
-			minDir = 90;
-		}
-
-		current = get(normeValue(i - 1, width), normeValue(j + 1, height));
-		if (current < min) {
-			min = current;
-			minDir = 135;
-		}
-
-		current = get(normeValue(i - 1, width), j);
-		if (current < min) {
-			min = current;
-			minDir = 180;
-		}
-
-		current = get(normeValue(i - 1, width), normeValue(j - 1, height));
-		if (current < min) {
-			min = current;
-			minDir = 225;
-		}
-
-		current = get(i, normeValue(j - 1, height));
-		if (current < min) {
-			min = current;
-			minDir = 270;
-		}
-
-		current = get(normeValue(i + 1, width), normeValue(j - 1, height));
-		if (current < min) {
-			min = current;
-			minDir = 315;
-		}
-		return minDir;
-	}
-
-	/**
-	 * Adds <code>inc</code> to the current value of the cell 
-	 * with the corresponding index
-	 * 
-	 * @param index cell's index
-	 * @param inc how much to add
-	 */
-	public void incValue(int index, float inc) {
-//		inc += get(index);
-//		if (inc > maximum)
-//			setMaximum(inc);
-//		set(index, inc);
-		set(index, inc + get(index));
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	/**
-	 * @return the diffusionPercentage
-	 */
-	public PheromoneCoefficientBoundedRangeModel getDiffusionPercentage() {
-		return diffusionPercentage;
-	}
-
-	/**
-	 * @return the evaporationPercentage
-	 */
-	public PheromoneCoefficientBoundedRangeModel getEvaporationPercentage() {
-		return evaporationPercentage;
-	}
-
+	public void incValue(int code, float attractQty);
 
 }

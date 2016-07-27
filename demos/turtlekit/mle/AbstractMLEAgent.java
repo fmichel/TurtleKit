@@ -64,7 +64,10 @@ public class AbstractMLEAgent extends Turtle {
 		}
 	};
 
-	protected Pheromone upperAttraction, upperRepulsion, attraction, repulsion,
+	Pheromone<Float> upperAttraction;
+
+	Pheromone<Float> upperRepulsion
+,attraction, repulsion,
 			presence, lowerPresence;
 
 	protected int level;
@@ -192,8 +195,7 @@ public class AbstractMLEAgent extends Turtle {
 //		}
 		if (level != 0) {
 			attraction.incValue(code, attractQty);
-			repulsion
-					.incValue(code, (float) (attractQty * Math.pow(
+			repulsion.incValue(code, (float) (attractQty * Math.pow(
 							AbstractMLEAgent.getRepulsionFactor().getValue(),
 							(level))));
 		}

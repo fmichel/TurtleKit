@@ -4,8 +4,8 @@ import java.awt.Color;
 
 import turtlekit.kernel.Turtle;
 import turtlekit.kernel.TurtleKit.Option;
-import turtlekit.viewer.StatesPerSecondCharter;
 import turtlekit.viewer.TKDefaultViewer;
+import turtlekit.viewer.TimeUnitsPerSecondCharter;
 
 public class LangtonAnt extends Turtle {
 	
@@ -36,7 +36,7 @@ public class LangtonAnt extends Turtle {
 		executeThisTurtle(1
 				,Option.envDimension.toString(),"1000,1000"
 				,Option.renderingInterval.toString(),"550"
-				,Option.viewers.toString(),StatesPerSecondCharter.class.getName()+";"+TKDefaultViewer.class.getName()
+				,Option.viewers.toString(),TimeUnitsPerSecondCharter.class.getName()+";"+TKDefaultViewer.class.getName()
 				,Option.startSimu.toString()
 				);
 	}

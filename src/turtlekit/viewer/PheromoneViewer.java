@@ -32,16 +32,16 @@ import javax.swing.JToolBar;
 
 import madkit.simulation.probe.SingleAgentProbe;
 import turtlekit.agr.TKOrganization;
-import turtlekit.kernel.TKEnvironment;
 import turtlekit.kernel.Patch;
+import turtlekit.kernel.TKEnvironment;
 import turtlekit.pheromone.Pheromone;
 import turtlekit.pheromone.PheromoneView;
 
 @GenericViewer
 public class PheromoneViewer extends TKDefaultViewer {
 
-	private SingleAgentProbe<TKEnvironment, Map<String, Pheromone>> pheroProbe;
-	private Pheromone selectedPheromone;
+	private SingleAgentProbe<TKEnvironment, Map<String, Pheromone<Float>>> pheroProbe;
+	private Pheromone<Float> selectedPheromone;
 	private double max;
 	private JToolBar tb;
 	private PheromoneView defaultView;
@@ -63,11 +63,11 @@ public class PheromoneViewer extends TKDefaultViewer {
 		addProbe(pheroProbe);
 	}
 	
-	public Pheromone setSelectedPheromone(String name) {
+	public Pheromone<Float> setSelectedPheromone(String name) {
 		getFrame().setTitle("phero view on "+name);
 		selectedPheromone = pheroProbe.getPropertyValue().get(name);
 		if(selectedPheromone == null){
-			for(Pheromone p : pheroProbe.getPropertyValue().values()){
+			for(Pheromone<Float> p : pheroProbe.getPropertyValue().values()){
 				selectedPheromone = p;
 				break;//TODO ugly
 			}
@@ -92,7 +92,7 @@ public class PheromoneViewer extends TKDefaultViewer {
 		super.setupFrame(frame);
 		JMenuBar menuB = frame.getJMenuBar();
 		JMenu menu = new JMenu("pheros");
-		for (final Pheromone p : pheroProbe.getPropertyValue().values()) {
+		for (final Pheromone<Float> p : pheroProbe.getPropertyValue().values()) {
 			setSelectedPheromone(p.getName());
 		menu.add(new JMenuItem(new AbstractAction(p.getName()) {
 				@Override
@@ -136,10 +136,10 @@ public class PheromoneViewer extends TKDefaultViewer {
 		}
 	}
 	
-	public Pheromone getSelectedPheromone() {
+	public Pheromone<Float> getSelectedPheromone() {
 		return selectedPheromone;
 	}
-	public void setSelectedPheromone(Pheromone selectedPheromone) {
+	public void setSelectedPheromone(Pheromone<Float> selectedPheromone) {
 		this.selectedPheromone = selectedPheromone;
 	}
 //	

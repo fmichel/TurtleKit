@@ -20,13 +20,9 @@ package turtlekit.cuda;
 import static jcuda.driver.JCudaDriver.cuMemFreeHost;
 
 import java.nio.IntBuffer;
-import java.util.concurrent.ExecutionException;
 
 import jcuda.Pointer;
-import jcuda.Sizeof;
 import jcuda.driver.CUdeviceptr;
-import jcuda.driver.CUfunction;
-import turtlekit.cuda.CudaEngine.Kernel;
 
 public class CudaGPUGradientsPhero extends CudaPheromone implements CudaObject{
 	
@@ -38,78 +34,22 @@ public class CudaGPUGradientsPhero extends CudaPheromone implements CudaObject{
 //	private Runnable diffusionAndEvaporation;
 	private Runnable diffusionUpdateAndEvaporationAndFieldMaxDir;
 
+	private CudaKernel diffusionUpdateAndEvaporationAndFieldMaxDirKernel;
+
+	private Pointer fieldMaxDirDataGridPtr;
+
 //	protected int[] fieldMaxDirAsArray;
 
 	public CudaGPUGradientsPhero(String name, int width, int height, final float evapPercentage,
 			final float diffPercentage) {
 		super(name, width, height, evapPercentage, diffPercentage);
-//		fieldMaxDirAsArray = new int[width * height];
+		fieldMaxDirPtr = new CUdeviceptr();
+		maxPinnedMemory = new Pointer();
+		fieldMaxDir = (IntBuffer) getCudaEngine().getUnifiedBufferBetweenPointer(maxPinnedMemory, fieldMaxDirPtr, Integer.class, getWidth(), getHeight());
+		fieldMaxDirDataGridPtr = Pointer.to(maxPinnedMemory);
+		diffusionUpdateAndEvaporationAndFieldMaxDirKernel = getCudaEngine().getKernel("DIFFUSION_UPDATE_THEN_EVAPORATION_THEN_FIELDMAXDIRV2", "/turtlekit/cuda/kernels/DiffusionEvaporationGradients_2D.cu", getKernelConfiguration());
 	}
-	
-	public void initCuda() {
-		super.initCuda();
-		final int intGridMemorySize = getWidth() * getHeight() * Sizeof.INT;
-
-		try {
-			getCudaEngine().submit(new Runnable() {
-				public void run() {
-					fieldMaxDirPtr = new CUdeviceptr();
-					maxPinnedMemory = new Pointer();
-					fieldMaxDir = CudaEngine.getUnifiedIntBuffer(maxPinnedMemory,
-							fieldMaxDirPtr, intGridMemorySize);
-//					fieldMaxDirAsArray = CudaEngine.getUnifiedIntArray(minPinnedMemory, fieldMaxDirPtr, getWidth() * getHeight());
-					initFunctions();
-				}
-			}).get();
-		} catch (InterruptedException | ExecutionException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	protected void initFunctions() {
-		super.initFunctions();
-		final CUfunction diffusionUpdateAndEvaporationAndFieldMaxDirFunction = getCudaEngine().getKernelFunction(Kernel.DIFFUSION_UPDATE_THEN_EVAPORATION_THEN_FIELDMAXDIRV2);
-		diffusionUpdateAndEvaporationAndFieldMaxDir = new Runnable() {
-			@Override
-			public void run() {
-//				launchKernel(Pointer.to(
-//						Pointer.to(widthParam),
-//						Pointer.to(heightParam),
-//						Pointer.to(getValuesPinnedMemory()),
-//						Pointer.to(tmpPtr),
-//						getPointerToFloat(getEvaporationCoefficient()),
-////						Pointer.to(minPinnedMemory)
-//						Pointer.to(fieldMaxDirPtr)
-//						)
-//						, diffusionUpdateAndEvaporationAndFieldMaxDirFunction);
-				launchKernel(diffusionUpdateAndEvaporationAndFieldMaxDirFunction,
-						Pointer.to(widthParam),
-						Pointer.to(heightParam),
-						Pointer.to(getValuesPinnedMemory()),
-						Pointer.to(tmpPtr),
-						getPointerToFloat(getEvaporationCoefficient()),
-//						Pointer.to(minPinnedMemory)
-						Pointer.to(fieldMaxDirPtr)
-						);
-			}
-		};
 		
-//		final CUfunction fieldMaxDirFunction = getCudaEngine().getKernelFunction(Kernel.FIELD_MAX_DIR);
-//		fieldMinDirComputation = new Runnable() {
-//			@Override
-//			public void run() {
-//				Pointer kernelParameters = Pointer.to(
-//						Pointer.to(widthParam),
-//						Pointer.to(heightParam),
-//						Pointer.to(valuesPtr),
-//						Pointer.to(fieldMaxDirPtr)
-//						);
-//
-//				launchKernel(kernelParameters, fieldMaxDirFunction);
-//			}
-//		};
-}
-
 	/**
 	 * This is faster than calling them sequentially: 
 	 * Only one GPU kernel is called.
@@ -117,8 +57,15 @@ public class CudaGPUGradientsPhero extends CudaPheromone implements CudaObject{
 	 */
 	@Override
 	public void diffusionAndEvaporation() {
-		getCudaEngine().submit(diffusionToTmp);
-		getCudaEngine().submit(diffusionUpdateAndEvaporationAndFieldMaxDir);
+		diffuseValuesToTmpGridKernel();
+		diffusionUpdateAndEvaporationAndFieldMaxDirKernel.run(
+				widthPtr,
+				heightPtr,
+				dataGridPtr,
+				tmpDeviceDataGridPtr,
+				getPointerToFloat(getEvaporationCoefficient()),
+				fieldMaxDirDataGridPtr
+				);
 	}
 	
 	@Override

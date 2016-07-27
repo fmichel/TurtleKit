@@ -189,8 +189,9 @@ public class Patch {
 	 */
 	@SuppressWarnings("unchecked")
 	public <T extends Turtle> T getNearestTurtle(int inRadius, boolean includeThisPatch, Class<T> turtleType) {
-		for (Patch p : getNeighbors(inRadius, includeThisPatch)) {
-			for (final Turtle t : p.getTurtles()) {
+		for (final Patch p : getNeighbors(inRadius, includeThisPatch)) {
+			final List<Turtle> turtles = p.getTurtles();
+			for (final Turtle t : turtles) {
 				if (turtleType.isAssignableFrom(t.getClass())) {
 					return (T) t;
 				}
@@ -234,7 +235,11 @@ public class Patch {
 	@SuppressWarnings("unchecked")
 	public <T extends Turtle> List<T> getTurtles(Class<T> turtleType) {
 		final ArrayList<T> turtles = new ArrayList<>();
-		for (final Turtle t : turtlesHere) {
+		final ArrayList<Turtle> tmp;
+		synchronized (turtlesHere) {
+			tmp = new ArrayList<Turtle>(turtlesHere);
+		}
+		for (final Turtle t : tmp) {
 			if (turtleType.isAssignableFrom(t.getClass())) {
 				turtles.add((T) t);
 			}

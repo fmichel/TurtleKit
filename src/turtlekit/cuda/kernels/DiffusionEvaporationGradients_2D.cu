@@ -23,22 +23,6 @@ __device__ int* neighborsIndexes(int i, int j, int width, int height){
 	return dir;
 }
 
-__device__ float getTotalUpdateFromNeighbors(float* tmp, int i, int j, int width, int height){
-	int iPlusOne = i + 1;
-	int jPlusOne = j + 1;
- 	int iMinusOne = i - 1;
- 	int jMinusOne = j - 1;
-       return 
-        tmp[get(normeValue(iPlusOne,width), j, width)] +
-        tmp[get(normeValue(iPlusOne,width), normeValue(jPlusOne,height),width)] +
-	tmp[get(i, normeValue(jPlusOne,height),width)] +
-        tmp[get(normeValue(iMinusOne,width), normeValue(jPlusOne,height),width)] +
-        tmp[get(normeValue(iMinusOne,width), j, width)] +
-        tmp[get(normeValue(iMinusOne,width), normeValue(jMinusOne,height),width)] +
-        tmp[get(i, normeValue(jMinusOne,height),width)] +
-        tmp[get(normeValue(iPlusOne,width), normeValue(jMinusOne,height),width)];
-}
-
 /*
 __device__ float getTotalUpdateFromNeighbors(float* tmp, int i, int j, int width, int height){
 		int index = get(i,j,width) * 8;
@@ -54,60 +38,7 @@ __device__ float getTotalUpdateFromNeighbors(float* tmp, int i, int j, int width
 }
 */
 
-extern "C"
-__global__ void DIFFUSION_TO_TMP( int width, int height, float *values, float* tmp, float diffCoef)
-{
-        int i = blockIdx.x * blockDim.x + threadIdx.x;
-        int j = blockIdx.y * blockDim.y + threadIdx.y;
-       
-       //filling tmp
-       if (i < width && j < height ){
-    		int k = get(i,j,width);
-    		float give = values[k] * diffCoef;
-    		float giveToNeighbor = give / 8;
-    		values[k] -= give;//TODO a[k] = value - give
-    		tmp[k] = giveToNeighbor;
-        }
-}
 
-
-extern "C"
-__global__ void DIFFUSION_UPDATE( int width, int height, float *values, float* tmp)
-{
-        int i = blockIdx.x * blockDim.x + threadIdx.x;
-        int j = blockIdx.y * blockDim.y + threadIdx.y;
-        
-       if (i < width && j < height ){//TODO + alone
-    	values[get(i,j,width)] += getTotalUpdateFromNeighbors(tmp, i, j, width, height);
-    	}
-}
-
-
-extern "C"
-__global__ void DIFFUSION_UPDATE_THEN_EVAPORATION( int width, int height, float *values, float* tmp, float evapCoef)
-{
-        int i = blockIdx.x * blockDim.x + threadIdx.x;
-        int j = blockIdx.y * blockDim.y + threadIdx.y;
-        
-       if (i < width && j < height ){//TODO + alone
-        int k = get(i,j,width);
-        float total = values[k] + getTotalUpdateFromNeighbors(tmp, i, j, width, height);
-    	values[k] = total - total * evapCoef;
-    	}
-}
-
-extern "C"
-__global__ void EVAPORATION( int width, int height, float *values, float evapCoef)
-{
-        int i = blockIdx.x * blockDim.x + threadIdx.x;
-        int j = blockIdx.y * blockDim.y + threadIdx.y;
-        
-       if (i < width && j < height ){//TODO + alone
-        int k = get(i,j,width);
-    	values[k] -= values[k] * evapCoef;
-    	}
-}
-//with fields
 extern "C"
 __global__ void FIELD_MAX_DIR(int width, int height, float *values, int* patchMax)
 {
@@ -361,21 +292,4 @@ __global__ void DIFFUSION_UPDATE_THEN_EVAPORATION_THEN_FIELDMAXDIR( int width, i
 		total += values[k];
 	    	values[k] = total - total * evapCoef;
     	}
-}
-
-//with fields
-extern "C"
-__global__ void TEST(int width, int height, float *values)
-{
-	int i = blockIdx.x * blockDim.x + threadIdx.x;
-	int j = blockIdx.y * blockDim.y + threadIdx.y;
-       if (i < width && j < height ){//TODO + alone
-		int k = get(i,j,width);
-		values[k] = 10;
-		}
-}
-
-
-int main()
-{
 }

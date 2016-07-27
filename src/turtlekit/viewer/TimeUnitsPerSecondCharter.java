@@ -27,13 +27,12 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
-import madkit.kernel.Watcher;
-import madkit.simulation.probe.SingleAgentProbe;
-
 import org.jfree.chart.ChartPanel;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
+import madkit.kernel.Watcher;
+import madkit.simulation.probe.SingleAgentProbe;
 import turtlekit.agr.TKOrganization;
 import turtlekit.gui.util.ChartsUtil;
 import turtlekit.kernel.TKScheduler;
@@ -48,7 +47,7 @@ import turtlekit.kernel.TurtleKit;
  * 
  */
 @GenericViewer
-public class StatesPerSecondCharter extends Watcher {
+public class TimeUnitsPerSecondCharter extends Watcher {
 
 	private XYSeriesCollection dataset = new XYSeriesCollection();
 	private XYSeries serie;
@@ -56,7 +55,7 @@ public class StatesPerSecondCharter extends Watcher {
 	private SingleAgentProbe<TKScheduler, Double> probe;
 	private Timer timer;
 
-	public StatesPerSecondCharter() {
+	public TimeUnitsPerSecondCharter() {
 		createGUIOnStartUp();
 	}
 
@@ -81,6 +80,13 @@ public class StatesPerSecondCharter extends Watcher {
 	private void initTimer() {
 		stopTimer();
 		timer = new java.util.Timer(true);
+		//clear after stabilization
+		timer.scheduleAtFixedRate(new TimerTask() {
+			@Override
+			public void run() {
+				serie.clear();
+			}
+		}, 1000, 60000);
 		timer.scheduleAtFixedRate(new TimerTask() {
 			private double last = 0;
 
@@ -90,7 +96,7 @@ public class StatesPerSecondCharter extends Watcher {
 					final double gvt = probe.getPropertyValue();
 					final double statesPerSecond = (gvt - last);
 					if (logger != null)
-						logger.fine("statesPerSecond =" + statesPerSecond);
+						logger.fine("SimulatedTimeUnitPerSecond =" + statesPerSecond);
 					last = gvt;
 					SwingUtilities.invokeLater(new Runnable() {// avoiding null pointers on the awt thread
 								@Override
@@ -100,7 +106,7 @@ public class StatesPerSecondCharter extends Watcher {
 									}
 								}
 							});
-				} catch (NullPointerException e) {//ugly but avoids e when quiting
+				} catch (NullPointerException e) {//ugly but avoids e when quitting
 				}
 			}
 		}, 0, getRefreshRate());
@@ -118,7 +124,7 @@ public class StatesPerSecondCharter extends Watcher {
 
 	@Override
 	public void setupFrame(JFrame frame) {
-		final ChartPanel chartPanel = ChartsUtil.createChartPanel(dataset, "States Per Second", null, null);
+		final ChartPanel chartPanel = ChartsUtil.createChartPanel(dataset, "Simulated time units per second", null, null);
 		chartPanel.setPreferredSize(new java.awt.Dimension(550, 250));
 		// frame.setContentPane(chartPanel);
 		frame.add(chartPanel);

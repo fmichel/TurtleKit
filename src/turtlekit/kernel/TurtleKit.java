@@ -25,6 +25,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 
@@ -34,18 +35,22 @@ import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JToggleButton;
 
+import org.omg.CORBA.Environment;
+
 import madkit.action.GUIManagerAction;
 import madkit.action.GlobalAction;
 import madkit.action.KernelAction;
 import madkit.kernel.AbstractAgent;
 import madkit.kernel.Madkit;
 import madkit.kernel.Madkit.BooleanOption;
-
-import org.omg.CORBA.Environment;
-
+import madkit.util.MadkitProperties;
 import turtlekit.viewer.TKDefaultViewer;
 
 public class TurtleKit extends AbstractAgent {
+	
+	final static List<String> tkDefaultMDKArgs = new ArrayList<>(
+			Arrays.asList(Madkit.Option.configFile.toString(),
+			"turtlekit/kernel/turtlekit.properties"));
 	
 	public static String VERSION ;
 	
@@ -75,7 +80,7 @@ public class TurtleKit extends AbstractAgent {
 				getMadkitProperty(turtlekit.kernel.TurtleKit.Option.turtles).equals("null")
 				){
 			if(logger != null)
-				logger.fine("no valid configuration to start with : desktop mode activated !");
+				logger.fine("No valid configuration to start with: Desktop mode activated!");
 			return;
 		}
 		launchAgent(getMadkitProperty(Option.launcher));
@@ -150,17 +155,22 @@ public class TurtleKit extends AbstractAgent {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		final List<String> l = new ArrayList<>(
-				Arrays.asList(Madkit.Option.configFile.toString(),
-				"turtlekit/kernel/turtlekit.properties"));
-		if(args != null && args.length > 0){
-			l.addAll(Arrays.asList(args));
-			if(l.contains(Option.model.toString())){
-				l.add(BooleanOption.desktop.toString());
-				l.add("false");
-			}
+		Collections.addAll(tkDefaultMDKArgs, args);
+		if(tkDefaultMDKArgs.contains(Option.model.toString())){
+			Collections.addAll(tkDefaultMDKArgs, BooleanOption.desktop.toString(),"false");
 		}
-		new Madkit(l.toArray(new String[l.size()]));
+//		final List<String> l = new ArrayList<>(
+//				Arrays.asList(Madkit.Option.configFile.toString(),
+//				"turtlekit/kernel/turtlekit.properties"));
+//		if(args != null && args.length > 0){
+//			l.addAll(Arrays.asList(args));
+//			if(l.contains(Option.model.toString())){
+//				l.add(BooleanOption.desktop.toString());
+//				l.add("false");
+//			}
+//		}
+		new Madkit(tkDefaultMDKArgs.toArray(new String[tkDefaultMDKArgs.size()]));
+//		new Madkit(l.toArray(new String[l.size()]));
 	}
 	
 	public static enum Option {

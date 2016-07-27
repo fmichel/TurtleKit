@@ -39,7 +39,7 @@ import turtlekit.agr.TKOrganization;
 import turtlekit.cuda.CudaEngine;
 import turtlekit.cuda.CudaGPUGradientsPhero;
 import turtlekit.cuda.CudaPheromone;
-import turtlekit.pheromone.JavaPheromone;
+import turtlekit.pheromone.DefaultCPUPheromoneGrid;
 import turtlekit.pheromone.Pheromone;
 
 public class TKEnvironment extends Watcher {
@@ -47,7 +47,7 @@ public class TKEnvironment extends Watcher {
 	private String community;
 	private int width;
 	private int height;
-	private Map<String, Pheromone> pheromones;
+	private Map<String, Pheromone<Float>> pheromones;
 	private Map<String,Probe<Turtle>> turtleProbes;
 	private Patch[] patchGrid;
 	boolean wrapMode;
@@ -59,11 +59,19 @@ public class TKEnvironment extends Watcher {
 	protected boolean GPU_GRADIENTS = false;
 	private boolean synchronizeGPU = true;
 
+	public boolean isSynchronizeGPU() {
+		return synchronizeGPU;
+	}
+
+	public void setSynchronizeGPU(boolean synchronizeGPU) {
+		this.synchronizeGPU = synchronizeGPU;
+	}
+
 	public TKEnvironment(){
-		pheromones = new TreeMap<String, Pheromone>();
+		pheromones = new TreeMap<String, Pheromone<Float>>();
 	}
 	
-	public Collection<Pheromone> getPheromones(){
+	public Collection<Pheromone<Float>> getPheromones(){
 		return pheromones.values();
 	}
 
@@ -226,7 +234,7 @@ public class TKEnvironment extends Watcher {
 	 * 
 	 */
 	private void executePheromonesSequentialy() {
-		for (Pheromone pheromone : pheromones.values()) {
+		for (Pheromone<?> pheromone : pheromones.values()) {
 //			pheromone.set((int) (Math.random()*200), (int) (Math.random()*200), 1E38f); //TODO nice art
 			pheromone.diffusionAndEvaporation();
 		}
@@ -261,11 +269,11 @@ public class TKEnvironment extends Watcher {
 	}
 	
 	private void executePheromonesInParallel() {
-		final Collection<Pheromone> pheromonesList = getPheromones();
+		final Collection<Pheromone<Float>> pheromonesList = getPheromones();
 		if (! pheromonesList.isEmpty()) {
 			final ArrayList<Callable<Void>> workers = new ArrayList<>(
 					pheromonesList.size());
-			for (final Pheromone pheromone : pheromonesList) {
+			for (final Pheromone<Float> pheromone : pheromonesList) {
 				workers.add(new Callable<Void>() {
 					@Override
 					public Void call() throws Exception {
@@ -290,8 +298,8 @@ public class TKEnvironment extends Watcher {
 	 * reset max values for rendering purposes
 	 */
 	protected void resetPheroMaxValues(){
-		for (Pheromone phero : pheromones.values()) {
-			phero.setMaximum(0);
+		for (Pheromone<Float> phero : pheromones.values()) {
+			phero.setMaximum(0f);
 		}
 	}
 	
@@ -301,7 +309,8 @@ public class TKEnvironment extends Watcher {
 	}
 
 	void emit(String pheromone, int x, int y, float value) {
-		getPheromone(pheromone).incValue(x, y, value);
+		final Pheromone<Float> p = getPheromone(pheromone);
+		p.set(x, y, p.get(x,y) + value);
 	}
 	
 	public int getWidth() {
@@ -320,7 +329,7 @@ public class TKEnvironment extends Watcher {
 	 * @param name the pheromone's name
 	 * @return the pheromone
 	 */
-	public Pheromone getPheromone(String name) {
+	public Pheromone<Float> getPheromone(String name) {
 		return getPheromone(name,50,50);
 	}
 	
@@ -334,7 +343,7 @@ public class TKEnvironment extends Watcher {
 	 * is the diffusion rate.
 	 * @return the pheromone
 	 */
-	public Pheromone getPheromone(String name, int evaporationPercentage, int diffusionPercentage) {
+	public Pheromone<Float> getPheromone(String name, int evaporationPercentage, int diffusionPercentage) {
 		return getPheromone(name, evaporationPercentage / 100f, diffusionPercentage / 100f);
 	}
 	
@@ -348,19 +357,21 @@ public class TKEnvironment extends Watcher {
 	 * is the diffusion rate.
 	 * @return the pheromone
 	 */
-	public Pheromone getPheromone(String name, float evaporationPercentage, float diffusionPercentage) {
-		Pheromone phero = pheromones.get(name);
+	public Pheromone<Float> getPheromone(String name, float evaporationPercentage, float diffusionPercentage) {
+		Pheromone<Float> phero = pheromones.get(name);
 		if (phero == null) {
 			synchronized (pheromones) {
 				phero = pheromones.get(name);
 				if (phero == null) {
 					if (cudaOn && CudaEngine.isCudaAvailable() ) {
+//						phero = new CudaPheromone(name, width, height, evaporationPercentage, diffusionPercentage);
 						phero = createCudaPheromone(name, evaporationPercentage, diffusionPercentage);
 					}
 					else{
 						//TODO experimental
 //						phero = new CPU_SobelPheromone(name, getWidth(),	getHeight(), evaporationPercentage, diffusionPercentage, neighborsIndexes);
-						phero = new JavaPheromone(name, getWidth(),	getHeight(), evaporationPercentage, diffusionPercentage, neighborsIndexes);
+//						phero = new JavaPheromone(name, getWidth(),	getHeight(), evaporationPercentage, diffusionPercentage, neighborsIndexes);
+						phero = new DefaultCPUPheromoneGrid(name, width, height, evaporationPercentage, diffusionPercentage, neighborsIndexes);//						phero = new FloatPheromoneGrid(name, getWidth(), getHeight(), evaporationPercentage, diffusionPercentage, neighborsIndexes);
 					}
 					pheromones.put(name, phero);
 				}
@@ -369,7 +380,7 @@ public class TKEnvironment extends Watcher {
 		return phero;
 	}
 	
-	protected Pheromone createCudaPheromone(String name, float evaporationPercentage, float diffusionPercentage){
+	protected Pheromone<Float> createCudaPheromone(String name, float evaporationPercentage, float diffusionPercentage){
 		if(GPU_GRADIENTS)
 			return new CudaGPUGradientsPhero(name, getWidth(), getHeight(), evaporationPercentage, diffusionPercentage);
 		return new CudaPheromone(name, getWidth(),	getHeight(), evaporationPercentage, diffusionPercentage);

@@ -32,18 +32,18 @@ public class PheromoneView extends JPanel implements ChangeListener{
 	private DefaultBoundedRangeModel red;
 	private DefaultBoundedRangeModel green;
 	private DefaultBoundedRangeModel blue;
-	private Pheromone myPhero;
+	private Pheromone<Float> myPhero;
 	//	private Environment env;
 	private JPanel evapPanel;
 	private JPanel diffusionPanel;
 
-	public PheromoneView(Pheromone phero) {
-		myPhero = phero;
-		final DefaultBoundedRangeModel evaporationPercentage = phero.getEvaporationPercentage();
+	public PheromoneView(Pheromone<Float> selectedPheromone) {
+		myPhero = selectedPheromone;
+		final DefaultBoundedRangeModel evaporationPercentage = selectedPheromone.getEvaporationCoefficientModel();
 		evaporationPercentage.addChangeListener(this);
 		evapPanel = SwingUtil.createSliderPanel(evaporationPercentage,"evaporation");
 		add(evapPanel);
-		final DefaultBoundedRangeModel diffusionPercentage = phero.getDiffusionPercentage();
+		final DefaultBoundedRangeModel diffusionPercentage = selectedPheromone.getDiffusionCoefficientModel();
 		diffusionPercentage.addChangeListener(this);
 		diffusionPanel = SwingUtil.createSliderPanel(diffusionPercentage, "diffusion");
 		add(diffusionPanel);
@@ -89,10 +89,10 @@ public class PheromoneView extends JPanel implements ChangeListener{
 	@Override
 	public void stateChanged(ChangeEvent e) {
 		((TitledBorder) diffusionPanel.getBorder())
-		.setTitle("diffusion " + myPhero.getDiffusionPercentage().getCoefficient());
+		.setTitle("diffusion " + myPhero.getDiffusionCoefficient());
 		diffusionPanel.repaint();
 		((TitledBorder) evapPanel.getBorder())
-		.setTitle("evaporation " + myPhero.getEvaporationPercentage().getCoefficient());
+		.setTitle("evaporation " + myPhero.getEvaporationCoefficient());
 		evapPanel.repaint();
 		
 	}

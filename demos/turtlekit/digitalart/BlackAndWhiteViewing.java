@@ -37,7 +37,7 @@ public class BlackAndWhiteViewing extends PheromoneViewer {
 	
 	@Override
 	public void paintPatch(Graphics g, Patch p, int x, int y, int index) {
-		final int a = ((int) getSelectedPheromone().get(index))%256;
+		final int a = getSelectedPheromone().get(index).intValue()%256;
 		g.setColor(new Color(a,a,a));
 		g.fillRect(x,y,cellSize,cellSize);
 	}

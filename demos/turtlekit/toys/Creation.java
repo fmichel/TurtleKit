@@ -28,7 +28,7 @@ import turtlekit.viewer.TKDefaultViewer;
 
 public class Creation extends Turtle {
 	
-	private Pheromone pheromone;
+	private Pheromone<Float> pheromone;
 	private boolean launched = false;
 	private Gas photon = null;
 

@@ -22,12 +22,11 @@ import java.util.logging.Level;
 
 import javax.swing.JFrame;
 
-import madkit.kernel.Probe;
-
 import org.jfree.chart.ChartPanel;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
+import madkit.kernel.Probe;
 import turtlekit.agr.TKOrganization;
 import turtlekit.gui.util.ChartsUtil;
 import turtlekit.kernel.Turtle;

@@ -26,7 +26,7 @@ import turtlekit.viewer.PheromoneViewer;
 
 public class PheroEmmiter extends Turtle {
 	
-	private Pheromone pheromone;
+	private Pheromone<?> pheromone;
 
 	@Override
 	protected void activate() {
@@ -52,8 +52,8 @@ public class PheroEmmiter extends Turtle {
 	public static void main(String[] args) {
 		executeThisTurtle(10
 				,Option.viewers.toString(),PheromoneViewer.class.getName()
-//				,Option.envHeight.toString(),"100"
-//				,Option.envWidth.toString(),"100"
+				,Option.envHeight.toString(),"100"
+//				,Option.envWidth.toString(),"200"
 				,Option.cuda.toString()
 				,Option.startSimu.toString()
 				);
