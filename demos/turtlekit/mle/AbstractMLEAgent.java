@@ -181,7 +181,7 @@ public class AbstractMLEAgent extends Turtle {
 //		setLevel(generator.nextInt(4));
 //		home();
 		initAttributes();
-//		setLevel(0);
+		setLevel(0);
 	}
 
 	public int getLevel() {

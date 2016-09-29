@@ -58,6 +58,7 @@ import madkit.message.SchedulingMessage;
 import madkit.util.XMLUtilities;
 import turtlekit.agr.TKOrganization;
 import turtlekit.cuda.CudaEngine;
+import turtlekit.kernel.TurtleKit.LevelOption;
 
 public class TKLauncher extends Agent {
 
@@ -80,7 +81,7 @@ public class TKLauncher extends Agent {
 		createGroup(community, MODEL_GROUP);
 		createGroup(community, TURTLES_GROUP);
 		requestRole(community, ENGINE_GROUP, MODEL_ROLE);
-		if (isMadkitPropertyTrue(TurtleKit.Option.cuda) && ! CudaEngine.init()){
+		if (isMadkitPropertyTrue(TurtleKit.Option.cuda) && ! CudaEngine.init(getMadkitProperty(LevelOption.turtleKitLogLevel))){
 			setMadkitProperty(TurtleKit.Option.cuda, "false");
 		}
 		createSimulationInstance();

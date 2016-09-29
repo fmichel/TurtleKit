@@ -8,6 +8,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.logging.Level;
 
 import jcuda.Pointer;
 import jcuda.driver.CUfunction;
@@ -80,11 +81,22 @@ public class CudaKernel {
 			
 			@Override
 			public void freeMemory() {
-				// TODO Auto-generated method stub
 				
 			}
+
+			@Override
+			public int getHeight() {
+				// TODO Auto-generated method stub
+				return 0;
+			}
+
+			@Override
+			public int getWidth() {
+				// TODO Auto-generated method stub
+				return 0;
+			}
 		};
-		CudaEngine.init();
+		CudaEngine.init(Level.ALL.toString());
 		CudaEngine ce = CudaEngine.getCudaEngine(name);
 	}
 

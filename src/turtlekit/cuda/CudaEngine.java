@@ -1,6 +1,6 @@
 /*******************************************************************************
  * TurtleKit 3 - Agent Based and Artificial Life Simulation Platform
- * Copyright (C) 2011-2014 Fabien Michel
+ * Copyright (C) 2011-2016 Fabien Michel
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,11 +19,12 @@ package turtlekit.cuda;
 
 import static jcuda.driver.CUdevice_attribute.CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK;
 import static jcuda.driver.JCudaDriver.cuMemAlloc;
+import static jcuda.driver.JCudaDriver.cuMemFree;
+import static jcuda.driver.JCudaDriver.cuMemFreeHost;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
@@ -33,7 +34,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -48,8 +48,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import jcuda.CudaException;
 import jcuda.Pointer;
@@ -71,127 +74,51 @@ public class CudaEngine {
 	 */
 	public static final String ioTmpDir = System.getProperty("java.io.tmpdir");
 
-	private static final Path TK_NATIVE_LIBS_DIR_PATH = Paths.get(ioTmpDir, "/tklib");
-
-	private static final String PHEROMONES_CU = "pheromones";
-
-	
-	
-	enum Kernels {
-		DIFFUSION_TO_TMP, 
-		DIFFUSION_UPDATE, 
-		EVAPORATION, FIELD_MAX_DIR, 
-		DIFFUSION_UPDATE_THEN_EVAPORATION
-//		,DIFFUSION_UPDATE_THEN_EVAPORATION_THEN_FIELDMAXDIR
-//		,FILL_NEIGHBORS
-		,TEST
-		,DIFFUSION_UPDATE_THEN_EVAPORATION_THEN_FIELDMAXDIRV2
-		,AVERAGE_DEPTH_1D_V2
-//		,HEAT_DEPTH_1D_V2
-//		,STATE_COMPUTATION
-//		,NUMBER_NEIGHBORS_ALIVE
-//		,HERE_COMPUTATION
-	}
-	
-
 	private static int availableDevicesNb = 0;
 
 	private static ExecutorService initialization;
 
 	final static Map<Integer,CudaEngine> cudaEngines = new HashMap<>();
 
-	final HashMap<Kernels, CUfunction> kernels = new HashMap<Kernels, CUfunction>();
-
-	
 	private static int NB_OF_DEVICE_TO_USE = 1;
 
-	/**
-	 * If not already done, gets from the classpath (jar file or /lib) a required native lib and load it
-	 * @param pathToLib
-	 * @param nativeLibName
-	 */
-	private static void extractAndLoadNativeLib(Path pathToLib, String nativeLibName){
-		//		System.err.println("loading "+nativeLibName);
-		final Path path = Paths.get(pathToLib.toString(),nativeLibName);
-		if (! path.toFile().exists()) {
-			try (InputStream is = CudaEngine.class.getResourceAsStream("/lib/"	+ nativeLibName)) {
-				Files.copy(is, path);
-				System.err.println(path.toAbsolutePath());
-				System.loadLibrary(path.toAbsolutePath().toString());
-			} catch (IOException e) {
-				e.printStackTrace();
-			} 
-		}
-//				System.load(nativeLibName);
-	}
-
-	
-	private static void extractAndLoadNativeLibs() throws IOException{
-		if(! TK_NATIVE_LIBS_DIR_PATH.toFile().exists()){
-			Files.createDirectories(TK_NATIVE_LIBS_DIR_PATH);
-		}
-		final boolean windows = System.getProperty("os.name").equalsIgnoreCase("windows");
-		String fileExtension = windows ? "dll" : "so";
-		String prefix = windows ? "" : "lib";
-		String libPattern = fileExtension.equals("dll") ? "-windows" : "-linux" + "-x86";
-		if(System.getProperty("sun.arch.data.model").equals("64")){
-			libPattern+="_64";
-		}
-		libPattern+="."+fileExtension;
-//		System.err.println(libPattern);
-		System.setProperty("java.library.path", TK_NATIVE_LIBS_DIR_PATH.toString());
-		System.err.println(System.getProperty("java.library.path"));
-		extractAndLoadNativeLib(TK_NATIVE_LIBS_DIR_PATH, prefix+"JCudaDriver"+libPattern);
-		extractAndLoadNativeLib(TK_NATIVE_LIBS_DIR_PATH, prefix+"JCudaRuntime"+libPattern);
-		extractAndLoadNativeLib(TK_NATIVE_LIBS_DIR_PATH, prefix+"JCurand"+libPattern);
-	}
+	private static Logger logger;
 
 	/**
-	 * Implements a little test that instantiates the CudaEngine and then cleans up
-	 * 
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		init();
-		CudaEngine cudaEngine = new CudaEngine(0);
-		KernelConfiguration kernelConfiguration = cudaEngine.getDefaultKernelConfiguration(100, 100);
-		cudaEngine.getKernel("EVAPORATION", "/turtlekit/cuda/kernels/Evaporation_2D.cu", kernelConfiguration);
-
-	}
-	
-	/**
+	 * @param logLevel 
 	 * 
 	 */
-	public static boolean init() {
+	public static boolean init(String logLevel) {
+		logger = Logger.getLogger(CudaEngine.class.getSimpleName());
+		logger.setLevel(Level.parse(logLevel));
+		logger.setLevel(Level.ALL);
 		synchronized (cudaEngines) {
-			System.err.println("---------Initializing Cuda----------------");
+			logger.finer("---------Initializing Cuda----------------");
 			try {
-				extractAndLoadNativeLibs();
 				JCudaDriver.setExceptionsEnabled(true);
 				JCudaDriver.cuInit(0);
-//				compileKernelsPtx();
 				// Obtain the number of devices
 				int deviceCountArray[] = { 0 };
 				JCudaDriver.cuDeviceGetCount(deviceCountArray);
 				availableDevicesNb = deviceCountArray[0];
 				if (availableDevicesNb == 0)
 					return false;
-//				availableDevicesNb = NB_OF_DEVICE_TO_USE;// TODO
+				//				availableDevicesNb = NB_OF_DEVICE_TO_USE;// TODO
 				initialization = Executors.newCachedThreadPool();
-				System.out.println("Found " + availableDevicesNb + " GPU devices");
-					Future<?> initJob = initialization.submit(new Runnable() {
-						public void run() {
-							for (int i = 0/*-NB_OF_DEVICE_TO_USE*/; i < availableDevicesNb; i++) {
-								final int index = i;
-							System.err.println("Initializing device n°" + index);
+				logger.finer("Found " + availableDevicesNb + " GPU devices");
+				Future<?> initJob = initialization.submit(new Runnable() {
+					public void run() {
+						for (int i = 0/*-NB_OF_DEVICE_TO_USE*/; i < availableDevicesNb; i++) {
+							final int index = i;
+							logger.finer("Initializing device n°" + index);
 							cudaEngines.put(index, new CudaEngine(index));
 						}}
-					});
-					initJob.get();
-					initialization.shutdown();
-			} catch (InterruptedException | ExecutionException | CudaException | UnsatisfiedLinkError | IOException e) {
+				});
+				initJob.get();
+				initialization.shutdown();
+			} catch (InterruptedException | ExecutionException | CudaException | UnsatisfiedLinkError e) {
+				logger.finer("---------Cannot initialize Cuda !!! ----------------");
 				e.printStackTrace();
-				System.err.println("---------Cannot initialize Cuda !!! ----------------");
 				return false;
 			}
 			Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -200,19 +127,24 @@ public class CudaEngine {
 					CudaEngine.stop();
 				}
 			});
-			System.out.println("---------Cuda Initialized----------------");
+			logger.fine("---------Cuda Initialized----------------");
 			return true;
 		}
 	}
+//	
+//	public Pointer getPointerToFloat(float f){
+//		return Pointer.to(new float[]{f});
+//	}
 	
+
 
 	public int cuDeviceGetCount() {
 		return availableDevicesNb;
 	}
 	
-
 	private static AtomicInteger cudaObjectID = new AtomicInteger(0);
 
+	private static Map<CudaObject, CudaEngine> engineBinds = new HashMap<>();
 
 	private ExecutorService exe;
 	protected CUfunction f;
@@ -222,8 +154,6 @@ public class CudaEngine {
 
 	private int Id = -1;
 
-	private Map<String,CUdeviceptr> neigborsPtrs;
-
 	protected CUcontext context;
 
 	protected CUmodule myModule;
@@ -231,7 +161,14 @@ public class CudaEngine {
 	private Map<String, CUfunction> functions = new HashMap<>();
 
 	private CudaEngine(final int deviceId) {
-		exe = Executors.newSingleThreadExecutor(); //mandatory: Only one cuda thread per context
+		exe = Executors.newSingleThreadExecutor(new ThreadFactory() {
+			@Override
+			public Thread newThread(Runnable r) {
+		        Thread thread = new Thread(r);
+		        thread.setDaemon(true);
+		        return thread;
+			}
+		}); //mandatory: Only one cuda thread per context
 		Id  = deviceId;
 		try {
 			exe.submit(new Runnable() {
@@ -246,26 +183,22 @@ public class CudaEngine {
 //					System.out.println(maxThreads);
 //					maxThreads = (int) 1024;
 					context = new CUcontext();
-//					JCudaDriver.cuCtxCreate(context, CUctx_flags.CU_CTX_SCHED_BLOCKING_SYNC, device);
 					JCudaDriver.cuCtxCreate(context, 0, device);
-//					JCudaDriver.cuCtxCreate(context, CUctx_flags.CU_CTX_MAP_HOST, device);
 					myModule = new CUmodule();
-//					initModules(myModule);
-//					for (Kernels k : Kernels.values()) {
-//						initFunction(myModule, k);
-//					}
-//					JCudaDriver.cuCtxSetCacheConfig(CUfunc_cache.CU_FUNC_CACHE_PREFER_NONE);>
-//					JCudaDriver.cuCtxSetSharedMemConfig(CUsharedconfig.CU_SHARED_MEM_CONFIG_EIGHT_BYTE_BANK_SIZE);
 				}
 			}).get();
 		} catch (InterruptedException | ExecutionException e) {
 			throw new RuntimeException(e.getMessage());
 		}
-		neigborsPtrs = new HashMap<>();
 	}
 	
 	public static boolean isCudaAvailable() {
 		return availableDevicesNb != 0;
+	}
+	
+	@Override
+	public String toString() {
+		return "cudaEngine device #"+Id;
 	}
 	
 	public static void addKernelSourceFile(String aPathInTheClassPath){
@@ -280,11 +213,9 @@ public class CudaEngine {
 	
 	public CudaKernel getKernel(final String kernelFunctionName, final String cuSourceFilePath, final KernelConfiguration kc){
 		try {
-			return exe.submit(new Callable<CudaKernel>() {
-				public CudaKernel call() {
-					CUfunction function = functions.computeIfAbsent(""+kernelFunctionName+cuSourceFilePath, k -> updateCuSourceFile(kernelFunctionName,cuSourceFilePath));
-					return new CudaKernel(function, CudaEngine.this, kernelFunctionName, cuSourceFilePath, kc);
-				}
+			return exe.submit(() -> {
+				CUfunction function = functions.computeIfAbsent(""+kernelFunctionName+cuSourceFilePath, k -> updateCuSourceFile(kernelFunctionName,cuSourceFilePath));
+				return new CudaKernel(function, CudaEngine.this, kernelFunctionName, cuSourceFilePath, kc);
 			}).get();
 		} catch (InterruptedException | ExecutionException e) {
 			e.printStackTrace();
@@ -298,14 +229,8 @@ public class CudaEngine {
 	public <T> CUdeviceptr createDeviceDataGrid(int wdith, int height, Class<T> dataType){
 		CUdeviceptr tmpPtr = new CUdeviceptr();
 		try {
-			final int floatGridMemorySize = wdith * height * dataType.getField("SIZE").getInt(null) / 8;
-			submit(new Runnable() {
-				@Override
-				public void run() {
-					cuMemAlloc(tmpPtr, floatGridMemorySize);
-				}
-			}).get();
-		} catch (InterruptedException | ExecutionException | IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+			submit(() -> cuMemAlloc(tmpPtr, getRequiredMemorySize(dataType, wdith, height))).get();
+		} catch (InterruptedException | ExecutionException | IllegalArgumentException | SecurityException e) {
 			e.printStackTrace();
 		}
 		return tmpPtr;
@@ -314,15 +239,12 @@ public class CudaEngine {
 	public <T> Buffer getUnifiedBufferBetweenPointer(Pointer hostData, CUdeviceptr deviceData, Class<T> dataType, int wdith, int height){
 		try {
 			int size = getRequiredMemorySize(dataType, wdith, height);
-			final Buffer buffer = exe.submit(new Callable<Buffer>() {
-				@Override
-				public Buffer call() {
-					JCudaDriver.cuMemHostAlloc(hostData, size, JCudaDriver.CU_MEMHOSTALLOC_DEVICEMAP);
-					final ByteBuffer byteBuffer = hostData.getByteBuffer(0, size);
-					byteBuffer.order(ByteOrder.nativeOrder());
-					JCudaDriver.cuMemHostGetDevicePointer(deviceData, hostData, 0);
-					return byteBuffer;
-				}
+			final Buffer buffer = exe.submit(() -> {
+				JCudaDriver.cuMemHostAlloc(hostData, size, JCudaDriver.CU_MEMHOSTALLOC_DEVICEMAP);
+				final ByteBuffer byteBuffer = hostData.getByteBuffer(0, size);
+				byteBuffer.order(ByteOrder.nativeOrder());
+				JCudaDriver.cuMemHostGetDevicePointer(deviceData, hostData, 0);
+				return byteBuffer;
 			}).get();
 			String simpleName = dataType.getSimpleName();
 			switch (simpleName) {
@@ -338,25 +260,32 @@ public class CudaEngine {
 			final Method method = buffer.getClass().getMethod("as"+simpleName+"Buffer");
 			method.setAccessible(true);
 			return (Buffer) method.invoke(buffer);
-		} catch (InterruptedException | ExecutionException | IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException | InvocationTargetException | NoSuchMethodException e) {
+		} catch (InterruptedException | ExecutionException | IllegalArgumentException | IllegalAccessException | SecurityException | InvocationTargetException | NoSuchMethodException e) {
 			e.printStackTrace();
 		}
 		return null;
 	}
 
 
-	private <T> int getRequiredMemorySize(Class<T> dataType, int wdith, int height)
-			throws IllegalAccessException, NoSuchFieldException {
+	private <T> int getRequiredMemorySize(Class<T> dataType, int wdith, int height) {
 		String simpleName = dataType.getSimpleName();
 		switch (simpleName) {
 		case "int":
-			
+			dataType = (Class<T>) Integer.class;
 			break;
-
+		case "char":
+			dataType = (Class<T>) Character.class;
+			break;
 		default:
 			break;
 		}
-		final int floatGridMemorySize = wdith * height * dataType.getField("SIZE").getInt(null) / 8;
+		int floatGridMemorySize = 0;
+		try {
+			floatGridMemorySize = wdith * height * dataType.getField("SIZE").getInt(null) / 8;
+		} catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return floatGridMemorySize;
 	}
 
@@ -366,29 +295,21 @@ public class CudaEngine {
 				throw new CudaException("No cuda device found");
 			try {
 				initialization.awaitTermination(10, TimeUnit.SECONDS);
-			} catch (InterruptedException e) {
+			} 
+			catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			
-//			Pheromone p = (Pheromone) co;
-			final int pheroID = cudaObjectID.incrementAndGet();
-
-			final CudaEngine ce = cudaEngines.get(pheroID % availableDevicesNb);
-//			final CudaEngine ce = cudaEngines.get(1);
-//			final CudaEngine ce = cudaEngines.get(0);
-			
-//			final CudaEngine ce;
-//			if(p.getName().contains("PRE")){
-//				ce = cudaEngines.get(0);
-//			}
-//			else{
-//				ce = cudaEngines.get(1);
-//			}
-//			
-			ce.cudaObjects.add(co);
-			System.err.println(co+"ID "+pheroID+" getting cuda engine Id "+ce.Id);
-			return ce;
-		}
+			synchronized (engineBinds) {
+				return engineBinds.computeIfAbsent(co, v -> {
+					final int pheroID = cudaObjectID.incrementAndGet();
+					final CudaEngine ce = cudaEngines.get(pheroID % availableDevicesNb);
+					//			final CudaEngine ce = cudaEngines.get(0);
+					ce.cudaObjects.add(co);
+					logger.finer(co + "ID " + pheroID + " getting cuda engine Id " + ce.Id);
+					return ce;
+				});
+			}
+	}
 	}
 
 	static FloatBuffer getUnifiedFloatBuffer(Pointer pinnedMemory,
@@ -488,38 +409,7 @@ public class CudaEngine {
 		}
 	}
 
-	static void initModules(CUmodule module) {
-		JCudaDriver.cuModuleLoad(module, new File(ioTmpDir,PHEROMONES_CU+".ptx").getAbsolutePath());
-	}
 
-	private void initFunction(CUmodule module, Kernels name) {
-		CUfunction function = new CUfunction();
-		JCudaDriver.cuModuleGetFunction(function, module, name.name());
-		System.err.println("initializing kernel "+name);
-		kernels.put(name, function);
-	}
-	
-
-	// void compileKernelsPtx()
-	static void compileKernelsPtx() throws IOException {
-//		KernelLauncher.setCompilerPath("/usr/local/cuda-7.5/bin/");
-		if(! new File(ioTmpDir,PHEROMONES_CU+".ptx").exists()){//TODO externalize
-			try(InputStream is = CudaEngine.class.getResourceAsStream("/turtlekit/cuda/kernels/"+PHEROMONES_CU+".cu")){
-				final Path path = Paths.get(ioTmpDir, PHEROMONES_CU+".cu");
-				try {
-					Files.copy(is, path);
-				} catch (FileAlreadyExistsException e) {
-				}
-				System.err.println("--------------- Compiling ptx ----------------------");
-				KernelLauncher.create(
-						path.toString(),
-						Kernels.DIFFUSION_TO_TMP.name(), false, "--use_fast_math","--prec-div=false");//,"--gpu-architecture=sm_20");
-			} catch (IOException e) {
-				throw e;
-			}
-		}
-	}
-	
 	public CUstream getNewCudaStream(){
 		try {
 			return exe.submit(() -> {
@@ -528,7 +418,6 @@ public class CudaEngine {
 				return cudaStream;
 			}).get();
 		} catch (InterruptedException | ExecutionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
@@ -571,72 +460,16 @@ public class CudaEngine {
 		return maxThreads;
 	}
 
-	public CUfunction getKernelFunction(Kernels f) {
-		CUfunction function = kernels.get(f);
-		if (function == null)
-			throw new CudaException("No such function " + f);
-		return function;
-	}
-
-//	public static void main(String[] args) {
-//		CudaPheromone cu, cu2;
-//		getCudaEngine(cu = new CudaPheromone(10, 10, 0.1f, 0f, "test"));
-//		getCudaEngine(cu2 = new CudaPheromone(100, 100, 0.3f, 0.5f, "test2"));
-//		cu.set(3, 3, 8);
-////		cu.diffusion();
-//		cu.evaporation();
-//		System.err.println(cu.get(3, 3));
-//		System.err.println(cu.get(0, 0));
-//		System.err.println(cu.get(3, 2));
-//		System.err.println("maxdir " + cu.getMaxDir(3, 2));
-//		cu.diffusion();
-//		System.err.println(cu.get(3, 3));
-//		cu.diffusion();
-//		System.err.println(cu.get(3, 3));
-//		cu2.diffusion();
-//		cu.freeMemory();
-//		cu2.freeMemory();
-//		CudaEngine.stop();
-//	}
-
 	public static synchronized void cuCtxSynchronizeAll() {
 		for (CudaEngine ce : cudaEngines.values()) {
 			ce.cuCtxSynchronize();
 		}
-		// List<Future<Void>> futures = new ArrayList<Future<Void>>();
-		// for (CudaEngine ce : executors) {
-		// futures.add(ce.exe.submit(new Callable<Void>() {
-		// @Override
-		// public Void call() throws Exception {
-		// JCudaDriver.cuCtxSynchronize();
-		// return null;
-		// }
-		//
-		// }));
-		// }
-		// for (Future<Void> future : futures) {
-		// try {
-		// future.get();
-		// } catch (InterruptedException | ExecutionException e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// }
-		// }
 	}
 	
-
 	public void cuCtxSynchronize() {
 		try {
-			exe.submit(new Callable<Void>() {
-				@Override
-				public Void call() throws Exception {
-					JCudaDriver.cuCtxSynchronize();
-					return null;
-				} 
-			}).get();
-		} catch (ExecutionException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
+			exe.submit(() -> JCudaDriver.cuCtxSynchronize()).get();
+		} catch (ExecutionException | InterruptedException e) {
 		}
 	}
 
@@ -646,13 +479,26 @@ public class CudaEngine {
 		}
 		return null;
 	}
-
-	public CUdeviceptr getNeighborsPtr(String string) {
-		return neigborsPtrs.get(string);
+	
+	public void freeCudaMemory(Pointer p){
+		exe.submit(() -> cuMemFreeHost(p));
 	}
 
-	public void addNeighborsPtr(String string, CUdeviceptr neighborsPtr) {
-		neigborsPtrs.put(string, neighborsPtr);
+	public void freeCudaMemory(CUdeviceptr p){
+		exe.submit(() -> cuMemFree(p));
+	}
+
+	/**
+	 * Implements a little test that instantiates the CudaEngine and then cleans up
+	 * 
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		init(Level.ALL.toString());
+		CudaEngine cudaEngine = new CudaEngine(0);
+		KernelConfiguration kernelConfiguration = cudaEngine.getDefaultKernelConfiguration(100, 100);
+		cudaEngine.getKernel("EVAPORATION", "/turtlekit/cuda/kernels/Evaporation_2D.cu", kernelConfiguration);
+	
 	}
 	
 }

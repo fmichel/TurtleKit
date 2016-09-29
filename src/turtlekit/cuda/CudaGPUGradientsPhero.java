@@ -17,37 +17,27 @@
  ******************************************************************************/
 package turtlekit.cuda;
 
-import static jcuda.driver.JCudaDriver.cuMemFreeHost;
-
 import java.nio.IntBuffer;
 
 import jcuda.Pointer;
 import jcuda.driver.CUdeviceptr;
 
-public class CudaGPUGradientsPhero extends CudaPheromone implements CudaObject{
+public class CudaGPUGradientsPhero extends CudaPheromone{
 	
 	private IntBuffer fieldMaxDir;
 	
 	protected CUdeviceptr fieldMaxDirPtr;
-//	private Runnable fieldMinDirComputation;
 	protected Pointer maxPinnedMemory;
-//	private Runnable diffusionAndEvaporation;
-	private Runnable diffusionUpdateAndEvaporationAndFieldMaxDir;
-
 	private CudaKernel diffusionUpdateAndEvaporationAndFieldMaxDirKernel;
-
 	private Pointer fieldMaxDirDataGridPtr;
 
-//	protected int[] fieldMaxDirAsArray;
-
-	public CudaGPUGradientsPhero(String name, int width, int height, final float evapPercentage,
-			final float diffPercentage) {
-		super(name, width, height, evapPercentage, diffPercentage);
+	public CudaGPUGradientsPhero(String name, int width, int height, final float evapCoeff, final float diffCoeff) {
+		super(name, width, height, evapCoeff, diffCoeff);
 		fieldMaxDirPtr = new CUdeviceptr();
 		maxPinnedMemory = new Pointer();
-		fieldMaxDir = (IntBuffer) getCudaEngine().getUnifiedBufferBetweenPointer(maxPinnedMemory, fieldMaxDirPtr, Integer.class, getWidth(), getHeight());
+		fieldMaxDir = (IntBuffer) getUnifiedBufferBetweenPointer(maxPinnedMemory, fieldMaxDirPtr, Integer.class);
 		fieldMaxDirDataGridPtr = Pointer.to(maxPinnedMemory);
-		diffusionUpdateAndEvaporationAndFieldMaxDirKernel = getCudaEngine().getKernel("DIFFUSION_UPDATE_THEN_EVAPORATION_THEN_FIELDMAXDIRV2", "/turtlekit/cuda/kernels/DiffusionEvaporationGradients_2D.cu", getKernelConfiguration());
+		diffusionUpdateAndEvaporationAndFieldMaxDirKernel = getCudaKernel("DIFFUSION_UPDATE_THEN_EVAPORATION_THEN_FIELDMAXDIRV2", "/turtlekit/cuda/kernels/DiffusionEvaporationGradients_2D.cu", getKernelConfiguration());
 	}
 		
 	/**
@@ -80,13 +70,8 @@ public class CudaGPUGradientsPhero extends CudaPheromone implements CudaObject{
 	
 	public void freeMemory() {
 		super.freeMemory();
-		getCudaEngine().submit(new Runnable() {
-			@Override
-			public void run() {
-				cuMemFreeHost(maxPinnedMemory);
-				cuMemFreeHost(fieldMaxDirPtr);
-			}
-		});
+		freeCudaMemory(maxPinnedMemory);
+		freeCudaMemory(fieldMaxDirPtr);
 	}
 
 }

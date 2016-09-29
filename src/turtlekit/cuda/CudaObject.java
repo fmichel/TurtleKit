@@ -17,6 +17,51 @@
  ******************************************************************************/
 package turtlekit.cuda;
 
+import java.nio.Buffer;
+
+import jcuda.Pointer;
+import jcuda.driver.CUdeviceptr;
+
 public interface CudaObject {
+
 	public void freeMemory();
+	
+	public int getWidth();
+	
+	public int getHeight();
+	
+	default CudaEngine getCudaEngine(){
+		return CudaEngine.getCudaEngine(this);
+	}
+	
+	default KernelConfiguration getNewKernelConfiguration(){
+		return getCudaEngine().getDefaultKernelConfiguration(getWidth(), getHeight());
+	}
+	default CudaKernel getCudaKernel(final String kernelFunctionName, final String cuSourceFilePath, final KernelConfiguration kc){
+		return getCudaEngine().getKernel(kernelFunctionName, cuSourceFilePath, kc);
+	}
+	
+	default Pointer getPointerToFloat(float f){
+		return Pointer.to(new float[]{f});
+	}
+	
+	default Pointer getPointerToInt(int i){
+		return Pointer.to(new int[]{i});
+	}
+	
+	default <T> CUdeviceptr createDeviceDataGrid(Class<T> dataType){
+		return getCudaEngine().createDeviceDataGrid(getWidth(), getHeight(), dataType);
+	}
+	
+	default <T> Buffer getUnifiedBufferBetweenPointer(Pointer hostData, CUdeviceptr deviceData, Class<T> dataType){
+		return getCudaEngine().getUnifiedBufferBetweenPointer(hostData, deviceData, dataType, getWidth(), getHeight());
+	}
+	
+	default void freeCudaMemory(Pointer p){
+		getCudaEngine().freeCudaMemory(p);
+	}
+	
+
+	
+
 }

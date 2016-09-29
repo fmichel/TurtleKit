@@ -17,6 +17,8 @@
  ******************************************************************************/
 package turtlekit.kernel;
 
+import java.util.logging.Level;
+
 import madkit.kernel.Scheduler;
 import madkit.simulation.activator.GenericBehaviorActivator;
 import turtlekit.agr.TKOrganization;
@@ -32,6 +34,7 @@ public class TKScheduler extends Scheduler {
 	private GenericBehaviorActivator<TKEnvironment> pheroMaxReset;
 				
 	public TKScheduler() {
+//		setLogLevel(Level.ALL);
 	}
 	
 	@Override
@@ -56,11 +59,13 @@ public class TKScheduler extends Scheduler {
 	@Override
 	protected void end() {
 		super.end();
-		if (isMadkitPropertyTrue(TurtleKit.Option.cuda)) {
-			CudaEngine.stop();
-			if (logger != null)
-				logger.fine("cuda freed");
-		}
+//		if (isMadkitPropertyTrue(TurtleKit.Option.cuda)) {
+//			CudaEngine.stop();
+//			if (logger != null)
+//				logger.fine("cuda freed");
+//		}
+		killAgent(environmentUpdateActivator.getCurrentAgentsList().get(0));
+		System.gc();
 //		pause(10000);
 
 //		killAgent(model.getEnvironment());

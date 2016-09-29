@@ -46,7 +46,7 @@ public class Homogeneization extends Turtle {
 	private String fly() {
 		setHeading(pheromone.getMinDirection(xcor(), ycor()));
 		wiggle();
-		pheromone.incValue(xcor(), ycor(), 100000);
+		pheromone.incValue(xcor(), ycor(), Math.random() < .5 ? 100000 : -10000);
 		return "fly";
 	}
 

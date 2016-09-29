@@ -27,7 +27,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.Action;
 import javax.swing.JCheckBoxMenuItem;
@@ -40,13 +42,18 @@ import org.omg.CORBA.Environment;
 import madkit.action.GUIManagerAction;
 import madkit.action.GlobalAction;
 import madkit.action.KernelAction;
+import madkit.i18n.ErrorMessages;
 import madkit.kernel.AbstractAgent;
 import madkit.kernel.Madkit;
 import madkit.kernel.Madkit.BooleanOption;
+import madkit.kernel.MadkitOption;
 import madkit.util.MadkitProperties;
 import turtlekit.viewer.TKDefaultViewer;
 
 public class TurtleKit extends AbstractAgent {
+	
+	private final static String	TK_LOGGER_NAME		= "[* TURTLEKIT *] ";
+
 	
 	final static List<String> tkDefaultMDKArgs = new ArrayList<>(
 			Arrays.asList(Madkit.Option.configFile.toString(),
@@ -55,12 +62,11 @@ public class TurtleKit extends AbstractAgent {
 	public static String VERSION ;
 	
 	public TurtleKit() {
-		setLogLevel(Level.ALL);
 	}
-	
 	
 	@Override
 	protected void activate() {
+		setLogLevel(Level.parse(getMadkitProperty(LevelOption.turtleKitLogLevel)));
 //		MadkitProperties p = getMadkitConfig();
 //		p.list(System.err);
 		final String[] urlsName = System.getProperty("java.class.path").split(File.pathSeparator);
@@ -173,7 +179,14 @@ public class TurtleKit extends AbstractAgent {
 //		new Madkit(l.toArray(new String[l.size()]));
 	}
 	
-	public static enum Option {
+	/**
+	 * TurtleKit options which are valued with a string representing parameters.
+	 * These options could be used from the command line or using the main method of TurtleKit.
+	 * 
+	 * @author Fabien Michel
+	 * 
+	 */
+	public static enum Option implements MadkitOption {
 		/**
 		 * Used to launch turtles.
 		 * This option can be used
@@ -301,5 +314,73 @@ public class TurtleKit extends AbstractAgent {
 			return "--"+name();
 		};
 	}
+	
+	/**
+	 * MaDKit options valued with a string representing a {@link Level} value.
+	 * These options could be used from the command line or using the main method of MaDKit.
+	 * 
+	 * @author Fabien Michel
+	 * @since MaDKit 5.0.0.10
+	 * @version 0.9
+	 * 
+	 */
+	public static enum LevelOption implements MadkitOption {
+		/**
+		 * Option defining the default agent log level for newly
+		 * launched agents.
+		 * Default value is "INFO". This value could be overridden
+		 * individually by agents using {@link AbstractAgent#setLogLevel(Level)}.
+		 * <p>
+		 * Example:
+		 * <ul>
+		 * <li>--agentLogLevel OFF</li>
+		 * <li>--agentLogLevel ALL</li>
+		 * <li>--agentLogLevel FINE</li>
+		 * </ul>
+		 * 
+		 * @see AbstractAgent#logger
+		 * @see java.util.logging.Logger
+		 * @see AbstractAgent#getMadkitProperty(String)
+		 * @see AbstractAgent#setMadkitProperty(String, String)
+		 */
+		turtleLogLevel,
+		/**
+		 * Only useful for TK kernel developers
+		 */
+		tkKernelLogLevel,
+		/**
+		 * log level for the {@link TKEnvironment} agent
+		 */
+		environmentLogLevel,
+		/**
+		 * Only useful for TK desktop developers
+		 */
+		tkGuiLogLevel,
+		/**
+		 * Can be used to make TK more quiet
+		 */
+		turtleKitLogLevel;
+
+		Level getValue(Properties session) {
+			try {
+				return Level.parse(session.getProperty(name()));
+			} catch (IllegalArgumentException e) {//TODO simplify this log
+				Logger.getLogger(TK_LOGGER_NAME).log(Level.SEVERE,
+						ErrorMessages.OPTION_MISUSED.toString() + " " + name() + " : " + session.getProperty(name()), e);
+			}
+			return Level.ALL;
+		}
+
+		/**
+		 * Returns the constant's name prefixed by "<code>--</code>" so that
+		 * it could interpreted as an option of the command line or
+		 * in {@link Madkit#Madkit(String...)}.
+		 */
+		@Override
+		public String toString() {
+			return "--" + name();
+		}
+	}
+
 
 }

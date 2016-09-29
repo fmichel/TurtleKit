@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -100,6 +101,19 @@ public class TKEnvironment extends Watcher {
 		
 		// this probe is used to initialize the agents' environment field
 		addProbe(new AgentsProbe());
+	}
+	
+	@Override
+	protected void end() {
+		super.end();
+		for (Pheromone<Float> i : pheromones.values()) {
+			if(i instanceof CudaPheromone){
+				((CudaPheromone) i).freeMemory();
+			}
+		}
+		pheromones = null;
+		patchGrid = null;
+		turtleProbes = null;
 	}
 
 	private void initPatchGrid() {

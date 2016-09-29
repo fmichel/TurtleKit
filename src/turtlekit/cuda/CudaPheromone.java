@@ -57,27 +57,14 @@ public class CudaPheromone extends AbstractPheromoneGrid<Float> implements CudaO
 		this.values = values;
 	}
 
-	private CudaEngine cudaEngine;
 	CUdeviceptr valuesPtr;
-	private CUstream cudaStream;
-	int[] widthParam;
-	int[] heightParam;
-	private int MAX_THREADS;
-	private int gridSizeX;
-	Runnable diffusionToTmp;
 	CUdeviceptr tmpDeviceDataGrid;
-	private Runnable diffusionUpdate;
 	private Pointer valuesPinnedMemory;
-	private int gridSizeY;
-	private Runnable evaporation;
-//	private Runnable diffusionAndEvaporation;
-	private Runnable diffusionUpdateThenEvaporation;
 	protected Pointer arrPointer;
-	private Runnable test;
 	protected CUdeviceptr testDevicePtr;
 	protected Pointer heightPtr;
 	protected Pointer dataGridPtr;
-	private turtlekit.cuda.CudaKernel diffusionToTmpKernel;
+	private CudaKernel diffusionToTmpKernel;
 	private CudaKernel diffusionUpdateKernel;
 	private CudaKernel diffusionUpdateThenEvaporationKernel;
 	private CudaKernel evaporationKernel;
@@ -103,24 +90,26 @@ public class CudaPheromone extends AbstractPheromoneGrid<Float> implements CudaO
 			final float diffPercentage) {
 		super(name, width, height, evapPercentage, diffPercentage);
 		setMaximum(0f);
-		widthParam = new int[]{width};
-		widthPtr = Pointer.to(new int[]{width});
-		heightParam = new int[]{height};
-		heightPtr = Pointer.to(new int[]{height});
-//		arr = new float[width * height];
-//		Arrays.fill(arr, 0);
-		cudaEngine = CudaEngine.getCudaEngine(this);
-		tmpDeviceDataGrid = cudaEngine.createDeviceDataGrid(getWidth(), getHeight(), Float.class);
+		widthPtr = getPointerToInt(width);
+		heightPtr = getPointerToInt(height);
+		tmpDeviceDataGrid = createDeviceDataGrid(Float.class);
 		tmpDeviceDataGridPtr = Pointer.to(tmpDeviceDataGrid);
 		valuesPtr = new CUdeviceptr();
 		valuesPinnedMemory = new Pointer();
-		values = (FloatBuffer) cudaEngine.getUnifiedBufferBetweenPointer(valuesPinnedMemory, valuesPtr, Float.class, getWidth(), getHeight());
+		values = (FloatBuffer) getUnifiedBufferBetweenPointer(valuesPinnedMemory, valuesPtr, Float.class);
 		dataGridPtr = Pointer.to(valuesPinnedMemory);
-
-//		initCuda();
-		initFunctions();
-
+		initKernels();
 	}
+	
+	protected void initKernels() {
+		kernelConfiguration = getNewKernelConfiguration();
+//		kernelConfiguration.setStreamID(cudaEngine.getNewCudaStream());
+		diffusionToTmpKernel = getCudaKernel("DIFFUSION_TO_TMP", "/turtlekit/cuda/kernels/Diffusion_2D.cu", kernelConfiguration);
+		diffusionUpdateKernel = getCudaKernel("DIFFUSION_UPDATE", "/turtlekit/cuda/kernels/Diffusion_2D.cu", kernelConfiguration);
+		diffusionUpdateThenEvaporationKernel = getCudaKernel("DIFFUSION_UPDATE_THEN_EVAPORATION", "/turtlekit/cuda/kernels/DiffusionEvaporation_2D.cu", kernelConfiguration);
+		evaporationKernel = getCudaKernel("EVAPORATION", "/turtlekit/cuda/kernels/Evaporation_2D.cu", kernelConfiguration);
+	}
+	
 	
 	@Override
 	public Float get(int index) {
@@ -134,89 +123,19 @@ public class CudaPheromone extends AbstractPheromoneGrid<Float> implements CudaO
 		values.put(index, value);
 	}
 
-	public void initCudaTmpGrid() throws InterruptedException, ExecutionException {
-//		tmpPtr = cudaEngine.getDevicePointerToDataGrid(getWidth(), getHeight(), Float.class);
-//		final int floatGridMemorySize = getWidth() * getHeight() * Sizeof.FLOAT;
-//		tmpPtr = new CUdeviceptr();
-//			cudaEngine.submit(new Runnable() {
-//				public void run() {
-//					cuMemAlloc(tmpPtr, floatGridMemorySize);
-//				}
-//			}).get();
-	}
-
-	public void initCudaArray() throws InterruptedException, ExecutionException {
-		final int floatGridMemorySize = getWidth() * getHeight() * Sizeof.FLOAT;
-			cudaEngine.submit(new Runnable() {
-				public void run() {
-			        // Create the 2D array on the device
-			        CUarray array = new CUarray();
-			        CUDA_ARRAY_DESCRIPTOR ad = new CUDA_ARRAY_DESCRIPTOR();
-			        ad.Format = CUarray_format.CU_AD_FORMAT_FLOAT;
-			        ad.Width = getWidth();
-			        ad.Height = getHeight();
-			        ad.NumChannels = 1;
-			        JCudaDriver.cuArrayCreate(array, ad);
-			       
-			        // Copy the host input to the 2D array  
-			        CUDA_MEMCPY2D copyHD = new CUDA_MEMCPY2D();
-			        copyHD.srcMemoryType = CUmemorytype.CU_MEMORYTYPE_UNIFIED;
-//			        copyHD.srcHost = Pointer.to(arr);
-
-			        copyHD.srcPitch = getWidth() * Sizeof.FLOAT;
-			        copyHD.dstMemoryType = CUmemorytype.CU_MEMORYTYPE_UNIFIED;
-			        copyHD.dstArray = array;
-			        copyHD.WidthInBytes = getWidth() * Sizeof.FLOAT;
-			        copyHD.Height = getHeight();
-			        JCudaDriver.cuMemcpy2D(copyHD);
-			 
-			        testDevicePtr = new CUdeviceptr();
-					JCudaDriver.cuMemHostGetDevicePointer(testDevicePtr, arrPointer, 0);
-					
-					tmpDeviceDataGrid = new CUdeviceptr();
-					cuMemAlloc(tmpDeviceDataGrid, floatGridMemorySize);
-				}
-			}).get();
-	}
-//
-//	public void initCudaStream() throws InterruptedException, ExecutionException {
-//			cudaEngine.submit(new Runnable() {
-//				public void run() {
-//					cudaStream = new CUstream();
-//					JCudaDriver.cuStreamCreate(cudaStream, CUstream_flags.CU_STREAM_NON_BLOCKING);
-//				}
-//			}).get();
-//	}
-
-	/**
-	 * 
-	 */
-	public Pointer getPointerToFloat(float f){
-		return Pointer.to(new float[]{f});
-	}
-	
-	
-	
-	protected void initFunctions() {
-		kernelConfiguration = cudaEngine.getDefaultKernelConfiguration(getWidth(), getHeight());
-//		kernelConfiguration.setStreamID(cudaEngine.getNewCudaStream());
-		diffusionToTmpKernel = cudaEngine.getKernel("DIFFUSION_TO_TMP", "/turtlekit/cuda/kernels/Diffusion_2D.cu", kernelConfiguration);
-		diffusionUpdateKernel = cudaEngine.getKernel("DIFFUSION_UPDATE", "/turtlekit/cuda/kernels/Diffusion_2D.cu", kernelConfiguration);
-		diffusionUpdateThenEvaporationKernel = cudaEngine.getKernel("DIFFUSION_UPDATE_THEN_EVAPORATION", "/turtlekit/cuda/kernels/DiffusionEvaporation_2D.cu", kernelConfiguration);
-		evaporationKernel = cudaEngine.getKernel("EVAPORATION", "/turtlekit/cuda/kernels/Evaporation_2D.cu", kernelConfiguration);
-}
-
-	public CudaEngine getCudaEngine(){
-		return cudaEngine;
-	}
-	
 	protected void diffuseValuesToTmpGridKernel(){
-		diffusionToTmpKernel.run(widthPtr, heightPtr, dataGridPtr, tmpDeviceDataGridPtr, getPointerToFloat(getDiffusionCoefficient()));
+		diffusionToTmpKernel.run(
+				widthPtr, 
+				heightPtr, 
+				dataGridPtr, 
+				tmpDeviceDataGridPtr, 
+				getPointerToFloat(getDiffusionCoefficient()));
 	}
 	
 	@Override
 	protected void diffusionUpdateKernel() {
-		diffusionUpdateKernel.run(widthPtr,
+		diffusionUpdateKernel.run(
+				widthPtr,
 				heightPtr,
 				dataGridPtr,
 				tmpDeviceDataGridPtr);
@@ -224,7 +143,8 @@ public class CudaPheromone extends AbstractPheromoneGrid<Float> implements CudaO
 
 	@Override
 	public void diffusionAndEvaporationUpdateKernel() {
-		diffusionUpdateThenEvaporationKernel.run(widthPtr,
+		diffusionUpdateThenEvaporationKernel.run(
+				widthPtr,
 				heightPtr,
 				dataGridPtr,
 				tmpDeviceDataGridPtr,
@@ -233,39 +153,17 @@ public class CudaPheromone extends AbstractPheromoneGrid<Float> implements CudaO
 	
 	@Override
 	public void evaporationKernel() {
-		evaporationKernel.run(widthPtr, heightPtr,	dataGridPtr, getPointerToFloat(getEvaporationCoefficient()));
+		evaporationKernel.run(
+				widthPtr, 
+				heightPtr,
+				dataGridPtr, 
+				getPointerToFloat(getEvaporationCoefficient()));
 	}
-	
-//	public void updateFieldMaxDir() {
-//			cuda.submit(fieldMinDirComputation);
-//	}
 	
 	public void freeMemory() {
-		cudaEngine.submit(new Runnable() {
-			@Override
-			public void run() {
-				cuMemFree(tmpDeviceDataGrid);
-				cuMemFreeHost(valuesPinnedMemory);
-				cuMemFreeHost(valuesPtr);
-			}
-		});
-	}
-
-//	void launchKernel(Pointer kernelParameters, CUfunction cUfunction) {
-//		JCudaDriver.cuLaunchKernel(cUfunction, //TODO cach
-//				gridSizeX , gridSizeY, 1, // Grid dimension
-//				MAX_THREADS , MAX_THREADS, 1, // Block dimension
-//				0, cudaStream, // Shared memory size and stream
-//				kernelParameters, null // Kernel- and extra parameters
-//		);
-//	}
-
-
-	/**
-	 * @param cudaEngine the cudaEngine to set
-	 */
-	public final void setCudaEngine(CudaEngine cudaEngine) {
-		this.cudaEngine = cudaEngine;
+		freeCudaMemory(tmpDeviceDataGrid);
+		freeCudaMemory(valuesPinnedMemory);
+		freeCudaMemory(valuesPtr);
 	}
 
 	/**

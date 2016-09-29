@@ -220,7 +220,7 @@ public class Particule extends AbstractMLEAgent {
 //				,"--GPU_gradients"
 				,Option.cuda.toString()
 //				,LevelOption.agentLogLevel.toString(),"ALL"
-//				,Option.startSimu.toString()
+				,Option.startSimu.toString()
 //				,Option.endTime.toString(),args[5]
 				,Option.environment.toString(),MLEEnvironment.class.getName()
 				,Option.scheduler.toString(),MLEScheduler.class.getName()

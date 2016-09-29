@@ -40,7 +40,7 @@
 	<property file="${resource.dir}/turtlekitBuild.properties" />
 
 	<property name="madkit.lib.dir" value="lib" />
-	<property name="madkit.version" value="5.0.5.3" />
+	<property name="madkit.version" value="5.1" />
 
 	<!-- user's specific local properties -->
 	<property name="server.info.dir" value="${user.home}/.mdk_keystore" />
