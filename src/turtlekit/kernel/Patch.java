@@ -31,7 +31,7 @@ public class Patch {
 	public int x;
 	public int y;
 	private TKEnvironment environment;
-	private ArrayList<Patch> neighbors = new ArrayList<>();// TODO bench lazy
+	private ArrayList<Patch> neighbors = new ArrayList<>(8);// TODO bench lazy
 														// creation
 	private HashMap<String, Object> marks;
 
@@ -237,7 +237,7 @@ public class Patch {
 		final ArrayList<T> turtles = new ArrayList<>();
 		final ArrayList<Turtle> tmp;
 		synchronized (turtlesHere) {
-			tmp = new ArrayList<Turtle>(turtlesHere);
+			tmp = new ArrayList<>(turtlesHere);
 		}
 		for (final Turtle t : tmp) {
 			if (turtleType.isAssignableFrom(t.getClass())) {

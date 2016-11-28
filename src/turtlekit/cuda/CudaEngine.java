@@ -25,6 +25,7 @@ import static jcuda.driver.JCudaDriver.cuMemFreeHost;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
@@ -425,17 +426,23 @@ public class CudaEngine {
 	
 	private CUfunction updateCuSourceFile(String kernelFunctionName, String dotCuSourceFilePath) {
 //		KernelLauncher.setCompilerPath("/usr/local/cuda-7.0/bin/");//FIXME
-		try {
+		try (final InputStream is = CudaEngine.class.getResourceAsStream(dotCuSourceFilePath)){
 			final URL resource = CudaEngine.class.getResource(dotCuSourceFilePath);
-			if(resource == null)
+			if(resource == null || is == null)
 				throw new FileNotFoundException(dotCuSourceFilePath+" not found on the class path");
-			File f = new File(resource.toURI());
-			final Path path = Paths.get(CudaEngine.ioTmpDir, f.getName());
+			String fileName = dotCuSourceFilePath.substring(dotCuSourceFilePath.lastIndexOf(File.separatorChar)+1);
+			final Path path = Paths.get(CudaEngine.ioTmpDir, fileName);
 			final File file = path.toFile();
-			final boolean rebuildNeeded = ! file.exists() || file.lastModified() < f.lastModified();
+			boolean rebuildNeeded = ! file.exists();
+			try{ //IDE mode
+				File f = new File(resource.toURI());
+				rebuildNeeded = rebuildNeeded || file.lastModified() < f.lastModified();
+			}
+			catch (IllegalArgumentException e) { //jar file mode
+			}
 			String cuFile = path.toString();
 			if(rebuildNeeded){
-				Files.copy(f.toPath(), path, StandardCopyOption.REPLACE_EXISTING);
+				Files.copy(is, path, StandardCopyOption.REPLACE_EXISTING);
 				System.err.println("--------------- Compiling ptx from "+cuFile);
 			}
 			KernelLauncher.create(

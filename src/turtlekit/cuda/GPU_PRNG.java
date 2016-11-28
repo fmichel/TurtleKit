@@ -32,11 +32,12 @@ import jcuda.jcurand.curandGenerator;
 import jcuda.jcurand.curandRngType;
 import jcuda.runtime.cudaMemcpyKind;
 
-public class GPU_PRNG extends Random implements CudaObject{
+public class GPU_PRNG extends Random {
 
 	private FloatBuffer fb;
 
 	public GPU_PRNG() {
+		this(System.nanoTime());
 	}
 
 	public GPU_PRNG(long seed) {
@@ -60,7 +61,7 @@ public class GPU_PRNG extends Random implements CudaObject{
 		fb = FloatBuffer.wrap(hostData);
 //		fb.compact();
 		fb.rewind();
-		System.err.println("\n-------------------"+fb.isDirect());
+//		System.err.println("\n-------------------"+fb.isDirect());
 		cudaMemcpy(Pointer.to(hostData), deviceData, n * Sizeof.FLOAT, cudaMemcpyKind.cudaMemcpyDeviceToHost); 
         // Cleanup 
 		JCurand.curandDestroyGenerator(generator);
@@ -69,12 +70,6 @@ public class GPU_PRNG extends Random implements CudaObject{
 	
 	@Override
 	public float nextFloat() {
-//		try {
-//			return hostData[index++];
-//		} catch (ArrayIndexOutOfBoundsException e) {
-//			index=0;
-//		}
-//		return nextFloat();
 		try {
 			return fb.get();
 		} catch (BufferUnderflowException e) {
@@ -87,10 +82,10 @@ public class GPU_PRNG extends Random implements CudaObject{
 	public double nextDouble() {
 		return nextFloat();
 	}
-
-	@Override
-	public void freeMemory() {
-		
+	
+	public static void main(String[] args) {
+		GPU_PRNG name = new GPU_PRNG();
+		System.err.println(name.nextDouble());
 	}
 
 }
