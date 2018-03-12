@@ -40,7 +40,6 @@ public class SchedulerFlocking  extends TKScheduler {
 		if (writeFile) {
 			final String csvFile = "result";//getMadkitProperty("cvs.file");
 			if (csvFile != null) {
-				logger.info("pouet");
 				final String envSize = getMadkitProperty(Option.envHeight.name());
 				int size = Integer.parseInt(envSize);
 				size = size * size;
@@ -63,10 +62,10 @@ public class SchedulerFlocking  extends TKScheduler {
 		if (logFile) {
 			getLogger().createLogFile();
 		}
-		logger.info("average agents"+ (Timer.getTimerValue(getTurtleActivator()) / 1000000 / getGVT())	);
-		logger.info(getMadkitProperty(Option.envDimension.name()));
-		logger.info("nb agents : "+getTurtleActivator().size());
-		logger.info("Iteration : " + getGVT());
-		logger.info(Timer.createPrettyString());
+//		logger.info("average agents"+ (Timer.getTimerValue(getTurtleActivator()) / 1000000 / getGVT())	);
+//		logger.info(getMadkitProperty(Option.envDimension.name()));
+//		logger.info("nb agents : "+getTurtleActivator().size());
+//		logger.info("Iteration : " + getGVT());
+//		logger.info(Timer.createPrettyString());
 	}
 }

@@ -47,7 +47,6 @@ import madkit.kernel.AbstractAgent;
 import madkit.kernel.Madkit;
 import madkit.kernel.Madkit.BooleanOption;
 import madkit.kernel.MadkitOption;
-import madkit.util.MadkitProperties;
 import turtlekit.viewer.TKDefaultViewer;
 
 public class TurtleKit extends AbstractAgent {
@@ -72,8 +71,7 @@ public class TurtleKit extends AbstractAgent {
 		final String[] urlsName = System.getProperty("java.class.path").split(File.pathSeparator);
 		final String modelFile = getMadkitProperty(Option.model);
 		if (modelFile != null) {
-			if(logger != null)
-				logger.info("----- Loading model "+modelFile);
+		    getLogger().info(() -> "----- Loading model "+modelFile);
 			try {
 				getMadkitConfig().loadPropertiesFromFile(modelFile);
 			} catch (IOException e) {
@@ -85,8 +83,7 @@ public class TurtleKit extends AbstractAgent {
 				getMadkitProperty(turtlekit.kernel.TurtleKit.Option.launcher).equals(TKLauncher.class.getName()) &&
 				getMadkitProperty(turtlekit.kernel.TurtleKit.Option.turtles).equals("null")
 				){
-			if(logger != null)
-				logger.fine("No valid configuration to start with: Desktop mode activated!");
+				getLogger().fine(() -> "No valid configuration to start with: Desktop mode activated!");
 			return;
 		}
 		launchAgent(getMadkitProperty(Option.launcher));
@@ -161,6 +158,7 @@ public class TurtleKit extends AbstractAgent {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+//		JOptionPane.showMessageDialog(null,Arrays.deepToString(args));
 		Collections.addAll(tkDefaultMDKArgs, args);
 		if(tkDefaultMDKArgs.contains(Option.model.toString())){
 			Collections.addAll(tkDefaultMDKArgs, BooleanOption.desktop.toString(),"false");
@@ -175,6 +173,7 @@ public class TurtleKit extends AbstractAgent {
 //				l.add("false");
 //			}
 //		}
+//		JOptionPane.showMessageDialog(null,tkDefaultMDKArgs);
 		new Madkit(tkDefaultMDKArgs.toArray(new String[tkDefaultMDKArgs.size()]));
 //		new Madkit(l.toArray(new String[l.size()]));
 	}

@@ -54,48 +54,45 @@ public class Termite extends Turtle {
 	 */
 	public String findEmptyPatch() {
 		wiggle();
-		if (getPatchColor() == Color.black) {
+		if (getPatchColor() == Color.BLACK) {
 			setPatchColor(Color.yellow);
 			return ("getAway");
-		} else
-			return ("findEmptyPatch");
+		} 
+		return SAME_BEHAVIOR;
 	}
 
 	/** another one step behavior */
 	public String getAway() {
-		if (getPatch().getColor() == Color.black)
+		if (getPatchColor() == Color.BLACK)
 			return ("searchForChip");
-		else {
-			randomHeading();
-			fd(20);
-			return ("getAway");
-		}
+		randomHeading();
+		fd(20);
+		return SAME_BEHAVIOR;
 	}
 
 	/** another one step behavior */
 	public String searchForChip() {
 		wiggle();
-		if (getPatchColor() == Color.yellow) {
-			setPatchColor(Color.black);
+		if (getPatchColor() == Color.YELLOW) {
+			setPatchColor(Color.BLACK);
 			fd(20);
 			return ("findNewPile");
-		} else
-			return ("searchForChip");
+		} 
+		return SAME_BEHAVIOR;
 	}
 
 	/** another one step behavior */
 	public String findNewPile() {
 		if (getPatchColor() == Color.YELLOW)
 			return ("findEmptyPatch");
-		else {
-			wiggle();
-			return ("findNewPile");
-		}
+		wiggle();
+		return SAME_BEHAVIOR;
 	}
 
 	public static void main(String[] args) {
 		executeThisTurtle(1000
-				,Option.envDimension.toString(),"300,150"
+				,Option.envDimension.toString(),"1024,1024"
+				,Option.envDimension.toString(),"2048,2048"
 				,Option.viewers.toString(),	TermiteViewer.class.getName()
 				,Option.startSimu.toString()
 				

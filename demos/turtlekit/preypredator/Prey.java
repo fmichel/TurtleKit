@@ -70,8 +70,6 @@ public class Prey extends Turtle
 			int targetedBy = 0;
 			for (Predator predator : predatorsHere) {
 				if(predator.getTarget() == this && ++targetedBy == 4){
-					if(logger != null)
-						logger.info("killed by "+predatorsHere);
 					return null; //die
 				}
 			}

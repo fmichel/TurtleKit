@@ -17,8 +17,11 @@
  ******************************************************************************/
 package turtlekit.viewer;
 
+import java.awt.Container;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -33,55 +36,59 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import madkit.agr.Organization;
+import madkit.gui.AgentFrame;
+import madkit.kernel.AbstractAgent;
 import madkit.kernel.Probe;
 import turtlekit.agr.TKOrganization;
 import turtlekit.gui.util.ChartsUtil;
 import turtlekit.kernel.Turtle;
 
+/**
+ * 
+ * Creates a chart tracing the population for each role taken by the turtles in the 
+ * Simulation. The "turtle" role is ignored by default.
+ * 
+ * @author Fabien Michel
+ *
+ */
 @GenericViewer
 public class PopulationCharter extends AbstractObserver{
 	
-	private XYSeriesCollection dataset = new XYSeriesCollection();
 	private int index=0;
+	private XYSeriesCollection dataset = new XYSeriesCollection();
 	private Map<Probe<Turtle>, XYSeries> series = new HashMap<>();
-	private Set<String> handledRoles = new HashSet<>();
 	private int timeFrame = 0;
-	private boolean monitorTurtle;
+	private Set<String> handledRoles = new HashSet<>();
+	private HashSet<String> ignoredRoles = new HashSet<>();
 	
 	public PopulationCharter() {
 		createGUIOnStartUp(); //prevent inappropriate launching and thus null pointer
+		ignoreRole(Organization.GROUP_MANAGER_ROLE);
+		ignoreRole(TKOrganization.ENVIRONMENT_ROLE);
+		ignoreRole(TKOrganization.TURTLE_ROLE);
 	}
 
 	@Override
 	protected void activate() {
-		setLogLevel(Level.ALL);
+//		setLogLevel(Level.ALL);
 		super.activate();
+		for (String role : handledRoles) {
+			addSerie(role);
+		}
 		observe();
 	}
 	
 	@Override
-	public void setupFrame(JFrame frame) {
+	public void setupFrame(AgentFrame frame) {
 		final ChartPanel chartPanel = ChartsUtil.createChartPanel(dataset, "Population", null, null);
 		chartPanel.setPreferredSize(new java.awt.Dimension(550, 250));
 		frame.setContentPane(chartPanel);
 		frame.setLocation(50, 0);
 	}
 	
-	/**
-	 * @param role
-	 */
-	private void addSerie(String role) {
-		final Probe<Turtle> probe = new Probe<Turtle>(getCommunity(), TKOrganization.TURTLES_GROUP, role);
-		addProbe(probe);
-		XYSeries serie = new XYSeries(role);
-		series.put(probe, serie);
-		dataset.addSeries(serie);
-		handledRoles.add(role);
-	}
-
 	@Override
 	protected void observe() {
-		updateSeries();
+		refreshMonitoredRoles();
 		SwingUtilities.invokeLater(new Runnable() {//avoiding null pointers on the awt thread
 			@Override
 			public void run() {
@@ -102,39 +109,59 @@ public class PopulationCharter extends AbstractObserver{
 		timeFrame = interval;
 	}
 	
-	public void setMonitorTurtleRole(boolean b){
-		monitorTurtle = b;
-		if (isAlive()) {
-			updateSeries();
-		}
-	}
-
 	/**
+	 * Starts ignoring this role.
 	 * 
+	 * @param role
 	 */
-	protected void updateSeries() {
-		TreeSet<String> roles = getExistingRoles();
-		if(roles != null && roles.size() != handledRoles.size()){
-			for (String role : roles) {
-				if(handledRoles.add(role)){
-					addSerie(role);
+	public void ignoreRole(String role){
+		if (handledRoles.remove(role)) {
+			for (Probe<? extends AbstractAgent> p : getProbes()) {
+				if(p.getRole().equals(role)){
+					dataset.removeSeries(series.remove(p));
 				}
 			}
 		}
+		ignoredRoles.add(role);
+	}
+	
+	/**
+	 * Starts monitoring this role.
+	 * 
+	 * @param role
+	 */
+	public void monitorRole(String role){
+		if(handledRoles.add(role)){
+			if (isAlive()) {
+				addSerie(role);
+			}
+		}
+		ignoredRoles.remove(role);
+	}
+
+	/**
+	 * @param role
+	 */
+	private void addSerie(String role) {
+		final Probe<Turtle> probe = new Probe<Turtle>(getCommunity(), TKOrganization.TURTLES_GROUP, role);
+		addProbe(probe);
+		XYSeries serie = new XYSeries(role);
+		series.put(probe, serie);
+		dataset.addSeries(serie);
 	}
 
 	/**
 	 * @return
 	 */
-	private TreeSet<String> getExistingRoles() {
-		TreeSet<String> roles = getExistingRoles(getCommunity(), TKOrganization.TURTLES_GROUP);
+	private void refreshMonitoredRoles() {
+		final Set<String> roles = getExistingRoles(getCommunity(), TKOrganization.TURTLES_GROUP);
 		if (roles != null) {
-			roles.remove(Organization.GROUP_MANAGER_ROLE);
-			if (! monitorTurtle) {
-				roles.remove(TKOrganization.TURTLE_ROLE);
+			roles.removeAll(ignoredRoles);
+			roles.removeAll(handledRoles);
+			for (String role : roles) {//new roles
+				monitorRole(role);
 			}
 		}
-		return roles;
 	}
 	
 }

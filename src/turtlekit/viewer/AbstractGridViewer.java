@@ -32,11 +32,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import javax.swing.JFrame;
+import javax.swing.JMenuBar;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JToolBar;
 
 import madkit.action.KernelAction;
+import madkit.gui.AgentFrame;
 import madkit.kernel.Madkit;
 import madkit.simulation.probe.SingleAgentProbe;
 import madkit.simulation.viewer.SwingViewer;
@@ -45,6 +47,7 @@ import turtlekit.gui.CudaMenu;
 import turtlekit.gui.toolbar.TKToolBar;
 import turtlekit.kernel.Patch;
 import turtlekit.kernel.TKEnvironment;
+import turtlekit.kernel.TKGridModel;
 import turtlekit.kernel.TKScheduler;
 import turtlekit.kernel.TurtleKit;
 import turtlekit.kernel.TurtleKit.Option;
@@ -66,10 +69,18 @@ public abstract class AbstractGridViewer extends SwingViewer {
 	private static final long serialVersionUID = 671181979144051600L;
 	protected int cellSize = 10;
 	private SingleAgentProbe<TKEnvironment, Patch[]> gridProbe;
+	/**
+	 * @deprecated replaced by using directly {@link #getCurrentEnvironment()}
+	 */
 	public SingleAgentProbe<TKEnvironment, Patch[]> getGridProbe() {
 		return gridProbe;
 	}
 
+
+	private SingleAgentProbe<TKEnvironment, TKGridModel> gridModelProbe;
+	SingleAgentProbe<TKEnvironment,TKGridModel> getGridModelProbe() {
+		return gridModelProbe;
+	}
 
 	private SingleAgentProbe<TKScheduler,Double> timeProbe;
 	private SingleAgentProbe<TKEnvironment, Integer> widthProbe;
@@ -77,6 +88,12 @@ public abstract class AbstractGridViewer extends SwingViewer {
 	private JPanel turtlePane;
 	
 	protected void initProbes(){
+		gridModelProbe = new SingleAgentProbe<TKEnvironment, TKGridModel>(
+				getCommunity(), 
+				TKOrganization.MODEL_GROUP, 
+				TKOrganization.ENVIRONMENT_ROLE, 
+				"gridModel");
+		addProbe(gridModelProbe);
 		gridProbe = new SingleAgentProbe<TKEnvironment, Patch[]>(
 				getCommunity(), 
 				TKOrganization.MODEL_GROUP, 
@@ -134,7 +151,7 @@ public abstract class AbstractGridViewer extends SwingViewer {
 //	}
 
 	@Override
-	public void setupFrame(final JFrame frame) {
+	public void setupFrame(final AgentFrame frame) {
 		initProbes();
 		SingleAgentProbe<TKScheduler,Double> p = new SingleAgentProbe<>(getCommunity(), TKOrganization.ENGINE_GROUP, TKOrganization.SCHEDULER_ROLE,"GVT");
 		addProbe(p);
@@ -143,7 +160,10 @@ public abstract class AbstractGridViewer extends SwingViewer {
 
 		super.setupFrame(frame);
 		
-		getFrame().getJMenuBar().add(new CudaMenu(getCurrentEnvironment()));
+		final JMenuBar jMenuBar = getFrame().getJMenuBar();
+		jMenuBar.add(tkScheduler.getSchedulerMenu(),6);
+		jMenuBar.add(new CudaMenu(getCurrentEnvironment()),7);
+		jMenuBar.remove(8);//removing the glue
 
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
@@ -191,9 +211,10 @@ public abstract class AbstractGridViewer extends SwingViewer {
 		});
 		turtlePane = (JPanel) getDisplayPane();
 		setDisplayPane(new JScrollPane(turtlePane));
+//		frame.restoreUIPreferences();
 		updateSize(null);
 		frame.pack();
-		frame.setLocationRelativeTo(null);
+//		frame.setLocationRelativeTo(null);
 		schedulerToolBar.getComponent(0).requestFocus();
 	}
 
@@ -271,11 +292,17 @@ public abstract class AbstractGridViewer extends SwingViewer {
 	 * @return
 	 */
 	public Patch[] getPatchGrid() {
-		return gridProbe.getPropertyValue();
+//		return gridProbe.getPropertyValue();
+		return getGridModel().getPatchGrid();
 	}
 	
 	public Patch getPatch(int x, int y){
-		return gridProbe.getPropertyValue()[x + getWidth() * y];
+//		return gridProbe.getPropertyValue()[x + getWidth() * y];
+		return getGridModel().getPatch(x,y);
+	}
+	
+	public TKGridModel getGridModel(){
+		return gridModelProbe.getPropertyValue();
 	}
 	
 	/**
@@ -293,7 +320,7 @@ public abstract class AbstractGridViewer extends SwingViewer {
 	}
 	
 	public TKEnvironment getCurrentEnvironment(){
-		return heightProbe.getProbedAgent();
+		return gridModelProbe.getProbedAgent();
 	}
 	
 	public double getSimulationTime(){

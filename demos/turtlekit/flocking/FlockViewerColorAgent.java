@@ -3,8 +3,7 @@ package turtlekit.flocking;
 import java.awt.Color;
 import java.awt.Graphics;
 
-import javax.swing.JFrame;
-
+import madkit.gui.AgentFrame;
 import turtlekit.agr.TKOrganization;
 import turtlekit.kernel.Patch;
 import turtlekit.kernel.Turtle;
@@ -13,7 +12,7 @@ import turtlekit.viewer.TKDefaultViewer;
 public class FlockViewerColorAgent extends TKDefaultViewer {
 
 	@Override
-	public void setupFrame(JFrame frame) {
+	public void setupFrame(AgentFrame frame) {
 		super.setupFrame(frame);
 		getDisplayPane().setBackground(Color.WHITE);
 	}

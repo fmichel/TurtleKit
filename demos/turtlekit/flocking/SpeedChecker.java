@@ -20,12 +20,11 @@ package turtlekit.flocking;
 
 import java.util.logging.Level;
 
-import javax.swing.JFrame;
-
 import org.jfree.chart.ChartPanel;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
+import madkit.gui.AgentFrame;
 import madkit.simulation.SimulationException;
 import madkit.simulation.probe.PropertyProbe;
 import turtlekit.agr.TKOrganization;
@@ -55,7 +54,7 @@ public class SpeedChecker extends AbstractObserver {
 	}
 
 	@Override
-	public void setupFrame(JFrame frame) {
+	public void setupFrame(AgentFrame frame) {
 		XYSeriesCollection dataset = new XYSeriesCollection();
 		final ChartPanel chartPanel = ChartsUtil.createChartPanel(dataset, "Moyenne", null, null);
 		chartPanel.setPreferredSize(new java.awt.Dimension(550, 250));

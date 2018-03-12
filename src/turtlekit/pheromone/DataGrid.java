@@ -42,7 +42,7 @@ public abstract class DataGrid<T> {
 		this.height = height;
 	}
 
-	final public T get(int x, int y) {
+	public final T get(int x, int y) {
 		return get(get1DIndex(x, y));
 	}
 
@@ -81,6 +81,14 @@ public abstract class DataGrid<T> {
 	
 	public void set(int x, int y, T value) {
 		set(get1DIndex(x, y), value);
+	}
+	
+	
+	/**
+	 * makes this data structure evolve to its next state, e.g. diffusion and evaporation for pheromone
+	 */
+	public void applyDynamics() {
+	    
 	}
 
 }

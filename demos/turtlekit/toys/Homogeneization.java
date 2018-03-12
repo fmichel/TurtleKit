@@ -19,6 +19,7 @@ package turtlekit.toys;
 
 import java.awt.Color;
 
+import turtlekit.cuda.CudaPheromone;
 import turtlekit.kernel.Turtle;
 import turtlekit.kernel.TurtleKit.Option;
 import turtlekit.pheromone.Pheromone;
@@ -40,6 +41,7 @@ public class Homogeneization extends Turtle {
 		randomLocation();
 		setColor(new Color((int) (Math.random() * 256),(int) (Math.random() * 256), (int) (Math.random() * 256)));
 		pheromone = getEnvironment().getPheromone("test",1,7);
+		System.err.println(pheromone instanceof CudaPheromone);
 	}
 	
 	
@@ -56,9 +58,9 @@ public class Homogeneization extends Turtle {
 	public static void main(String[] args) {
 		executeThisTurtle(10
 				,Option.viewers.toString(),PheromoneViewer.class.getName()
-				,Option.envHeight.toString(),"100"
-				,Option.envWidth.toString(),"100"
-//				,Option.cuda.toString()
+				,Option.envHeight.toString(),"1000"
+				,Option.envWidth.toString(),"1000"
+				,Option.cuda.toString()
 				);
 	}
 

@@ -20,12 +20,11 @@ package turtlekit.pvequalsnrt;
 
 import java.util.logging.Level;
 
-import javax.swing.JFrame;
-
 import org.jfree.chart.ChartPanel;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
+import madkit.gui.AgentFrame;
 import madkit.kernel.Probe;
 import turtlekit.agr.TKOrganization;
 import turtlekit.gui.util.ChartsUtil;
@@ -57,7 +56,7 @@ public class PhysicsChecker extends AbstractObserver {
 	}
 
 	@Override
-	public void setupFrame(JFrame frame) {
+	public void setupFrame(AgentFrame frame) {
 		XYSeriesCollection dataset = new XYSeriesCollection();
 		final ChartPanel chartPanel = ChartsUtil.createChartPanel(dataset, "PV = nRT", null, null);
 		chartPanel.setPreferredSize(new java.awt.Dimension(550, 250));
@@ -67,7 +66,6 @@ public class PhysicsChecker extends AbstractObserver {
 		dataset.addSeries(total);
 		frame.setContentPane(chartPanel);
 		frame.setLocation(50, 0);
-		XYSeries s = dataset.getSeries("Total");
 	}
 	
 	@Override

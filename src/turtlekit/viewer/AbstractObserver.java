@@ -17,8 +17,12 @@
  ******************************************************************************/
 package turtlekit.viewer;
 
+import madkit.kernel.Probe;
 import madkit.kernel.Watcher;
 import turtlekit.agr.TKOrganization;
+import turtlekit.kernel.TKEnvironment;
+import turtlekit.kernel.TKLauncher;
+import turtlekit.kernel.TKScheduler;
 import turtlekit.kernel.TurtleKit;
 
 /**
@@ -32,9 +36,25 @@ import turtlekit.kernel.TurtleKit;
  */
 public abstract class AbstractObserver extends Watcher{
 	
+	private TKLauncher launcher;
+	private TKEnvironment environment;
+	private TKScheduler scheduler;
+
 	@Override
 	protected void activate() {
 		requestRole(getCommunity(), TKOrganization.ENGINE_GROUP,TKOrganization.VIEWER_ROLE);
+		Probe<TKEnvironment> envProbe = new Probe<>(getCommunity(), TKOrganization.MODEL_GROUP, TKOrganization.ENVIRONMENT_ROLE);
+		addProbe(envProbe);
+		environment = envProbe.getCurrentAgentsList().get(0);
+		removeProbe(envProbe);
+		Probe<TKLauncher> launcherProbe = new Probe<>(getCommunity(), TKOrganization.ENGINE_GROUP, TKOrganization.LAUNCHER_ROLE);
+		addProbe(launcherProbe);
+		launcher = launcherProbe.getCurrentAgentsList().get(0);
+		removeProbe(envProbe);
+		Probe<TKScheduler> schedulerProbe = new Probe<>(getCommunity(), TKOrganization.ENGINE_GROUP, TKOrganization.SCHEDULER_ROLE);
+		addProbe(schedulerProbe);
+		scheduler = schedulerProbe.getCurrentAgentsList().get(0);
+		removeProbe(schedulerProbe);
 	}
 	
 	/**
@@ -50,5 +70,26 @@ public abstract class AbstractObserver extends Watcher{
 	public final String getCommunity() {
 		return getMadkitProperty(TurtleKit.Option.community);
 	}
-	
+
+	/**
+	 * @return the environment
+	 */
+	public TKEnvironment getEnvironment() {
+		return environment;
+	}
+
+	/**
+	 * @return the scheduler
+	 */
+	public TKScheduler getScheduler() {
+		return scheduler;
+	}
+
+	/**
+	 * @return the launcher
+	 */
+	public TKLauncher getLauncher() {
+		return launcher;
+	}
+
 }

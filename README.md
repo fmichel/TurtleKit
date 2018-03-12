@@ -1,7 +1,7 @@
 TurtleKit: Artificial Life using MaDKit
 ================================================
 
-What is TurtleKit ?
+What is TurtleKit
 -----------------
 
 TurtleKit is an open source library for simulating artificial life models based on the Logo programming language.

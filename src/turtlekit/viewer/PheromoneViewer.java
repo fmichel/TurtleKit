@@ -24,12 +24,12 @@ import java.awt.event.ActionEvent;
 import java.util.Map;
 
 import javax.swing.AbstractAction;
-import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JToolBar;
 
+import madkit.gui.AgentFrame;
 import madkit.simulation.probe.SingleAgentProbe;
 import turtlekit.agr.TKOrganization;
 import turtlekit.kernel.Patch;
@@ -88,7 +88,7 @@ public class PheromoneViewer extends TKDefaultViewer {
 	
 
 	@Override
-	public void setupFrame(JFrame frame) {
+	public void setupFrame(AgentFrame frame) {
 		super.setupFrame(frame);
 		JMenuBar menuB = frame.getJMenuBar();
 		JMenu menu = new JMenu("pheros");

@@ -9,6 +9,8 @@ public class CudaAverageField implements CudaObject {
 	//TODO ADD UN TABLEAU POUR LES RESULTATS !!!!!!!!!
 	final int width, height;
 	
+	public final static int DEFAULT_DEPTH = 5;
+	
 	private FloatBuffer values;
 	private FloatBuffer result;
 	
@@ -25,12 +27,12 @@ public class CudaAverageField implements CudaObject {
 	private Pointer heightPtr;
 	private Pointer dataGridPtr;
 	private Pointer resultGridPtr;
-	private Pointer depthPtr;
+	private int defaultDepth;
 	
 	public CudaAverageField(String name, int width, int height, int depth, float[] valuesAverage) {
 		widthPtr = getPointerToInt(width);
 		heightPtr = getPointerToInt(height);
-		depthPtr = getPointerToInt(depth);
+		defaultDepth = depth;
 		this.width = width;
 		this.height = height;
 		
@@ -47,7 +49,11 @@ public class CudaAverageField implements CudaObject {
 		initFunctions();
 	}
 	
-	private void initValues(float[] valuesAverage) {
+	public CudaAverageField(String name, int width, int height, float[] valuesAverage) {
+		this(name,width,height,DEFAULT_DEPTH,valuesAverage);
+	}
+	
+	private void initValues(float[] valuesAverage) {//TODO
 		values.rewind();
 		result.rewind();
 		for (float f : valuesAverage) {
@@ -101,14 +107,19 @@ public class CudaAverageField implements CudaObject {
 		averageComputation = getCudaKernel("AVERAGE_DEPTH_1D_V2", "/turtlekit/cuda/kernels/Average_2D.cu", kernelConfiguration);
 	}
 	
-	public void computeAverage(){
+
+	public void computeAverage(final int depth){
 		averageComputation.run(
 				widthPtr,
 				heightPtr,
 				dataGridPtr,
 				resultGridPtr,
-				depthPtr
+				getPointerToInt(depth)
 				);
+	}
+	
+	public void computeAverage(){
+		computeAverage(defaultDepth);
 	}
 	
 	@Override

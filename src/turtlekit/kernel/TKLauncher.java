@@ -67,20 +67,28 @@ public class TKLauncher extends Agent {
 	private int height = 200;
 //	private TKScheduler sch;
 	private String community;
+	/**
+	 * @return the community
+	 */
+	public String getCommunity() {
+		return community;
+	}
+
 	private Document dom;
+	private TKSimulationEngine simulationModel;
 	
 	public TKLauncher() {
 	}
 	
 	@Override
 	protected void activate() {
-//		setLogLevel(Level.ALL);
 		initProperties();
-		createGroup(TKOrganization.TK_COMMUNITY, TKOrganization.LAUNCHING);
 		createGroup(community, ENGINE_GROUP);
+		requestRole(community, ENGINE_GROUP, TKOrganization.LAUNCHER_ROLE);
 		createGroup(community, MODEL_GROUP);
 		createGroup(community, TURTLES_GROUP);
-		requestRole(community, ENGINE_GROUP, MODEL_ROLE);
+		requestRole(community, ENGINE_GROUP, MODEL_ROLE);//FIXME
+		
 		if (isMadkitPropertyTrue(TurtleKit.Option.cuda) && ! CudaEngine.init(getMadkitProperty(LevelOption.turtleKitLogLevel))){
 			setMadkitProperty(TurtleKit.Option.cuda, "false");
 		}
@@ -92,7 +100,27 @@ public class TKLauncher extends Agent {
 	
 	protected void live() {	}//avoid the Agent's default live message
 	
+	/**
+	 * Creates the simulation agents.
+	 * 
+	 * 1. launch core agents : Environment -> Scheduler -> Simulation model
+	 * 2. launchConfigTurtles : launchXmlTurtles -> launch args turtles
+	 * 3. launch viewers 
+	 * 4. launch xml Agent tag
+	 */
 	protected void createSimulationInstance(){
+		launchCoreAgents();
+		launchConfigTurtles();
+		if (! launchXMLAgents("Viewer")) {
+			launchViewers();
+		}
+		launchXMLAgents("Agent");
+	}
+
+	/**
+	 * 
+	 */
+	protected void launchCoreAgents() {
 		if (! launchXMLAgents("Environment")) {
 			launchAgent(getMadkitProperty(environment));
 		}
@@ -100,11 +128,8 @@ public class TKLauncher extends Agent {
 //			System.err.println(getMadkitProperty(turtlekit.kernel.TurtleKit.Option.community));
 			launchScheduler();
 		}
-		launchConfigTurtles();
-		if (! launchXMLAgents("Viewer")) {
-			launchViewers();
-		}
-		launchXMLAgents("Agent");
+		simulationModel = new TKSimulationEngine(this);
+		launchAgent(simulationModel);
 	}
 	
 	protected void launchScheduler(){
@@ -162,6 +187,24 @@ public class TKLauncher extends Agent {
 				launchNode(turtleNode);
 			}
 		}
+	}
+	
+	<T extends Turtle> T getTurtleNewInstance(Class<T> type){
+		try {
+			return type.newInstance();
+		} catch (InstantiationException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public static Turtle getNewTurtleInstance(String className){
+		try {
+			return (Turtle) Class.forName(className).newInstance();
+		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 	/**
@@ -267,7 +310,7 @@ public class TKLauncher extends Agent {
 	protected void launchConfigTurtles(){
 //		Timer.startTimer(this);
 //		if (logger != null)
-//			logger.info("** LAUNCHING CONFIG TURTLES **");
+//			logger.info("** LAUNCHER_ROLE CONFIG TURTLES **");
 		launchXmlTurtles();
 		final String agentsTolaunch = getMadkitProperty(turtles);
 		if (!agentsTolaunch.equals("null")) {
@@ -283,8 +326,8 @@ public class TKLauncher extends Agent {
 						getLogger().severeLog(ErrorMessages.OPTION_MISUSED.toString() +Option.launchAgents.toString()+" "+ agentsTolaunch +" "+e.getClass().getName()+" !!!\n" , null);
 					}
 				}
-				if (logger != null)
-					logger.info("Launching " + number + " instance(s) of " + className);
+//				if (logger != null)
+//					logger.info("Launching " + number + " instance(s) of " + className);
 				launchAgentBucket(className,number,Runtime.getRuntime().availableProcessors()+1,community+","+TKOrganization.TURTLES_GROUP+","+TKOrganization.TURTLE_ROLE);
 			}
 		}
@@ -317,6 +360,13 @@ public class TKLauncher extends Agent {
 	 */
 	public void setHeight(int height) {
 		this.height = height;
+	}
+
+	/**
+	 * @return the simulationModel
+	 */
+	public TKSimulationEngine getSimulationModel() {
+		return simulationModel;
 	}
 
 }

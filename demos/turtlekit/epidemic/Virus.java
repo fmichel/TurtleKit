@@ -56,13 +56,15 @@ import turtlekit.viewer.TKDefaultViewer;
 @SuppressWarnings("serial")
 public class Virus extends Turtle 
 {
+	
+	public Virus() {
+		super("go");
+		setColor(Color.GREEN);
+	}
 
 	@Override
 	protected void activate() {
 		super.activate();
-		setNextAction("go");
-		setColor(Color.GREEN);
-		randomLocation();
 		playRole("healty");
 	}
 	
@@ -90,6 +92,8 @@ public class Virus extends Turtle
 	}
 	
 	public String infected(){
+//		if(getCurrentBehaviorCount() == 30)
+//			return null;
 		wiggle();
 		List<Turtle> l = getPatchOtherTurtles();
 		if(l.size() > 0){
@@ -98,7 +102,7 @@ public class Virus extends Turtle
 				virus.getInfected();
 			}
 		}
-		if (generator.nextDouble() < 0.0001) {
+		if (generator.nextDouble() < 0.1) {
 			getCured();
 			return "go";
 		}
@@ -107,8 +111,8 @@ public class Virus extends Turtle
 
 
 	public static void main(String[] args) {
-		executeThisTurtle(10000
-				, Option.envDimension.toString(),"600,600"
+		executeThisTurtle(100000
+				, Option.envDimension.toString(),"500,500"
 //				,Option.startSimu.toString()
 				,Option.viewers.toString(),
 				PopulationCharter.class.getName()+";"+

@@ -19,6 +19,7 @@ package turtlekit.toys;
 
 import java.awt.Color;
 
+import turtlekit.cuda.CudaPheromone;
 import turtlekit.kernel.Turtle;
 import turtlekit.kernel.TurtleKit.Option;
 import turtlekit.pheromone.Pheromone;
@@ -37,6 +38,7 @@ public class PheroEmmiter extends Turtle {
 		setColor(new Color((int) (Math.random() * 256),(int) (Math.random() * 256), (int) (Math.random() * 256)));
 //		pheromone = getEnvironment().getPheromone("test",0.333f,0.3f);
 		pheromone = getEnvironment().getPheromone("test",33,30);
+		System.err.println(pheromone instanceof CudaPheromone);
 	}
 	
 	
@@ -55,7 +57,7 @@ public class PheroEmmiter extends Turtle {
 				,Option.envHeight.toString(),"100"
 //				,Option.envWidth.toString(),"200"
 				,Option.cuda.toString()
-				,Option.startSimu.toString()
+//				,Option.startSimu.toString()
 				);
 	}
 

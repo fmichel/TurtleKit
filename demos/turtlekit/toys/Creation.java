@@ -19,6 +19,7 @@ package turtlekit.toys;
 
 import java.awt.Color;
 
+import turtlekit.agr.TKOrganization;
 import turtlekit.kernel.Turtle;
 import turtlekit.kernel.TurtleKit.Option;
 import turtlekit.pheromone.Pheromone;
@@ -89,6 +90,6 @@ public class Creation extends Turtle {
 class MyPopulationCharter extends PopulationCharter{
 	public MyPopulationCharter() {
 		setTimeFrame(1000);
-		setMonitorTurtleRole(true);
+		monitorRole(TKOrganization.TURTLE_ROLE);
 	}
 }

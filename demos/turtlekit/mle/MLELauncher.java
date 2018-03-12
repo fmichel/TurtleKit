@@ -17,7 +17,6 @@
  ******************************************************************************/
 package turtlekit.mle;
 
-import static turtlekit.kernel.TurtleKit.Option.cuda;
 import static turtlekit.kernel.TurtleKit.Option.envDimension;
 import static turtlekit.kernel.TurtleKit.Option.environment;
 import static turtlekit.kernel.TurtleKit.Option.scheduler;
@@ -28,13 +27,13 @@ import static turtlekit.kernel.TurtleKit.Option.viewers;
 import javax.swing.JOptionPane;
 
 import turtlekit.kernel.TKLauncher;
+import turtlekit.kernel.TurtleKit.Option;
 import turtlekit.viewer.PheromoneViewer;
 
 public class MLELauncher extends TKLauncher {
 	
 	@Override
 	protected void activate() {
-		setMadkitProperty(cuda, "true");
 //		setMadkitProperty("GPU_gradients", "true");
 		Object[] tab = { "50","100", "256","512","1024","1536","2048" };
 		Object size = JOptionPane.showInputDialog(null,
@@ -57,7 +56,11 @@ public class MLELauncher extends TKLauncher {
 
 	
 	public static void main(String[] args) {
-		executeThisLauncher("--popDensity","100");
+		executeThisLauncher(
+			"--popDensity",
+			"100",
+			Option.cuda.toString()
+);
 	}
 
 }

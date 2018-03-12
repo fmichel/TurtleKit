@@ -73,8 +73,7 @@ public class ModelProber extends Watcher {
 		if (time % 50 == 0) {
 			System.err.println("----------\n\n");
 			for (Probe<? extends AbstractAgent> p : allProbes()) {
-				if (logger != null)
-					logger.info(p.toString());
+			    getLogger().info(() -> p.toString());
 			}
 		}
 	}

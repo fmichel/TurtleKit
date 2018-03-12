@@ -45,6 +45,11 @@ import turtlekit.pheromone.Pheromone;
 public class Turtle extends AbstractAgent {
 	
 	/**
+	 * Can be used when returning the same behavior again for optimizing execution.
+	 */
+	protected static final String SAME_BEHAVIOR = "_SAME_";
+
+	/**
 	 * The turtle's environment 
 	 */
 	private TKEnvironment environment;// = FakeEnvironment;
@@ -113,7 +118,7 @@ public class Turtle extends AbstractAgent {
 	/**
 	 * The turtle's PRNG //TODO have a real model
 	 */
-	protected static Random generator = new Random();//TODO move to model
+	protected static Random generator = new Random(4444);//TODO move to model
 	/**
 	 * The community of the simulation see {@link #activate()}
 	 */
@@ -128,7 +133,6 @@ public class Turtle extends AbstractAgent {
 			community = getMadkitProperty(TurtleKit.Option.community);
 		}
 		requestRole(community, TKOrganization.TURTLES_GROUP, TKOrganization.TURTLE_ROLE, null);
-		setup();//TODO
 	}
 	
 	/**one way to identify a kind of turtle: give them a Role in the simulation.*/
@@ -214,6 +218,10 @@ public class Turtle extends AbstractAgent {
 		if (position != null) {
 			moveTo(environment.getWidth() / 2,environment.getHeight() / 2);
 		}
+	}
+	
+	public Patch getCenterPatch(){
+		return environment.getPatch(environment.getWidth() / 2,environment.getHeight() / 2);
 	}
 
 	public void setPatchColor(Color c) {
@@ -353,6 +361,13 @@ public class Turtle extends AbstractAgent {
 		return environment.createTurtle(t, x, y);
 	}
 	
+	public void printBehaviorInFinerLoggingLevel(){
+//		if(logger !=null){
+//			final String string = nextAction.toString();
+//			logger.finer(toString()+" "+string.substring(string.lastIndexOf('.')+1, string.length()-2)+" ("+getCurrentBehaviorCount()+")");
+//		}
+	}
+	
 	/**
 	 * Launch a turtle with a random location.
 	 * 
@@ -433,9 +448,9 @@ public class Turtle extends AbstractAgent {
 	 */
 	protected void emit(String pheromone, float value) {
 		environment.getPheromone(pheromone).incValue(xcor(), ycor(), value);
-			if (logger != null)
-				logger.finest("emitting " + value + " of " + pheromone + " on "
-						+ position);
+	// if (logger != null)
+	// logger.finest("emitting " + value + " of " + pheromone + " on "
+	// + position);
 	}
 
 	/**
@@ -513,27 +528,28 @@ public class Turtle extends AbstractAgent {
 	 * MoveTo(xcor()+10,ycor())
 	 */
 	public void moveTo(final double a, final double b) {
-		x = normalizeX(a);
-		y = normalizeY(b);
-		position.removeAgent(this);
-		environment.getPatch((int) x, (int) y).addAgent(this);
-//		if (environment != null) {//TODO test vs no test : add then remove
-//			final int lastXcor = xcor();
-//			final int lastYcor = ycor();
-//			x = normeValue(a, environment.getWidth());
-//			y = normeValue(b, environment.getHeight());
-//			final int newXcor = (int) x;
-//			final int newYcor = (int) y;
-//			changePatch = lastXcor != newXcor || lastYcor != newYcor;
-//			if (changePatch) {
-//				position.removeAgent(this);
-//				environment.getPatch(newXcor, newYcor).addAgent(this);
-//			}
-//		}
-//		else{
-//			x = a;
-//			y = b;
-//		}
+		if (environment != null) {
+			x = normalizeX(a);
+			y = normalizeY(b);
+			position.removeAgent(this);
+			environment.getPatch((int) x, (int) y).addAgent(this);
+			//		if (environment != null) {//TODO test vs no test : add then remove
+			//			final int lastXcor = xcor();
+			//			final int lastYcor = ycor();
+			//			x = normeValue(a, environment.getWidth());
+			//			y = normeValue(b, environment.getHeight());
+			//			final int newXcor = (int) x;
+			//			final int newYcor = (int) y;
+			//			changePatch = lastXcor != newXcor || lastYcor != newYcor;
+			//			if (changePatch) {
+			//				position.removeAgent(this);
+			//				environment.getPatch(newXcor, newYcor).addAgent(this);
+			//			}
+		}
+		else{
+			x = a;
+			y = b;
+		}
 	}
 	
 	/**
@@ -609,6 +625,8 @@ public class Turtle extends AbstractAgent {
 	 */
 	@SuppressWarnings("unchecked")
 	public <T extends Turtle> T getNearestTurtle(int patchRadius, Class<T> turtleType) {
+//		getPatch().getNeighbors(patchRadius, true).parallelStream().forEach(p -> p.getTurtles(turtleType).parallelStream().anyMatch(t -> {return (t!= Turtle.this);}));//cannot use that because we need the first
+//		getPatch().getNeighbors(patchRadius, true).forEach(p -> p.getTurtles(turtleType).parallelStream().anyMatch(t -> {return (t!= Turtle.this);}));//cannot use that because we need the first
 		for (Patch p : getPatch().getNeighbors(patchRadius, true)) {
 			final List<Turtle> turtles = new ArrayList<Turtle>(p.getTurtles(turtleType));
 			for (final Turtle t : turtles) {//TODO could be optimized
@@ -649,6 +667,39 @@ public class Turtle extends AbstractAgent {
 		}
 		return l;
 	}
+	
+	
+//	/**
+//	 * Returns the <code>howMany</code> nearest turtles of type T from this one
+//	 * according to a patch distance.
+//	 * 
+//	 * @param inRadius the side length of the square of patches 
+//	 * to look into
+//	 * @return the corresponding turtle or <code>null</code> if
+//	 * there is no turtle of this type around. In case of equality between 
+//	 * turtles (same patch distance or same patch), the first found is returned.
+//	 */
+//	@SuppressWarnings("unchecked")
+//	public List<Turtle> getNearestTurtles(int inRadius, int howMany) {
+//		List<Turtle> l = getPatch().getTurtles();
+//		l.remove(this);
+//		if (l.size() >= howMany) {
+//			return l.subList(0, howMany);
+//		}
+//		howMany -= l.size();
+//		for (Patch p : getPatch().getNeighbors(inRadius, false)) {
+//			List<T> tmp = p.getTurtles();
+//			for (T t : tmp) {
+//				l.add(t);
+//				if(--howMany == 0){
+//					return l;
+//				}
+//			}
+//		}
+//		return l;
+//	}
+	
+	
 	
 	/**
 	 * Returns the nearest turtle of type T from this one
@@ -754,6 +805,14 @@ public class Turtle extends AbstractAgent {
 	public double towards(final Turtle t) {
 		try {
 			return towards(t.getX(), t.getY());
+		} catch (ArithmeticException e) {
+			throw new ArithmeticException("direction to self makes no sense");
+		}
+	}
+
+	public double towards(Patch p) {
+		try {
+			return towards(p.x+.5,p.y+.5);
 		} catch (ArithmeticException e) {
 			throw new ArithmeticException("direction to self makes no sense");
 		}
@@ -1027,7 +1086,7 @@ public class Turtle extends AbstractAgent {
 	}
 
 	/**
-	 * When the turtle switches its behavior the value of this counter is 0
+	 * When the turtle switches its behavior the value of this counter is reset to 1
 	 * @return returns the number of time the current behavior has been successively activated previously
 	 */
 	public int getCurrentBehaviorCount() {
@@ -1129,12 +1188,6 @@ public class Turtle extends AbstractAgent {
 	}
 
 	/**
-	 * @deprecated {@link #activate()} should be overridden instead, beginning by super.activate();
-	 */
-	public void setup() {
-	}
-
-	/**
 	 * Used by default viewers.
 	 * 
 	 * @return <code>true</code> if the turtle should be
@@ -1154,6 +1207,13 @@ public class Turtle extends AbstractAgent {
 	 */
 	public void setVisible(boolean visible) {
 		this.visible = visible;
+	}
+
+	/**
+	 * @param environment the environment to set
+	 */
+	public void setEnvironment(TKEnvironment environment) {
+		this.environment = environment;
 	}
 
 }

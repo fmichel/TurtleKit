@@ -178,7 +178,8 @@ public int getMaxDirection(int xcor, int ycor) {
 
 	 float getTotalUpdateFromNeighbors(int i, int j){
 		 int index = get1DIndex(i, j)*8;
-	        return 
+
+		return 
 	        		tmp[neighborsIndexes[index]] +
 	        tmp[neighborsIndexes[++index]] +
 	        tmp[neighborsIndexes[++index]] +

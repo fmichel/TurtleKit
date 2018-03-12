@@ -61,8 +61,14 @@ public interface TKOrganization {
 	 */
 	public static final String ENVIRONMENT_ROLE = "env";
 
+	/**
+	 * The value of this constant is {@value}.
+	 */
 	final public static String TK_COMMUNITY = "TK";
 
-	public static final String LAUNCHING = "launch";
+	/**
+	 * The value of this constant is {@value}.
+	 */
+	public static final String LAUNCHER_ROLE = "launcher";
 
 }

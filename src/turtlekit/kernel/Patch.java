@@ -23,17 +23,27 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Patch {
 
-	final private Collection<Turtle> turtlesHere = new HashSet<>();
+//	final private Collection<Turtle> turtlesHere = new HashSet<>(50000,.9f);
+	final private Collection<Turtle> turtlesHere = new ArrayList<>(500);
 	private Color color;
 	public int x;
 	public int y;
 	private TKEnvironment environment;
-	private ArrayList<Patch> neighbors = new ArrayList<>(8);// TODO bench lazy
+	ArrayList<Patch> neighbors = new ArrayList<>(1);// TODO bench lazy
 														// creation
 	private HashMap<String, Object> marks;
+	private TKGridModel gridModel;
+
+	/**
+	 * @return the gridModel
+	 */
+	public TKGridModel getGridModel() {
+		return gridModel;
+	}
 
 	public Patch() {
 		color = Color.BLACK;
@@ -57,36 +67,37 @@ public class Patch {
 	}
 
 	public List<Patch> getNeighbors(int inRadius, boolean includeThisPatch) {
-		final int height = environment.getHeight();
-		final int width = environment.getWidth();
-		int max = Math.max(height,width);
-		if(inRadius > max - 1)
-			inRadius = max - 1;
-		int length = 1;
-		for (int i = 1; i <= inRadius; i++) {
-			length += nbOfNeighborsAt(i, width, height);
-		}
-		if (neighbors.size() < length) {
-			int startIndex = length - nbOfNeighborsAt(inRadius, width, height);
-			int startRadius = inRadius;
-			while (startIndex != neighbors.size()) {
-				startRadius--;
-				startIndex -= nbOfNeighborsAt(startRadius, width, height);
-			}
-			for (; startRadius <= inRadius && nbOfNeighborsAt(startRadius, width, height) > 0; startRadius++) {
-				Collection<Patch> tmp = new HashSet<>();
-				for (int u = -startRadius; u <= startRadius ; u++) {
-					for (int v = -startRadius; v <= startRadius ; v++) {
-						if (Math.abs(u) < width && Math.abs(v) < height && (Math.abs(u) == startRadius || Math.abs(v) == startRadius)) {
-							tmp.add(environment.getPatch(x + u, y + v));
-						}
-					}
-				}
-				neighbors.addAll(tmp);
-			}
-			neighbors.trimToSize();
-		}
-		return neighbors.subList(includeThisPatch ? 0 : 1, length);
+		return gridModel.getNeighborsOf(this, inRadius, includeThisPatch);
+//		final int height = environment.getHeight();
+//		final int width = environment.getWidth();
+//		int max = Math.max(height,width);
+//		if(inRadius > max - 1)
+//			inRadius = max - 1;
+//		int length = 1;
+//		for (int i = 1; i <= inRadius; i++) {
+//			length += nbOfNeighborsAt(i, width, height);
+//		}
+//		if (neighbors.size() < length) {
+//			int startIndex = length - nbOfNeighborsAt(inRadius, width, height);
+//			int startRadius = inRadius;
+//			while (startIndex != neighbors.size()) {
+//				startRadius--;
+//				startIndex -= nbOfNeighborsAt(startRadius, width, height);
+//			}
+//			for (; startRadius <= inRadius && nbOfNeighborsAt(startRadius, width, height) > 0; startRadius++) {
+//				Collection<Patch> tmp = new HashSet<>();
+//				for (int u = -startRadius; u <= startRadius ; u++) {
+//					for (int v = -startRadius; v <= startRadius ; v++) {
+//						if (Math.abs(u) < width && Math.abs(v) < height && (Math.abs(u) == startRadius || Math.abs(v) == startRadius)) {
+//							tmp.add(environment.getPatch(x + u, y + v));
+//						}
+//					}
+//				}
+//				neighbors.addAll(tmp);
+//			}
+//			neighbors.trimToSize();
+//		}
+//		return neighbors.subList(includeThisPatch ? 0 : 1, length);
 	}
 	
     /** Drop a mark on the patch
@@ -120,6 +131,33 @@ public class Patch {
   
 	
 	final private int nbOfNeighborsAt(int radius, int width, int height){
+		radius *= 2;//diameter
+		final int aSide = radius + 1;
+		int verticalNeighbors = 0;
+		int offset = 0;
+		if (radius <= width) {
+			verticalNeighbors = Math.min(aSide, height);
+			offset++;
+			if (radius != width) {
+				verticalNeighbors *= 2;
+				offset++;
+			}
+		}
+		int horizontalNeighbors = 0;
+		if (radius <= height) {
+			horizontalNeighbors = Math.min(aSide, width);
+			if (radius != height) {
+				horizontalNeighbors *= 2;
+				offset *= 2;
+			}
+		}
+		else {
+			offset=0;
+		}
+		return verticalNeighbors + horizontalNeighbors - offset;
+	}
+	
+	final private int nbOfNeighborsAt2(int radius, int width, int height){
 		radius *= 2;//diameter
 		final int aSide = radius + 1;
 		int verticalNeighbors = 0;
@@ -275,6 +313,7 @@ public class Patch {
 	 */
 	@SuppressWarnings("unchecked")
 	public <T extends Turtle> List<T> getTurtlesWithRole(String role) {
+//		return turtlesHere.parallelStream().filter(t -> {return t.isPlayingRole(role);}).collect(Collectors.toList()));//TODO
 		final List<T> turtles = new ArrayList<>();
 		for (final Turtle t : turtlesHere) {
 			if (t.isPlayingRole(role)) {
@@ -318,6 +357,14 @@ public class Patch {
 	protected void update() {
 
 	}
+	
+	public double getDirectionToPatch(Patch p){
+		return getGridModel().getDirectionFromTo(this, p);
+	}
+
+	public double getDistanceToPatch(Patch p){
+		return getGridModel().getDistanceBetweenPatchCenters(this, p);
+	}
 
 	@Override
 	public String toString() {
@@ -326,6 +373,10 @@ public class Patch {
 
 	public void dropPheromone(String name, float quantity, Float... parameters) {
 		environment.getPheromone(name).incValue(x, y, quantity);
+	}
+
+	public void setGridModel(TKGridModel tkGridModel) {
+		gridModel = tkGridModel;
 	}
 
 }

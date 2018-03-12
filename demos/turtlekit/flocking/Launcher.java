@@ -38,7 +38,9 @@ public class Launcher extends TKLauncher{
 	@Override
 	protected void createSimulationInstance() {
 		setMadkitProperty(Option.environment, Environment.class.getName());
-		setMadkitProperty(Option.viewers, TKDefaultViewer.class.getName()+";"+HeadingChecker.class.getName());
+		setMadkitProperty(Option.viewers, TKDefaultViewer.class.getName()
+//				+";"+HeadingChecker.class.getName()
+				);
 //		setMadkitProperty(Option.viewers, FlockViewerColorPatch.class.getName());
 		setMadkitProperty(Option.turtles, BirdFlockingUnify.class.getName()+",4000");
 		setMadkitProperty(Option.fastRendering, "true");

@@ -74,11 +74,11 @@ public class MLEScheduler extends TKScheduler {
 				e.printStackTrace();
 			}
 		}
-		logger.info("average agents"+ (Timer.getTimerValue(getTurtleActivator()) / 1000000 / getGVT())	);
-		//		getLogger().createLogFile();
-		logger.info(getMadkitProperty(Option.envDimension.name()));
-		logger.info("nb agents : "+getTurtleActivator().size());
-		logger.info(Timer.createPrettyString());
+//		logger.info("average agents"+ (Timer.getTimerValue(getTurtleActivator()) / 1000000 / getGVT())	);
+//		//		getLogger().createLogFile();
+//		logger.info(getMadkitProperty(Option.envDimension.name()));
+//		logger.info("nb agents : "+getTurtleActivator().size());
+//		logger.info(Timer.createPrettyString());
 	}
 
 }
