@@ -39,6 +39,7 @@ import turtlekit.agr.TKOrganization;
 import turtlekit.cuda.CudaEngine;
 import turtlekit.cuda.CudaGPUGradientsPhero;
 import turtlekit.cuda.CudaPheromone;
+import turtlekit.cuda.CudaPheromoneWithBlock;
 import turtlekit.cuda.GPUSobelGradientsPhero;
 import turtlekit.pheromone.CPU_SobelPheromone;
 import turtlekit.pheromone.DefaultCPUPheromoneGrid;
@@ -289,7 +290,7 @@ public class TKEnvironment extends Watcher {
     /**
      * 
      */
-    private void executePheromonesSequentialy() {
+    public void executePheromonesSequentialy() {
 	for (Pheromone<?> pheromone : pheromones.values()) {
 	    // pheromone.set((int) (Math.random()*200), (int) (Math.random()*200), 1E38f); //TODO nice art
 	    pheromone.diffusionAndEvaporation();
@@ -329,7 +330,7 @@ public class TKEnvironment extends Watcher {
 	return createTurtle(t, Double.MAX_VALUE, Double.MAX_VALUE);
     }
 
-    private void executePheromonesInParallel() {
+    public void executePheromonesInParallel() {
 	final Collection<Pheromone<Float>> pheromonesList = getPheromones();
 	if (!pheromonesList.isEmpty()) {
 	    final ArrayList<Callable<Void>> workers = new ArrayList<>(pheromonesList.size());
@@ -407,6 +408,20 @@ public class TKEnvironment extends Watcher {
 	return getPheromone(name, evaporationPercentage / 100f, diffusionPercentage / 100f);
     }
 
+    public Pheromone<Float> getCudaPheromoneWithBlock(String name, int evaporationPercentage, int diffusionPercentage) {
+	Pheromone<Float> phero = pheromones.get(name);
+	if (phero == null) {
+	    synchronized (pheromones) {
+		phero = pheromones.get(name);
+		if (phero == null) {
+		    phero = new CudaPheromoneWithBlock(name, width, height, evaporationPercentage / 100f, diffusionPercentage / 100f);
+		    }
+		    pheromones.put(name, phero);
+		}
+	    }
+	return phero;
+	}
+
     /**
      * Gets the corresponding pheromone or create a new one using the parameters if available: The first float is the
      * evaporation rate and the second is the diffusion rate.
@@ -429,8 +444,7 @@ public class TKEnvironment extends Watcher {
 		    }
 		    else {
 			// TODO experimental
-			// phero = new CPU_SobelPheromone(name, getWidth(), getHeight(), evaporationPercentage,
-			// diffusionPercentage, neighborsIndexes);
+			// phero = new CPU_SobelPheromone(name, getWidth(), getHeight(), evaporationPercentage, diffusionPercentage, neighborsIndexes);
 			// phero = new JavaPheromone(name, getWidth(), getHeight(), evaporationPercentage,
 			// diffusionPercentage, neighborsIndexes);
 			phero = new DefaultCPUPheromoneGrid(name, width, height, evaporationPercentage, diffusionPercentage, neighborsIndexes);// phero

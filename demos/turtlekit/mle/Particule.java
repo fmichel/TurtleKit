@@ -206,8 +206,10 @@ public class Particule extends AbstractMLEAgent {
 	public static void main(String[] args) {
 //		System.setProperty("sun.java2d.xrender", "true");
 //		String[] args2 = {"128","10","--GPU_gradients"};
+//		String[] args2 = {"256","10","--GPU_gradients"};
+		String[] args2 = {"200","10","--GPU_gradients"};
 //		String[] args2 = {"100","10","--test"};
-		String[] args2 = {"512","10","--GPU_gradients"};
+//		String[] args2 = {"512","10","--GPU_gradients"};
 		args = args2;
 		float percentage = Float.parseFloat(args[1])/100;
 		int size = Integer.parseInt(args[0]);

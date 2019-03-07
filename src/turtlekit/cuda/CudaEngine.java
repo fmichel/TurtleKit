@@ -119,8 +119,7 @@ public class CudaEngine {
 		initialization.shutdown();
 	    }
 	    catch(InterruptedException | ExecutionException | CudaException | UnsatisfiedLinkError e) {
-		logger.finer("---------Cannot initialize Cuda !!! ----------------");
-		e.printStackTrace();
+		logger.log(Level.FINER,e,() -> "---------Cannot initialize Cuda !!! ----------------");
 		return false;
 	    }
 	    Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -497,13 +496,16 @@ public class CudaEngine {
      * @throws IOException
      */
     public static void main(String[] args) throws IOException {
-//	ProcessBuilder pb = new ProcessBuilder("/usr/local/cuda-9.1/bin/nvcc");
-//	pb.inheritIO();
-//	pb.start();
+	ProcessBuilder pb = new ProcessBuilder("/usr/local/cuda-9.1/bin/nvcc","--version");
+	pb.inheritIO();
+	pb.start();
+	pb = new ProcessBuilder("env");
+	pb.inheritIO();
+	pb.start();
 	init(Level.ALL.toString());
 	CudaEngine cudaEngine = new CudaEngine(0);
-	KernelConfiguration kernelConfiguration = cudaEngine.getDefaultKernelConfiguration(100, 100);
-	cudaEngine.getKernel("EVAPORATION", "/turtlekit/cuda/kernels/Evaporation_2D.cu", kernelConfiguration);
+//	KernelConfiguration kernelConfiguration = cudaEngine.getDefaultKernelConfiguration(100, 100);
+//	cudaEngine.getKernel("EVAPORATION", "/turtlekit/cuda/kernels/Evaporation_2D.cu", kernelConfiguration);
 
     }
 

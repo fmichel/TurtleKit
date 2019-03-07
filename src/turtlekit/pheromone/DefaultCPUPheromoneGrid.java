@@ -55,6 +55,8 @@ public class DefaultCPUPheromoneGrid extends AbstractPheromoneGrid<Float> implem
 	 */
 	@Override
 	public void set(int index, Float value) {
+	    if(value > getMaximum())
+		setMaximum(value);
 		values[index] = value;
 	}
 	

@@ -23,7 +23,7 @@ import jcuda.Pointer;
 import jcuda.driver.CUdeviceptr;
 
 public interface CudaObject {
-
+    
 	public void freeMemory();
 	
 	public int getWidth();

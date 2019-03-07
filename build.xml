@@ -40,7 +40,7 @@
 	<property file="${resource.dir}/turtlekitBuild.properties" />
 
 	<property name="madkit.lib.dir" value="lib" />
-	<property name="madkit.version" value="5.2.1a" />
+	<property name="madkit.version" value="5.2.1b" />
 
 	<!-- user's specific local properties -->
 	<property name="server.info.dir" value="${user.home}/.mdk_keystore" />
@@ -66,9 +66,10 @@
 
 	     ================================= -->
 	<fileset id="third.party.libraries" dir="lib">
-		<include name="jcuda-0.7.5b.jar" />
+		<include name="jcuda-0.9.0.jar" />
+		<include name="jcuda-natives-0.9.0-linux-x86_64.jar" />
 		<include name="jcudaUtils-0.0.4.jar" />
-		<include name="jcurand-0.7.5b.jar" />
+		<include name="jcurand-0.9.0.jar" />
 		<include name="jfreechart-1.0.19.jar" />
 		<include name="jcommon-1.0.23.jar" />
 	</fileset>

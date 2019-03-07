@@ -20,10 +20,9 @@ package turtlekit.kernel;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Patch {
 
@@ -35,7 +34,7 @@ public class Patch {
 	private TKEnvironment environment;
 	ArrayList<Patch> neighbors = new ArrayList<>(1);// TODO bench lazy
 														// creation
-	private HashMap<String, Object> marks;
+	private Map<String, Object> marks;
 	private TKGridModel gridModel;
 
 	/**
@@ -106,7 +105,7 @@ public class Patch {
   @param value  mark itself, can be any java object*/
     final public void dropMark(String markName, Object value) {
         if (marks == null)
-            marks = new HashMap<>(1);
+            marks = new ConcurrentHashMap<String, Object>(1);
         marks.put(markName,value);
     }
     
@@ -216,6 +215,7 @@ public class Patch {
 		}
 		return l;
 	}
+	
 
 	/**
 	 * Gets the nearest turtle of type T in the vicinity of the patch.

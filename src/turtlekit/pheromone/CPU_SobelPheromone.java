@@ -40,6 +40,8 @@ public class CPU_SobelPheromone extends DefaultCPUPheromoneGrid {
 		neValue + 2 * eValue + seValue - swValue - 2 * wValue - nwValue // filter X
 	));
     }
+    
+    
 
     @Override
     public int getMaxDirection(int xcor, int ycor) {

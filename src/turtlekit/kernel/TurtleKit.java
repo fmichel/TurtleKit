@@ -37,8 +37,6 @@ import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JToggleButton;
 
-import org.omg.CORBA.Environment;
-
 import madkit.action.GUIManagerAction;
 import madkit.action.GlobalAction;
 import madkit.action.KernelAction;
@@ -51,10 +49,10 @@ import turtlekit.viewer.TKDefaultViewer;
 
 public class TurtleKit extends AbstractAgent {
 	
-	private final static String	TK_LOGGER_NAME		= "[* TURTLEKIT *] ";
+	private static final String	TK_LOGGER_NAME		= "[* TURTLEKIT *] ";
 
 	
-	final static List<String> tkDefaultMDKArgs = new ArrayList<>(
+	static final List<String> tkDefaultMDKArgs = new ArrayList<>(
 			Arrays.asList(Madkit.Option.configFile.toString(),
 			"turtlekit/kernel/turtlekit.properties"));
 	
@@ -185,7 +183,7 @@ public class TurtleKit extends AbstractAgent {
 	 * @author Fabien Michel
 	 * 
 	 */
-	public static enum Option implements MadkitOption {
+	public enum Option implements MadkitOption {
 		/**
 		 * Used to launch turtles.
 		 * This option can be used
@@ -323,7 +321,7 @@ public class TurtleKit extends AbstractAgent {
 	 * @version 0.9
 	 * 
 	 */
-	public static enum LevelOption implements MadkitOption {
+	public enum LevelOption implements MadkitOption {
 		/**
 		 * Option defining the default agent log level for newly
 		 * launched agents.

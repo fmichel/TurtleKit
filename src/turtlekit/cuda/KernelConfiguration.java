@@ -2,6 +2,12 @@ package turtlekit.cuda;
 
 import jcuda.driver.CUstream;
 
+/**
+ * A kernel configuration defines the dimensions of the cuda grid and blocks to be used, as well as a stream ID
+ * 
+ * @author Fabien Michel
+ *
+ */
 public class KernelConfiguration {
 	
 	private int gridDimX;

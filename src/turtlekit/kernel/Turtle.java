@@ -26,6 +26,7 @@ import static java.lang.Math.toDegrees;
 import static java.lang.Math.toRadians;
 
 import java.awt.Color;
+import java.awt.geom.Point2D;
 import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -86,6 +87,7 @@ public class Turtle extends AbstractAgent {
 	 */
 	double angleSin = 0; //TODO float !!
 	
+	private double angleInRadians = toRadians(0);
 	
 	/**
 	 * The patch the turtle is in
@@ -126,6 +128,9 @@ public class Turtle extends AbstractAgent {
 	
 	private boolean visible = true;
 
+	private String mainRole;
+
+
 	@Override
 	protected void activate() {
 //		setLogLevel(Level.ALL);
@@ -143,10 +148,26 @@ public class Turtle extends AbstractAgent {
 	/**the turtle will no longer play the specified role*/
 	public  void giveUpRole(String role){
 		leaveRole(community,TKOrganization.TURTLES_GROUP,role);
+		if(role.equals(mainRole)) {
+		    mainRole = null;
+		}
 	}
 	
 	public int getMinDirection(Pheromone p){
 		return p.getMinDirection(xcor(), ycor());
+	}
+	
+	public double getMaxDirectionInVisionCone(Pheromone phero, double visionConeAngle){
+	    Patch selected = null;
+	    float max = -2;
+	    for (Patch p : getPatchesInVisionCone(visionConeAngle)) {
+		final float d = (float) phero.get(p.x,p.y);
+		if(d > max) {
+		    max = d;
+		    selected = p;
+		}
+	    }
+	return towards(selected);
 	}
 	
 	public int getMaxDirection(Pheromone p){
@@ -160,6 +181,7 @@ public class Turtle extends AbstractAgent {
 	public void towardsMaxGradientField(Pheromone p) {
 		setHeading(getMaxDirection(p));
 	}
+	
 
 	/**
 	 * Tells if the turtle is currently playing this role
@@ -219,7 +241,31 @@ public class Turtle extends AbstractAgent {
 			moveTo(environment.getWidth() / 2,environment.getHeight() / 2);
 		}
 	}
-	
+
+	public boolean isInVisionCone(Turtle t, double visionConeAngle) {
+	    return differenceTwoAngles(getHeading(), towards(t)) <= visionConeAngle / 2; 
+	}
+	public boolean isInVisionCone(Patch p, double visionConeAngle) {
+	    return differenceTwoAngles(getHeading(), towards(p)) <= visionConeAngle / 2; 
+	}
+
+	public List<Patch> getPatchesInVisionCone(double visionConeAngle) {
+	    List<Patch> patches = new ArrayList<>();
+	    for (Patch p : getPatch().getNeighbors(1, false)) {
+		if(isInVisionCone(p, visionConeAngle))
+		    patches.add(p);
+	    }
+	    return patches;
+	}
+	/**
+	 * Connaitre la différence entre deux angles (sans prise en compte des signes)
+	 */
+	public double differenceTwoAngles(double targetA, double targetB) {
+	    double d = Math.abs(targetA - targetB) % 360;
+	    return d > 180 ? 360 - d : d;
+	}
+
+
 	public Patch getCenterPatch(){
 		return environment.getPatch(environment.getWidth() / 2,environment.getHeight() / 2);
 	}
@@ -379,6 +425,14 @@ public class Turtle extends AbstractAgent {
 	}
 	
 
+	public void setMainRole(String role) {
+	    playRole(role);
+	    mainRole = role;
+	}
+	
+	public String getMainRole() {
+	    return mainRole;
+	}
 	
 	/**
 	 * the id of this turtle
@@ -481,11 +535,16 @@ public class Turtle extends AbstractAgent {
 		fd(1);
 	}
 
+	public void wiggle(double range) {
+		randomHeading(range);
+		fd(1);
+	}
+
 
 	/**
 	 * @param range
 	 */
-	public void randomHeading(int range) {
+	public void randomHeading(double range) {
 		turnRight(generator.nextFloat() * range);
 		turnLeft(generator.nextFloat() * range);
 	}
@@ -503,9 +562,9 @@ public class Turtle extends AbstractAgent {
 		angle = direction % 360;
 		if (angle < 0)
 			angle += 360;
-		final double radian = toRadians(angle);
-		angleSin = sin(radian);
-		angleCos = cos(radian);
+		angleInRadians = toRadians(angle);
+		angleSin = sin(angleInRadians);
+		angleCos = cos(angleInRadians);
 	}
 
 	/**
@@ -851,7 +910,10 @@ public class Turtle extends AbstractAgent {
 //				relativeY -= environment.getHeight();
 //		return angleToPoint(relativeX, relativeY);
 	}
-
+	
+	public  double towards(Point2D.Float target){
+	    return towards(target.getX(),target.getY());
+	}
 	/**
 	 * return the direction to a location which is i,j units
 	 * away 
@@ -978,6 +1040,11 @@ public class Turtle extends AbstractAgent {
 	/** return the current heading of the turtle */
 	public double getHeading() {
 		return angle;
+	}
+
+	/** return the current heading of the turtle */
+	public double getHeadingInRadians() {
+		return angleInRadians;
 	}
 
 	public float smellAt(final String pheromoneName, final int xOffset, final int yOffset) {

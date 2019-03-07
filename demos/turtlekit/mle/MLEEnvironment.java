@@ -49,10 +49,10 @@ public class MLEEnvironment extends TKEnvironment{
 
 	}
 	
-//	@Override
-//	public Pheromone<Float> getPheromone(String name, float evaporationPercentage, float diffusionPercentage) {
-//	    return getSobelPheromone(name, evaporationPercentage, diffusionPercentage);
-//	}
+	@Override
+	public Pheromone<Float> getPheromone(String name, float evaporationPercentage, float diffusionPercentage) {
+	    return getSobelPheromone(name, evaporationPercentage, diffusionPercentage);
+	}
 	
 //	@Override
 //	protected void update() {

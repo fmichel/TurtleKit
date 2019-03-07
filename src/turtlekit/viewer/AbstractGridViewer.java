@@ -31,7 +31,6 @@ import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import javax.swing.JFrame;
 import javax.swing.JMenuBar;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -82,7 +81,6 @@ public abstract class AbstractGridViewer extends SwingViewer {
 		return gridModelProbe;
 	}
 
-	private SingleAgentProbe<TKScheduler,Double> timeProbe;
 	private SingleAgentProbe<TKEnvironment, Integer> widthProbe;
 	private SingleAgentProbe<TKEnvironment, Integer> heightProbe;
 	private JPanel turtlePane;
@@ -100,8 +98,6 @@ public abstract class AbstractGridViewer extends SwingViewer {
 				TKOrganization.ENVIRONMENT_ROLE, 
 				"patchGrid");
 		addProbe(gridProbe);
-		timeProbe = new SingleAgentProbe<>(getCommunity(), TKOrganization.ENGINE_GROUP, TKOrganization.SCHEDULER_ROLE,"GVT");
-		addProbe(timeProbe);
 		widthProbe = new SingleAgentProbe<TKEnvironment, Integer>(
 				getCommunity(), 
 				TKOrganization.MODEL_GROUP, 
@@ -323,10 +319,6 @@ public abstract class AbstractGridViewer extends SwingViewer {
 		return gridModelProbe.getProbedAgent();
 	}
 	
-	public double getSimulationTime(){
-		return timeProbe.getPropertyValue();
-	}
-
 	/**
 	 * @return the cellSize
 	 */

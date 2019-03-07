@@ -17,18 +17,13 @@
  ******************************************************************************/
 package turtlekit.viewer;
 
-import java.awt.Container;
-import java.util.ArrayList;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeSet;
-import java.util.logging.Level;
 
-import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 import org.jfree.chart.ChartPanel;
@@ -54,7 +49,6 @@ import turtlekit.kernel.Turtle;
 @GenericViewer
 public class PopulationCharter extends AbstractObserver{
 	
-	private int index=0;
 	private XYSeriesCollection dataset = new XYSeriesCollection();
 	private Map<Probe<Turtle>, XYSeries> series = new HashMap<>();
 	private int timeFrame = 0;
@@ -92,11 +86,11 @@ public class PopulationCharter extends AbstractObserver{
 		SwingUtilities.invokeLater(new Runnable() {//avoiding null pointers on the awt thread
 			@Override
 			public void run() {
+			    BigDecimal actualTime = getSimulationTime().getActualTime();
 				for(Entry<Probe<Turtle>, XYSeries> entry : series.entrySet()) {
-					entry.getValue().add(index, entry.getKey().size());
+					entry.getValue().add(actualTime, entry.getKey().size());
 				}
-				index++;
-				if(timeFrame > 0 && index % timeFrame == 0){
+				if(timeFrame > 0 && actualTime.intValue() % timeFrame == 0){
 					for (XYSeries serie : series.values()) {
 						serie.clear();
 					}

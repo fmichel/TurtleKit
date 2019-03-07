@@ -36,8 +36,8 @@ public class GameOfLife extends TKEnvironment{
 		Arrays.fill(gridBuffer, false);
 		int index = 0;
 		for (Patch p : patchGrid) {
-			if(Math.random() < .4 ){
-				p.setColor(Color.RED);
+			if(Math.random() < .1 ){
+				p.setColor(Color.WHITE);
 				gridBuffer[index] = true;
 			}
 			index++;
@@ -50,7 +50,7 @@ public class GameOfLife extends TKEnvironment{
 		for (Patch p : getPatchGrid()) {
 			int lifeCounter = 0;
 			for(Patch tmp : p.getNeighbors(1,false)){
-				if(tmp.getColor() == Color.RED){
+				if(tmp.getColor() == Color.WHITE){
 					lifeCounter++;
 				}
 			}
@@ -63,13 +63,13 @@ public class GameOfLife extends TKEnvironment{
 		}
 		index = 0;
 		for (Patch p : getPatchGrid()) {
-			p.setColor(gridBuffer[index++] ? Color.RED : Color.BLACK);
+			p.setColor(gridBuffer[index++] ? Color.WHITE : Color.BLACK);
 		}
 	}
 	
 	public static void main(String[] args) {
 		executeThisEnvironment(Option.envDimension.toString(),"150,150"
-				,Option.startSimu.toString()
+//				,Option.startSimu.toString()
 				);
 	}
 }

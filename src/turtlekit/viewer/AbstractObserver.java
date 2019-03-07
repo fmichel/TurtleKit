@@ -49,7 +49,7 @@ public abstract class AbstractObserver extends Watcher{
 		removeProbe(envProbe);
 		Probe<TKLauncher> launcherProbe = new Probe<>(getCommunity(), TKOrganization.ENGINE_GROUP, TKOrganization.LAUNCHER_ROLE);
 		addProbe(launcherProbe);
-		launcher = launcherProbe.getCurrentAgentsList().get(0);
+//		launcher = launcherProbe.getCurrentAgentsList().get(0);
 		removeProbe(envProbe);
 		Probe<TKScheduler> schedulerProbe = new Probe<>(getCommunity(), TKOrganization.ENGINE_GROUP, TKOrganization.SCHEDULER_ROLE);
 		addProbe(schedulerProbe);

@@ -17,24 +17,10 @@
  ******************************************************************************/
 package turtlekit.cuda;
 
-import static jcuda.driver.JCudaDriver.cuMemAlloc;
-import static jcuda.driver.JCudaDriver.cuMemFree;
-import static jcuda.driver.JCudaDriver.cuMemFreeHost;
-
 import java.nio.FloatBuffer;
-import java.util.concurrent.ExecutionException;
 
 import jcuda.Pointer;
-import jcuda.Sizeof;
-import jcuda.driver.CUDA_ARRAY_DESCRIPTOR;
-import jcuda.driver.CUDA_MEMCPY2D;
-import jcuda.driver.CUarray;
-import jcuda.driver.CUarray_format;
 import jcuda.driver.CUdeviceptr;
-import jcuda.driver.CUmemorytype;
-import jcuda.driver.CUstream;
-import jcuda.driver.CUstream_flags;
-import jcuda.driver.JCudaDriver;
 import turtlekit.pheromone.AbstractPheromoneGrid;
 import turtlekit.pheromone.Pheromone;
 
@@ -64,12 +50,12 @@ public class CudaPheromone extends AbstractPheromoneGrid<Float> implements CudaO
 	protected CUdeviceptr testDevicePtr;
 	protected Pointer heightPtr;
 	protected Pointer dataGridPtr;
-	private CudaKernel diffusionToTmpKernel;
-	private CudaKernel diffusionUpdateKernel;
-	private CudaKernel diffusionUpdateThenEvaporationKernel;
-	private CudaKernel evaporationKernel;
+	protected CudaKernel diffusionToTmpKernel;
+	protected CudaKernel diffusionUpdateKernel;
+	protected CudaKernel diffusionUpdateThenEvaporationKernel;
+	protected CudaKernel evaporationKernel;
 	protected Pointer widthPtr;
-	private KernelConfiguration kernelConfiguration;
+	protected KernelConfiguration kernelConfiguration;
 	protected Pointer tmpDeviceDataGridPtr;
 	
 

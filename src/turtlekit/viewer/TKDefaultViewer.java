@@ -28,57 +28,57 @@ import turtlekit.kernel.Turtle;
  * The default viewer for TK 3
  * 
  * @author Fabien Michel
- *
  */
 @GenericViewer
-public class TKDefaultViewer extends AbstractGridViewer{
-	
-	@Override
-	protected void render(Graphics g) {
-		try {
-			int index = 0;
-			final Patch[] grid = getPatchGrid();
-				final int w = getWidth();
-				for (int j = getHeight() - 1; j >= 0; j--) {
-					for (int i = 0; i < w; i++) {
-						final Patch p = grid[index];
-						if (p.isEmpty()) {
-							paintPatch(g, p, i * cellSize, j * cellSize, index);
-						} 
-						else {
-								try {
-									for (final Turtle t : p.getTurtles()) {
-										if(t.isVisible()){
-											paintTurtle(g, t, i * cellSize, j * cellSize);
-											break;
-										}
-									}
-//									paintTurtle(g, p.getTurtles().get(0), i * cellSize, j * cellSize);
-								} catch (NullPointerException | IndexOutOfBoundsException e) {//for the asynchronous mode
-								}
-							}
-						index++;
-					}
+public class TKDefaultViewer extends AbstractGridViewer {
+
+    @Override
+    protected void render(Graphics g) {
+	try {
+	    int index = 0;
+	    final Patch[] grid = getPatchGrid();
+	    final int w = getWidth();
+	    for (int j = getHeight() - 1; j >= 0; j--) {
+		for (int i = 0; i < w; i++) {
+		    final Patch p = grid[index];
+		    if (p.isEmpty()) {
+			paintPatch(g, p, i * cellSize, j * cellSize, index);
+		    }
+		    else {
+			try {
+			    for (final Turtle t : p.getTurtles()) {
+				if (t.isVisible()) {
+				    paintTurtle(g, t, i * cellSize, j * cellSize);
+				    break;
+				}
+			    }
+			    // paintTurtle(g, p.getTurtles().get(0), i * cellSize, j * cellSize);
 			}
-		} catch (ConcurrentModificationException e) {//FIXME
+			catch(NullPointerException | IndexOutOfBoundsException e) {// for the asynchronous mode
+			}
+		    }
+		    index++;
 		}
-		g.setColor(Color.RED);
-		g.drawLine(getWidth()*cellSize, getHeight()*cellSize, 0, getHeight()*cellSize);
-		g.drawLine(getWidth()*cellSize, getHeight()*cellSize, getWidth()*cellSize, 0);
+	    }
 	}
+	catch(ConcurrentModificationException e) {// FIXME
+	}
+	g.setColor(Color.RED);
+	g.drawLine(getWidth() * cellSize, getHeight() * cellSize, 0, getHeight() * cellSize);
+	g.drawLine(getWidth() * cellSize, getHeight() * cellSize, getWidth() * cellSize, 0);
+    }
 
-	public void paintTurtle(final Graphics g, final Turtle t, final int i, final int j) {
-		g.setColor(t.getColor());
-		g.fillRect(i , j , cellSize, cellSize);
-	}
+    public void paintTurtle(final Graphics g, final Turtle t, final int i, final int j) {
+	g.setColor(t.getColor());
+	g.fillRect(i, j, cellSize, cellSize);
+    }
 
-	public void paintPatch(final Graphics g, final Patch p, final int x, final int y, final int index) {
-		final Color c = p.getColor();
-		if (c != Color.BLACK) {
-			g.setColor(c);
-			g.fillRect(x , y , cellSize, cellSize);
-		}
-	}
+    public void paintPatch(final Graphics g, final Patch p, final int x, final int y, final int index) {
+	final Color c = p.getColor();
+//	if (c != Color.BLACK) {
+	    g.setColor(c);
+	    g.fillRect(x, y, cellSize, cellSize);
+//	}
+    }
 
 }
-

@@ -33,11 +33,11 @@ public class PheroEmmiter extends Turtle {
 	protected void activate() {
 		super.activate();
 		setNextAction("fly");
-		home();
+		randomLocation();
 		randomHeading();
 		setColor(new Color((int) (Math.random() * 256),(int) (Math.random() * 256), (int) (Math.random() * 256)));
 //		pheromone = getEnvironment().getPheromone("test",0.333f,0.3f);
-		pheromone = getEnvironment().getPheromone("test",33,30);
+		pheromone = getEnvironment().getPheromone("test",20,60);
 		System.err.println(pheromone instanceof CudaPheromone);
 	}
 	
@@ -54,8 +54,8 @@ public class PheroEmmiter extends Turtle {
 	public static void main(String[] args) {
 		executeThisTurtle(10
 				,Option.viewers.toString(),PheromoneViewer.class.getName()
-				,Option.envHeight.toString(),"100"
-//				,Option.envWidth.toString(),"200"
+				,Option.envHeight.toString(),"256"
+				,Option.envWidth.toString(),"256"
 				,Option.cuda.toString()
 //				,Option.startSimu.toString()
 				);

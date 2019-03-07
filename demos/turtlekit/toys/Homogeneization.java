@@ -58,8 +58,8 @@ public class Homogeneization extends Turtle {
 	public static void main(String[] args) {
 		executeThisTurtle(10
 				,Option.viewers.toString(),PheromoneViewer.class.getName()
-				,Option.envHeight.toString(),"1000"
-				,Option.envWidth.toString(),"1000"
+				,Option.envHeight.toString(),"512"
+				,Option.envWidth.toString(),"512"
 				,Option.cuda.toString()
 				);
 	}

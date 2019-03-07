@@ -31,138 +31,127 @@ import turtlekit.viewer.AbstractGridViewer;
 
 public class TKScheduler extends Scheduler {
 
-	private Map<String,TurtleActivator> turtleActivators = new HashMap<>();
-	protected String community;
-	private GenericBehaviorActivator<TKEnvironment> environmentUpdateActivator;
-	private GenericBehaviorActivator<AbstractGridViewer> viewerActivator;
-	private TurtleActivator turtleActivator;
-	private GenericBehaviorActivator<TKEnvironment> pheroMaxReset;
-				
-	public TKScheduler() {
-//		setLogLevel(Level.ALL);
-	}
-	
-	@Override
-	protected void activate() {
-		community = getMadkitProperty(TurtleKit.Option.community);
-		requestRole(
-				community, 
-				TKOrganization.ENGINE_GROUP, 
-				TKOrganization.SCHEDULER_ROLE);
-		initializeActivators();
-//		
-//		turtleActivator = new TurtleActivator(community);
-//		addActivator(turtleActivator);
-////		turtles.setMulticore(4);
-	}
-	
-	@Override
-	public void doSimulationStep() {
-			if(getGVT() == 100)
-			
-			Timer.startTimer(getTurtleActivator());
-			getTurtleActivator().execute();
-			Timer.stopTimer(getTurtleActivator());
+    private Map<String, TurtleActivator> turtleActivators = new HashMap<>();
+    protected String community;
+    private GenericBehaviorActivator<TKEnvironment> environmentUpdateActivator;
+    private GenericBehaviorActivator<AbstractGridViewer> viewerActivator;
+    private TurtleActivator turtleActivator;
+    private GenericBehaviorActivator<TKEnvironment> pheroMaxReset;
 
-			Timer.startTimer(getEnvironmentUpdateActivator());
-			getEnvironmentUpdateActivator().execute();
-			Timer.stopTimer(getEnvironmentUpdateActivator());
-			getViewerActivator().execute();
-			setGVT(getGVT() + 1);
-	}
+    public TKScheduler() {
+	// setLogLevel(Level.ALL);
+    }
 
-	
-	/**
-	 * Initialize default TurtleKit activators.</br>
-	 * 1. adds a environment update activator</br>
-	 * 2. adds a turtle activator on the {@link TKOrganization.TURTLE_ROLE}, that is on all the turtles</br>
-	 * 
-	 * Should be overridden for setting up customized activators for a specific simulation dynamics
-	 */
-	protected void initializeActivators(){
-		getTurtleActivator();
-		viewerActivator = new GenericBehaviorActivator<AbstractGridViewer>(community, TKOrganization.ENGINE_GROUP, TKOrganization.VIEWER_ROLE, "observe");
-		addActivator(viewerActivator);
-	}
-	
-	@Override
-	protected void end() {
-		super.end();
-//		if (isMadkitPropertyTrue(TurtleKit.Option.cuda)) {
-//			CudaEngine.stop();
-//			if (logger != null)
-//				logger.fine("cuda freed");
-//		}
-//		killAgent(environmentUpdateActivator.getCurrentAgentsList().get(0));
-		for (AbstractAgent a : getViewerActivator().getCurrentAgentsList()) {
-			killAgent(a);
-		}
-		System.gc();
-//		pause(10000);
+    @Override
+    protected void activate() {
+	community = getMadkitProperty(TurtleKit.Option.community);
+	requestRole(community, TKOrganization.ENGINE_GROUP, TKOrganization.SCHEDULER_ROLE);
+	initializeActivators();
+	//
+	// turtleActivator = new TurtleActivator(community);
+	// addActivator(turtleActivator);
+	//// turtles.setMulticore(4);
+    }
 
-//		killAgent(model.getEnvironment());
-//		CudaEngine.stop();
-//		sendMessage(
-//				LocalCommunity.NAME, 
-//				Groups.SYSTEM, 
-//				Organization.GROUP_MANAGER_ROLE, 
-//				new KernelMessage(KernelAction.EXIT));//TODO work with AA but this is probably worthless	
-	}
-	
-	/**
-	 * @return the turtleActivator
-	 */
-	public TurtleActivator getTurtleActivator() {
-		return getTurtleActivator(TURTLE_ROLE);
-	}
+    @Override
+    public void doSimulationStep() {
+	Timer.startTimer(getTurtleActivator());
+	getTurtleActivator().execute();
+	Timer.stopTimer(getTurtleActivator());
 
-	/**
-	 * Returns a turtleActivator for this role or creates and adds one to
-	 * simulation if it not already exists.
-	 * 
-	 * @return the corresponding turtleActivator
-	 * 
-	 */
-	public TurtleActivator getTurtleActivator(String targetedRole) {
-		return turtleActivators.computeIfAbsent(targetedRole, 
-				k -> 
-				{TurtleActivator ta = new TurtleActivator(community, TKOrganization.TURTLES_GROUP, targetedRole);
-				addActivator(ta);
-				return ta;}
-				);
-	}
+	Timer.startTimer(getEnvironmentUpdateActivator());
+	getEnvironmentUpdateActivator().execute();
+	Timer.stopTimer(getEnvironmentUpdateActivator());
+	getViewerActivator().execute();
+	setGVT(getGVT() + 1);
+    }
 
-	/**
-	 * @return the environmentUpdateActivator
-	 */
-	public GenericBehaviorActivator<TKEnvironment> getEnvironmentUpdateActivator() {
-		if(environmentUpdateActivator == null){
-			environmentUpdateActivator = new GenericBehaviorActivator<TKEnvironment>(community, TKOrganization.MODEL_GROUP, TKOrganization.ENVIRONMENT_ROLE, "update");
-			addActivator(environmentUpdateActivator);
-		}
-		return environmentUpdateActivator;
-	}
+    /**
+     * Initialize default TurtleKit activators.</br>
+     * 1. adds a environment update activator</br>
+     * 2. adds a turtle activator on the {@link TKOrganization.TURTLE_ROLE}, that is on all the turtles</br>
+     * Should be overridden for setting up customized activators for a specific simulation dynamics
+     */
+    protected void initializeActivators() {
+	getTurtleActivator();
+	viewerActivator = new GenericBehaviorActivator<AbstractGridViewer>(community, TKOrganization.ENGINE_GROUP, TKOrganization.VIEWER_ROLE, "observe");
+	addActivator(viewerActivator);
+    }
 
-	/**
-	 * @return the viewerActivator
-	 */
-	public GenericBehaviorActivator<AbstractGridViewer> getViewerActivator() {
-		if(viewerActivator == null){
-			viewerActivator = new GenericBehaviorActivator<AbstractGridViewer>(community, TKOrganization.ENGINE_GROUP, TKOrganization.VIEWER_ROLE, "observe");
-			addActivator(viewerActivator);
-		}
-		return viewerActivator;
+    @Override
+    protected void end() {
+	super.end();
+	// if (isMadkitPropertyTrue(TurtleKit.Option.cuda)) {
+	// CudaEngine.stop();
+	// if (logger != null)
+	// logger.fine("cuda freed");
+	// }
+	// killAgent(environmentUpdateActivator.getCurrentAgentsList().get(0));
+	for (AbstractAgent a : getViewerActivator().getCurrentAgentsList()) {
+	    killAgent(a);
 	}
+	System.gc();
+	// pause(10000);
 
-	/**
-	 * @return the pheroMaxReset
-	 */
-	public GenericBehaviorActivator<TKEnvironment> getPheroMaxReset() {
-		if (pheroMaxReset == null) {
-			pheroMaxReset = new GenericBehaviorActivator<TKEnvironment>(community, TKOrganization.MODEL_GROUP,
-					TKOrganization.ENVIRONMENT_ROLE, "resetPheroMaxValues");
-			addActivator(pheroMaxReset);
-		}
-		return pheroMaxReset;
+	// killAgent(model.getEnvironment());
+	// CudaEngine.stop();
+	// sendMessage(
+	// LocalCommunity.NAME,
+	// Groups.SYSTEM,
+	// Organization.GROUP_MANAGER_ROLE,
+	// new KernelMessage(KernelAction.EXIT));//TODO work with AA but this is probably worthless
+    }
+
+    /**
+     * @return the turtleActivator
+     */
+    public TurtleActivator getTurtleActivator() {
+	return getTurtleActivator(TURTLE_ROLE);
+    }
+
+    /**
+     * Returns a turtleActivator for this role or creates and adds one to simulation if it not already exists.
+     * 
+     * @return the corresponding turtleActivator
+     */
+    public TurtleActivator getTurtleActivator(String targetedRole) {
+	return turtleActivators.computeIfAbsent(targetedRole, k -> {
+	    TurtleActivator ta = new TurtleActivator(community, TKOrganization.TURTLES_GROUP, targetedRole);
+	    addActivator(ta);
+	    return ta;
+	});
+    }
+
+    /**
+     * @return the environmentUpdateActivator
+     */
+    public GenericBehaviorActivator<TKEnvironment> getEnvironmentUpdateActivator() {
+	if (environmentUpdateActivator == null) {
+	    environmentUpdateActivator = new GenericBehaviorActivator<TKEnvironment>(community, TKOrganization.MODEL_GROUP, TKOrganization.ENVIRONMENT_ROLE, "update");
+	    addActivator(environmentUpdateActivator);
 	}
+	return environmentUpdateActivator;
+    }
+
+    /**
+     * @return the viewerActivator
+     */
+    public GenericBehaviorActivator<AbstractGridViewer> getViewerActivator() {
+	if (viewerActivator == null) {
+	    viewerActivator = new GenericBehaviorActivator<AbstractGridViewer>(community, TKOrganization.ENGINE_GROUP, TKOrganization.VIEWER_ROLE, "observe");
+	    addActivator(viewerActivator);
+	}
+	return viewerActivator;
+    }
+
+    /**
+     * @return the pheroMaxReset
+     */
+    public GenericBehaviorActivator<TKEnvironment> getPheroMaxReset() {
+	if (pheroMaxReset == null) {
+	    pheroMaxReset = new GenericBehaviorActivator<TKEnvironment>(community, TKOrganization.MODEL_GROUP, TKOrganization.ENVIRONMENT_ROLE, "resetPheroMaxValues");
+	    addActivator(pheroMaxReset);
+	}
+	return pheroMaxReset;
+    }
 }
