@@ -4,7 +4,7 @@ import jcuda.Pointer;
 import jcuda.driver.CUdeviceptr;
 import turtlekit.pheromone.DataGrid;
 
-public class CudaAverageField extends DataGrid<Integer> implements CudaObject {
+public abstract class CudaAverageField extends DataGrid<Integer> implements CudaObject {
 	
 	public final static int DEFAULT_DEPTH = 5;
 	
