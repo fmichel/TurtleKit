@@ -17,8 +17,6 @@
  ******************************************************************************/
 package turtlekit.cuda;
 
-import java.nio.FloatBuffer;
-
 import jcuda.Pointer;
 import jcuda.driver.CUdeviceptr;
 import turtlekit.pheromone.AbstractPheromoneGrid;
@@ -26,45 +24,20 @@ import turtlekit.pheromone.Pheromone;
 
 public class CudaPheromone extends AbstractPheromoneGrid<Float> implements CudaObject,Pheromone<Float>{
 	
-	private FloatBuffer values;
+	private CudaFloatBuffer values;
 //	private float[] arr;
 	
-	/**
-	 * @return the values
-	 */
-	public FloatBuffer getValues() {
-		return values;
-	}
-
-	/**
-	 * @param values the values to set
-	 */
-	public void setValues(FloatBuffer values) {
-		this.values = values;
-	}
-
-	CUdeviceptr valuesPtr;
-	CUdeviceptr tmpDeviceDataGrid;
-	private Pointer valuesPinnedMemory;
-	protected Pointer arrPointer;
-	protected CUdeviceptr testDevicePtr;
-	protected Pointer heightPtr;
-	protected Pointer dataGridPtr;
 	protected CudaKernel diffusionToTmpKernel;
 	protected CudaKernel diffusionUpdateKernel;
 	protected CudaKernel diffusionUpdateThenEvaporationKernel;
 	protected CudaKernel evaporationKernel;
-	protected Pointer widthPtr;
 	protected KernelConfiguration kernelConfiguration;
 	protected Pointer tmpDeviceDataGridPtr;
+	CUdeviceptr tmpDeviceDataGrid;
 	
 
 	public KernelConfiguration getKernelConfiguration() {
 		return kernelConfiguration;
-	}
-
-	public void setKernelConfiguration(KernelConfiguration kernelConfiguration) {
-		this.kernelConfiguration = kernelConfiguration;
 	}
 
 	public CudaPheromone(String name, int width, int height, final int evapPercentage,
@@ -76,26 +49,19 @@ public class CudaPheromone extends AbstractPheromoneGrid<Float> implements CudaO
 			final float diffPercentage) {
 		super(name, width, height, evapPercentage, diffPercentage);
 		setMaximum(0f);
-		widthPtr = getPointerToInt(width);
-		heightPtr = getPointerToInt(height);
 		tmpDeviceDataGrid = createDeviceDataGrid(Float.class);
 		tmpDeviceDataGridPtr = Pointer.to(tmpDeviceDataGrid);
-		valuesPtr = new CUdeviceptr();
-		valuesPinnedMemory = new Pointer();
-		values = (FloatBuffer) getUnifiedBufferBetweenPointer(valuesPinnedMemory, valuesPtr, Float.class);
-		dataGridPtr = Pointer.to(valuesPinnedMemory);
+		values = new CudaFloatBuffer(this);
+		kernelConfiguration = createDefaultKernelConfiguration();
 		initKernels();
 	}
 	
 	protected void initKernels() {
-		kernelConfiguration = getNewKernelConfiguration();
-//		kernelConfiguration.setStreamID(cudaEngine.getNewCudaStream());
-		diffusionToTmpKernel = getCudaKernel("DIFFUSION_TO_TMP", "/turtlekit/cuda/kernels/Diffusion_2D.cu", kernelConfiguration);
-		diffusionUpdateKernel = getCudaKernel("DIFFUSION_UPDATE", "/turtlekit/cuda/kernels/Diffusion_2D.cu", kernelConfiguration);
-		diffusionUpdateThenEvaporationKernel = getCudaKernel("DIFFUSION_UPDATE_THEN_EVAPORATION", "/turtlekit/cuda/kernels/DiffusionEvaporation_2D.cu", kernelConfiguration);
-		evaporationKernel = getCudaKernel("EVAPORATION", "/turtlekit/cuda/kernels/Evaporation_2D.cu", kernelConfiguration);
+		diffusionToTmpKernel = createKernel("DIFFUSION_TO_TMP", "/turtlekit/cuda/kernels/Diffusion_2D.cu");
+		diffusionUpdateKernel = createKernel("DIFFUSION_UPDATE", "/turtlekit/cuda/kernels/Diffusion_2D.cu");
+		diffusionUpdateThenEvaporationKernel = createKernel("DIFFUSION_UPDATE_THEN_EVAPORATION", "/turtlekit/cuda/kernels/DiffusionEvaporation_2D.cu");
+		evaporationKernel = createKernel("EVAPORATION", "/turtlekit/cuda/kernels/Evaporation_2D.cu");
 	}
-	
 	
 	@Override
 	public Float get(int index) {
@@ -111,9 +77,9 @@ public class CudaPheromone extends AbstractPheromoneGrid<Float> implements CudaO
 
 	protected void diffuseValuesToTmpGridKernel(){
 		diffusionToTmpKernel.run(
-				widthPtr, 
-				heightPtr, 
-				dataGridPtr, 
+				getWidthPointer(),
+				getHeightPointer(),
+				values.getPointer(), 
 				tmpDeviceDataGridPtr, 
 				getPointerToFloat(getDiffusionCoefficient()));
 	}
@@ -121,18 +87,18 @@ public class CudaPheromone extends AbstractPheromoneGrid<Float> implements CudaO
 	@Override
 	protected void diffusionUpdateKernel() {
 		diffusionUpdateKernel.run(
-				widthPtr,
-				heightPtr,
-				dataGridPtr,
+				getWidthPointer(),
+				getHeightPointer(),
+				values.getPointer(),
 				tmpDeviceDataGridPtr);
 	}
 
 	@Override
 	public void diffusionAndEvaporationUpdateKernel() {
 		diffusionUpdateThenEvaporationKernel.run(
-				widthPtr,
-				heightPtr,
-				dataGridPtr,
+				getWidthPointer(),
+				getHeightPointer(),
+				values.getPointer(),
 				tmpDeviceDataGridPtr,
 				getPointerToFloat(getEvaporationCoefficient()));
 	}
@@ -140,44 +106,15 @@ public class CudaPheromone extends AbstractPheromoneGrid<Float> implements CudaO
 	@Override
 	public void evaporationKernel() {
 		evaporationKernel.run(
-				widthPtr, 
-				heightPtr,
-				dataGridPtr, 
+				getWidthPointer(),
+				getHeightPointer(),
+				values.getPointer(),
 				getPointerToFloat(getEvaporationCoefficient()));
 	}
 	
 	public void freeMemory() {
 		freeCudaMemory(tmpDeviceDataGrid);
-		freeCudaMemory(valuesPinnedMemory);
-		freeCudaMemory(valuesPtr);
-	}
-
-	/**
-	 * @return the valuesPtr
-	 */
-	public CUdeviceptr getValuesPtr() {
-		return valuesPtr;
-	}
-
-	/**
-	 * @param valuesPtr the valuesPtr to set
-	 */
-	public void setValuesPtr(CUdeviceptr valuesPtr) {
-		this.valuesPtr = valuesPtr;
-	}
-
-	/**
-	 * @return the valuesPinnedMemory
-	 */
-	public Pointer getValuesPinnedMemory() {
-		return valuesPinnedMemory;
-	}
-
-	/**
-	 * @param valuesPinnedMemory the valuesPinnedMemory to set
-	 */
-	public void setValuesPinnedMemory(Pointer valuesPinnedMemory) {
-		this.valuesPinnedMemory = valuesPinnedMemory;
+		values.freeMemory();
 	}
 
 	@Override
@@ -296,6 +233,14 @@ public int getMaxDirection(int xcor, int ycor) {
 			minDir = 315;
 		}
 		return minDir;
+	}
+
+	
+	/**
+	 * @return the values
+	 */
+	public CudaFloatBuffer getValues() {
+	    return values;
 	}
 
 }

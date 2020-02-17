@@ -17,7 +17,7 @@ public class KernelConfiguration {
 	private CUstream streamID;
 	
 	
-	public KernelConfiguration(int gridDimX, int gridDimY, int blockDimX, int blockDimY, CUstream streamID) {
+	KernelConfiguration(int gridDimX, int gridDimY, int blockDimX, int blockDimY, CUstream streamID) {
 		super();
 		this.gridDimX = gridDimX;
 		this.gridDimY = gridDimY;

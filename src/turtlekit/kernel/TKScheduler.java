@@ -63,7 +63,7 @@ public class TKScheduler extends Scheduler {
 	getEnvironmentUpdateActivator().execute();
 	Timer.stopTimer(getEnvironmentUpdateActivator());
 	getViewerActivator().execute();
-	setGVT(getGVT() + 1);
+	getSimulationTime().addOneTimeUnit();
     }
 
     /**

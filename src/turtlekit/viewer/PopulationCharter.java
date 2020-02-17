@@ -86,7 +86,7 @@ public class PopulationCharter extends AbstractObserver{
 		SwingUtilities.invokeLater(new Runnable() {//avoiding null pointers on the awt thread
 			@Override
 			public void run() {
-			    BigDecimal actualTime = getSimulationTime().getActualTime();
+			    BigDecimal actualTime = getSimulationTime().getCurrentTick();
 				for(Entry<Probe<Turtle>, XYSeries> entry : series.entrySet()) {
 					entry.getValue().add(actualTime, entry.getKey().size());
 				}

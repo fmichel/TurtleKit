@@ -17,57 +17,33 @@
  ******************************************************************************/
 package turtlekit.cuda;
 
-import java.nio.IntBuffer;
-
-import jcuda.Pointer;
-import jcuda.driver.CUdeviceptr;
-
 public class GPUSobelGradientsPhero extends CudaPheromone {
 
-    private IntBuffer fieldMaxDir;
-
-    protected CUdeviceptr fieldMaxDirPtr;
-    protected Pointer maxPinnedMemory;
     private CudaKernel sobel, sobel2;
-    private Pointer fieldMaxDirDataGridPtr;
+
+    private CudaIntBuffer cudaIntBuffer;
 
     public GPUSobelGradientsPhero(String name, int width, int height, final float evapCoeff, final float diffCoeff) {
 	super(name, width, height, evapCoeff, diffCoeff);
-	fieldMaxDirPtr = new CUdeviceptr();
-	maxPinnedMemory = new Pointer();
-	fieldMaxDir = (IntBuffer) getUnifiedBufferBetweenPointer(maxPinnedMemory, fieldMaxDirPtr, Integer.class);
-	fieldMaxDirDataGridPtr = Pointer.to(maxPinnedMemory);
 //	sobel = getCudaKernel("SOBEL", "/turtlekit/cuda/kernels/SobelGradient_2D.cu", getKernelConfiguration());
-	sobel2 = getCudaKernel("DIFFUSION_UPDATE_AND_SOBEL_THEN_EVAPORATION", "/turtlekit/cuda/kernels/SobelGradient_2D.cu", getKernelConfiguration());
+	sobel2 = createKernel("DIFFUSION_UPDATE_AND_SOBEL_THEN_EVAPORATION", "/turtlekit/cuda/kernels/SobelGradient_2D.cu");
+	cudaIntBuffer = new CudaIntBuffer(this);
     }
 
-//    /**
-//     * This is faster than calling them sequentially: Only one GPU kernel is called.
-//     */
-//    @Override
-//    public void diffusionAndEvaporation() {
-//	super.diffusionAndEvaporation();
-//	sobel.run(
-//		widthPtr, 
-//		heightPtr, 
-//		dataGridPtr, 
-//		fieldMaxDirDataGridPtr);
-//    }
-    
     @Override
     public void diffusionAndEvaporationUpdateKernel() {
 	sobel2.run(
-		widthPtr,
-		heightPtr,
-		dataGridPtr,
+		getWidthPointer(),
+		getHeightPointer(),
+		getValues().getPointer(),
 		tmpDeviceDataGridPtr,
 		getPointerToFloat(getEvaporationCoefficient()),
-		fieldMaxDirDataGridPtr);
+		cudaIntBuffer.getDataPpointer());
     }
 
     @Override
     public int getMaxDirection(int i, int j) {
-	return fieldMaxDir.get(get1DIndex(i, j));
+	return cudaIntBuffer.get(get1DIndex(i, j));
     }
 
     @Override
@@ -77,8 +53,7 @@ public class GPUSobelGradientsPhero extends CudaPheromone {
 
     public void freeMemory() {
 	super.freeMemory();
-	freeCudaMemory(maxPinnedMemory);
-	freeCudaMemory(fieldMaxDirPtr);
+	cudaIntBuffer.freeMemory();
     }
 
 }

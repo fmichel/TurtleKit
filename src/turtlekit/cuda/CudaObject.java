@@ -23,45 +23,71 @@ import jcuda.Pointer;
 import jcuda.driver.CUdeviceptr;
 
 public interface CudaObject {
-    
-	public void freeMemory();
-	
-	public int getWidth();
-	
-	public int getHeight();
-	
-	default CudaEngine getCudaEngine(){
-		return CudaEngine.getCudaEngine(this);
-	}
-	
-	default KernelConfiguration getNewKernelConfiguration(){
-		return getCudaEngine().getDefaultKernelConfiguration(getWidth(), getHeight());
-	}
-	default CudaKernel getCudaKernel(final String kernelFunctionName, final String cuSourceFilePath, final KernelConfiguration kc){
-		return getCudaEngine().getKernel(kernelFunctionName, cuSourceFilePath, kc);
-	}
-	
-	default Pointer getPointerToFloat(float f){
-		return Pointer.to(new float[]{f});
-	}
-	
-	default Pointer getPointerToInt(int i){
-		return Pointer.to(new int[]{i});
-	}
-	
-	default <T> CUdeviceptr createDeviceDataGrid(Class<T> dataType){
-		return getCudaEngine().createDeviceDataGrid(getWidth(), getHeight(), dataType);
-	}
-	
-	default <T> Buffer getUnifiedBufferBetweenPointer(Pointer hostData, CUdeviceptr deviceData, Class<T> dataType){
-		return getCudaEngine().getUnifiedBufferBetweenPointer(hostData, deviceData, dataType, getWidth(), getHeight());
-	}
-	
-	default void freeCudaMemory(Pointer p){
-		getCudaEngine().freeCudaMemory(p);
-	}
-	
 
-	
+    public void freeMemory();
+
+    public int getWidth();
+
+    public int getHeight();
+
+    default CudaEngine getCudaEngine() {
+	return CudaEngine.getCudaEngine(this);
+    }
+    
+    /**
+     * Shortcut for <code>getCudaEngine().createNewKernelConfiguration(getWidth(), getHeight())</code>
+     * 
+     * @return a new kernel configuration according to the CudaObject dimensions
+     */
+    default KernelConfiguration createDefaultKernelConfiguration() {
+	return getCudaEngine().createNewKernelConfiguration(getWidth(), getHeight());
+    }
+
+    /**
+     * see {@link CudaEngine#createNewKernelConfiguration(int, int)} for creating a default one.
+     * 
+     * @return the default kernel configuration of this {@link CudaObject}
+     */
+    public KernelConfiguration getKernelConfiguration();
+
+    /**
+     * Shortcut for
+     * <code>return getCudaEngine().createKernel(kernelFunctionName, cuSourceFilePath, getKernelConfiguration())</code>
+     * 
+     * @param kernelFunctionName
+     * @param cuSourceFilePath
+     * @return
+     */
+    default CudaKernel createKernel(final String kernelFunctionName, final String cuSourceFilePath) {
+	return getCudaEngine().createKernel(kernelFunctionName, cuSourceFilePath, getKernelConfiguration());
+    }
+
+    default Pointer getPointerToFloat(float f) {
+	return Pointer.to(new float[] { f });
+    }
+
+    default Pointer getPointerToInt(int i) {
+	return Pointer.to(new int[] { i });
+    }
+
+    default <T> CUdeviceptr createDeviceDataGrid(Class<T> dataType) {
+	return getCudaEngine().createDeviceDataGrid(getWidth(), getHeight(), dataType);
+    }
+
+    default <T> Buffer getUnifiedBufferBetweenPointer(Pointer hostData, CUdeviceptr deviceData, Class<T> dataType) {
+	return getCudaEngine().getUnifiedBufferBetweenPointer(hostData, deviceData, dataType, getWidth(), getHeight());
+    }
+
+    default void freeCudaMemory(Pointer p) {
+	getCudaEngine().freeCudaMemory(p);
+    }
+    
+    default Pointer getWidthPointer() {
+	return getPointerToInt(getWidth());
+    }
+
+    default Pointer getHeightPointer() {
+	return getPointerToInt(getHeight());
+    }
 
 }

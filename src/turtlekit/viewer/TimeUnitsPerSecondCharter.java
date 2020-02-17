@@ -31,6 +31,7 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import madkit.gui.AgentFrame;
+import madkit.kernel.Scheduler.SimulationTime;
 import madkit.kernel.Watcher;
 import madkit.simulation.probe.SingleAgentProbe;
 import turtlekit.agr.TKOrganization;
@@ -51,7 +52,7 @@ public class TimeUnitsPerSecondCharter extends Watcher {
     private XYSeriesCollection dataset = new XYSeriesCollection();
     private XYSeries serie;
     private int refreshRate = 1000;
-    private SingleAgentProbe<TKScheduler, Double> probe;
+    private SingleAgentProbe<TKScheduler, SimulationTime> probe;
     private Timer timer;
 
     public TimeUnitsPerSecondCharter() {
@@ -60,7 +61,7 @@ public class TimeUnitsPerSecondCharter extends Watcher {
 
     @Override
     protected void activate() {
-	probe = new SingleAgentProbe<TKScheduler, Double>(getMadkitProperty(TurtleKit.Option.community), TKOrganization.ENGINE_GROUP, TKOrganization.SCHEDULER_ROLE, "GVT");
+	probe = new SingleAgentProbe<>(getMadkitProperty(TurtleKit.Option.community), TKOrganization.ENGINE_GROUP, TKOrganization.SCHEDULER_ROLE, "simulationTime");
 	addProbe(probe);
 	serie = new XYSeries("States Per Second");
 	dataset.addSeries(serie);
@@ -94,16 +95,16 @@ public class TimeUnitsPerSecondCharter extends Watcher {
 	    @Override
 	    public void run() {
 		try {
-		    final double gvt = probe.getPropertyValue();
-		    final double statesPerSecond = (gvt - last);
+		    final double time = probe.getPropertyValue().getCurrentTick().doubleValue();
+		    final double statesPerSecond = (time - last);
 			getLogger().fine(() -> "SimulatedTimeUnitPerSecond =" + statesPerSecond);
-		    last = gvt;
+		    last = time;
 		    SwingUtilities.invokeLater(new Runnable() {// avoiding null pointers on the awt thread
 
 			@Override
 			public void run() {
 			    if (statesPerSecond > 0) {
-				serie.add((int) gvt, statesPerSecond);
+				serie.add((int) time, statesPerSecond);
 			    }
 			}
 		    });

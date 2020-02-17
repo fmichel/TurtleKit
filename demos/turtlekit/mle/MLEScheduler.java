@@ -49,7 +49,8 @@ public class MLEScheduler extends TKScheduler {
 //			Timer.stopTimer(this);
 			
 			getViewerActivator().execute();
-			setGVT(getGVT() + 1);
+			getSimulationTime().addOneTimeUnit();
+
 	}
 
 	@Override

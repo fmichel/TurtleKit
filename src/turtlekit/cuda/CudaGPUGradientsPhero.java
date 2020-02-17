@@ -37,7 +37,7 @@ public class CudaGPUGradientsPhero extends CudaPheromone{
 		maxPinnedMemory = new Pointer();
 		fieldMaxDir = (IntBuffer) getUnifiedBufferBetweenPointer(maxPinnedMemory, fieldMaxDirPtr, Integer.class);
 		fieldMaxDirDataGridPtr = Pointer.to(maxPinnedMemory);
-		diffusionUpdateAndEvaporationAndFieldMaxDirKernel = getCudaKernel("DIFFUSION_UPDATE_THEN_EVAPORATION_THEN_FIELDMAXDIRV2", "/turtlekit/cuda/kernels/DiffusionEvaporationGradients_2D.cu", getKernelConfiguration());
+		diffusionUpdateAndEvaporationAndFieldMaxDirKernel = createKernel("DIFFUSION_UPDATE_THEN_EVAPORATION_THEN_FIELDMAXDIRV2", "/turtlekit/cuda/kernels/DiffusionEvaporationGradients_2D.cu");
 	}
 		
 	/**
@@ -49,9 +49,9 @@ public class CudaGPUGradientsPhero extends CudaPheromone{
 	public void diffusionAndEvaporation() {
 		diffuseValuesToTmpGridKernel();
 		diffusionUpdateAndEvaporationAndFieldMaxDirKernel.run(
-				widthPtr,
-				heightPtr,
-				dataGridPtr,
+				getWidthPointer(),
+				getHeightPointer(),
+				getValues().getPointer(),
 				tmpDeviceDataGridPtr,
 				getPointerToFloat(getEvaporationCoefficient()),
 				fieldMaxDirDataGridPtr

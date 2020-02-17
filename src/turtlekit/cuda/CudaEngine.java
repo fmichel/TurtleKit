@@ -33,8 +33,6 @@ import java.net.URL;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -44,6 +42,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -119,7 +118,7 @@ public class CudaEngine {
 		initialization.shutdown();
 	    }
 	    catch(InterruptedException | ExecutionException | CudaException | UnsatisfiedLinkError e) {
-		logger.log(Level.FINER,e,() -> "---------Cannot initialize Cuda !!! ----------------");
+		logger.log(Level.FINER, e, () -> "---------Cannot initialize Cuda !!! ----------------");
 		return false;
 	    }
 	    Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -207,13 +206,32 @@ public class CudaEngine {
 
     }
 
-    public KernelConfiguration getDefaultKernelConfiguration(int dataSizeX, int dataSizeY) {
+    /**
+     * Creates a new kernel configuration with a new Cuda stream ID according to 2D data size.
+     * 
+     * @param dataSizeX
+     * @param dataSizeY
+     * @return a kernel configuration with a unique stream ID
+     */
+    public KernelConfiguration createNewKernelConfiguration(int dataSizeX, int dataSizeY) {
 	int gridSizeX = (dataSizeX + maxThreads - 1) / maxThreads;
 	int gridSizeY = (dataSizeY + maxThreads - 1) / maxThreads;
 	return new KernelConfiguration(gridSizeX, gridSizeY, maxThreads, maxThreads, getNewCudaStream());
     }
 
-    public CudaKernel getKernel(final String kernelFunctionName, final String cuSourceFilePath, final KernelConfiguration kc) {
+    /**
+     * Creates a new Cuda kernel using a configuration and a kernel name 
+     * which could be found in a Cuda source file.
+     * 
+     * @param kernelFunctionName
+     * @param cuSourceFilePath
+     * @param kc a kernel configuration. 
+     * @return a new Cuda Kernel
+     * 
+     * @see {@link #createNewKernelConfiguration(int, int)}
+     */
+    public CudaKernel createKernel(final String kernelFunctionName, final String cuSourceFilePath, final KernelConfiguration kc) {
+	Objects.requireNonNull(kc);
 	try {
 	    return exe.submit(() -> {
 		CUfunction function = functions.computeIfAbsent("" + kernelFunctionName + cuSourceFilePath, k -> updateCuSourceFile(kernelFunctionName, cuSourceFilePath));
@@ -315,39 +333,38 @@ public class CudaEngine {
 	}
     }
 
-    static FloatBuffer getUnifiedFloatBuffer(Pointer pinnedMemory, CUdeviceptr devicePtr, long size) {
-	JCudaDriver.cuMemHostAlloc(pinnedMemory, size, JCudaDriver.CU_MEMHOSTALLOC_DEVICEMAP);
-	final ByteBuffer byteBuffer = pinnedMemory.getByteBuffer(0, size);
-	byteBuffer.order(ByteOrder.nativeOrder());
-	JCudaDriver.cuMemHostGetDevicePointer(devicePtr, pinnedMemory, 0);
-	return byteBuffer.asFloatBuffer();
-    }
-
-    public static IntBuffer getUnifiedIntBuffer(Pointer pinnedMemory, CUdeviceptr devicePtr, int size) {
-	JCudaDriver.cuMemHostAlloc(pinnedMemory, size, JCudaDriver.CU_MEMHOSTALLOC_DEVICEMAP);
-	final ByteBuffer byteBuffer = pinnedMemory.getByteBuffer(0, size);
-	byteBuffer.order(ByteOrder.nativeOrder());
-	JCudaDriver.cuMemHostGetDevicePointer(devicePtr, pinnedMemory, 0);
-	return byteBuffer.asIntBuffer();
-    }
-
-    public static int[] getUnifiedIntArray(Pointer pinnedMemory, CUdeviceptr devicePtr, int size) {
-	int[] values = new int[size];
-	JCudaDriver.cuMemHostAlloc(pinnedMemory, size, JCudaDriver.CU_MEMHOSTALLOC_DEVICEMAP);
-	final ByteBuffer byteBuffer = pinnedMemory.getByteBuffer(0, size);
-	byteBuffer.order(ByteOrder.nativeOrder());
-	JCudaDriver.cuMemHostGetDevicePointer(devicePtr, pinnedMemory, 0);
-
-	return values;
-    }
-
-    public static ByteBuffer getUnifiedByteBuffer(Pointer pinnedMemory, CUdeviceptr devicePtr, int size) {
-	JCudaDriver.cuMemHostAlloc(pinnedMemory, size, JCudaDriver.CU_MEMHOSTALLOC_DEVICEMAP);
-	final ByteBuffer byteBuffer = pinnedMemory.getByteBuffer(0, size);
-	byteBuffer.order(ByteOrder.nativeOrder());
-	JCudaDriver.cuMemHostGetDevicePointer(devicePtr, pinnedMemory, 0);
-	return byteBuffer;
-    }
+//    static FloatBuffer getUnifiedFloatBuffer(Pointer pinnedMemory, CUdeviceptr devicePtr, long size) {
+//	JCudaDriver.cuMemHostAlloc(pinnedMemory, size, JCudaDriver.CU_MEMHOSTALLOC_DEVICEMAP);
+//	final ByteBuffer byteBuffer = pinnedMemory.getByteBuffer(0, size);
+//	byteBuffer.order(ByteOrder.nativeOrder());
+//	JCudaDriver.cuMemHostGetDevicePointer(devicePtr, pinnedMemory, 0);
+//	return byteBuffer.asFloatBuffer();
+//    }
+//
+//    public static CudaIntBuffer getUnifiedIntBuffer(Pointer pinnedMemory, CUdeviceptr devicePtr, int size) {
+//	JCudaDriver.cuMemHostAlloc(pinnedMemory, size, JCudaDriver.CU_MEMHOSTALLOC_DEVICEMAP);
+//	final ByteBuffer byteBuffer = pinnedMemory.getByteBuffer(0, size);
+//	byteBuffer.order(ByteOrder.nativeOrder());
+//	JCudaDriver.cuMemHostGetDevicePointer(devicePtr, pinnedMemory, 0);
+//	return byteBuffer.asIntBuffer();
+//    }
+//
+//    public static int[] getUnifiedIntArray(Pointer pinnedMemory, CUdeviceptr devicePtr, int size) {
+//	int[] values = new int[size];
+//	JCudaDriver.cuMemHostAlloc(pinnedMemory, size, JCudaDriver.CU_MEMHOSTALLOC_DEVICEMAP);
+//	final ByteBuffer byteBuffer = pinnedMemory.getByteBuffer(0, size);
+//	byteBuffer.order(ByteOrder.nativeOrder());
+//	JCudaDriver.cuMemHostGetDevicePointer(devicePtr, pinnedMemory, 0);
+//	return values;
+//    }
+//
+//    public static ByteBuffer getUnifiedByteBuffer(Pointer pinnedMemory, CUdeviceptr devicePtr, int size) {
+//	JCudaDriver.cuMemHostAlloc(pinnedMemory, size, JCudaDriver.CU_MEMHOSTALLOC_DEVICEMAP);
+//	final ByteBuffer byteBuffer = pinnedMemory.getByteBuffer(0, size);
+//	byteBuffer.order(ByteOrder.nativeOrder());
+//	JCudaDriver.cuMemHostGetDevicePointer(devicePtr, pinnedMemory, 0);
+//	return byteBuffer;
+//    }
 
     /**
      * Stop the executors and clean memory on registered CUObject
@@ -420,7 +437,7 @@ public class CudaEngine {
     }
 
     private CUfunction updateCuSourceFile(String kernelFunctionName, String dotCuSourceFilePath) {
-	KernelLauncher.setCompilerPath("/usr/local/cuda-9.1/bin/");//FIXME
+	KernelLauncher.setCompilerPath("/opt/cuda/bin/");// FIXME
 	try (final InputStream is = CudaEngine.class.getResourceAsStream(dotCuSourceFilePath)) {
 	    final URL resource = CudaEngine.class.getResource(dotCuSourceFilePath);
 	    if (resource == null || is == null)
@@ -496,7 +513,7 @@ public class CudaEngine {
      * @throws IOException
      */
     public static void main(String[] args) throws IOException {
-	ProcessBuilder pb = new ProcessBuilder("/usr/local/cuda-9.1/bin/nvcc","--version");
+	ProcessBuilder pb = new ProcessBuilder("nvcc", "--version");
 	pb.inheritIO();
 	pb.start();
 	pb = new ProcessBuilder("env");
@@ -504,8 +521,8 @@ public class CudaEngine {
 	pb.start();
 	init(Level.ALL.toString());
 	CudaEngine cudaEngine = new CudaEngine(0);
-//	KernelConfiguration kernelConfiguration = cudaEngine.getDefaultKernelConfiguration(100, 100);
-//	cudaEngine.getKernel("EVAPORATION", "/turtlekit/cuda/kernels/Evaporation_2D.cu", kernelConfiguration);
+	// KernelConfiguration kernelConfiguration = cudaEngine.getDefaultKernelConfiguration(100, 100);
+	// cudaEngine.getKernel("EVAPORATION", "/turtlekit/cuda/kernels/Evaporation_2D.cu", kernelConfiguration);
 
     }
 

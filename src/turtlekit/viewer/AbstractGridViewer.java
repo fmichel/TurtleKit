@@ -39,6 +39,7 @@ import javax.swing.JToolBar;
 import madkit.action.KernelAction;
 import madkit.gui.AgentFrame;
 import madkit.kernel.Madkit;
+import madkit.kernel.Scheduler;
 import madkit.simulation.probe.SingleAgentProbe;
 import madkit.simulation.viewer.SwingViewer;
 import turtlekit.agr.TKOrganization;
@@ -149,9 +150,9 @@ public abstract class AbstractGridViewer extends SwingViewer {
 	@Override
 	public void setupFrame(final AgentFrame frame) {
 		initProbes();
-		SingleAgentProbe<TKScheduler,Double> p = new SingleAgentProbe<>(getCommunity(), TKOrganization.ENGINE_GROUP, TKOrganization.SCHEDULER_ROLE,"GVT");
+		SingleAgentProbe<TKScheduler,Double> p = new SingleAgentProbe<>(getCommunity(), TKOrganization.ENGINE_GROUP, TKOrganization.SCHEDULER_ROLE,"delay");
 		addProbe(p);
-		final TKScheduler tkScheduler = p.getCurrentAgentsList().get(0);
+		final Scheduler tkScheduler = p.getCurrentAgentsList().get(0);
 		final JToolBar schedulerToolBar = tkScheduler.getSchedulerToolBar();
 
 		super.setupFrame(frame);

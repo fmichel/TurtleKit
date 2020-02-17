@@ -1,17 +1,17 @@
 /*******************************************************************************
  * TurtleKit 3 - Agent Based and Artificial Life Simulation Platform
  * Copyright (C) 2011-2014 Fabien Michel
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
@@ -37,6 +37,8 @@ import static turtlekit.kernel.TurtleKit.Option.turtles;
 import static turtlekit.kernel.TurtleKit.Option.viewers;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -55,6 +57,7 @@ import madkit.i18n.ErrorMessages;
 import madkit.kernel.Agent;
 import madkit.kernel.Madkit;
 import madkit.kernel.Madkit.Option;
+import madkit.kernel.Scheduler;
 import madkit.message.SchedulingMessage;
 import madkit.util.XMLUtilities;
 import turtlekit.agr.TKOrganization;
@@ -65,7 +68,7 @@ import turtlekit.viewer.jfx.JfxViewerApplication;
 
 public class TKLauncher extends Agent {
 
-	
+
 	private int width = 200;
 	private int height = 200;
 //	private TKScheduler sch;
@@ -79,10 +82,10 @@ public class TKLauncher extends Agent {
 
 	private Document dom;
 	private TKSimulationEngine simulationModel;
-	
+
 	public TKLauncher() {
 	}
-	
+
 	@Override
 	protected void activate() {
 		initProperties();
@@ -91,7 +94,7 @@ public class TKLauncher extends Agent {
 		createGroup(community, MODEL_GROUP);
 		createGroup(community, TURTLES_GROUP);
 		requestRole(community, ENGINE_GROUP, MODEL_ROLE);//FIXME
-		
+
 		if (isMadkitPropertyTrue(TurtleKit.Option.cuda) && ! CudaEngine.init(getMadkitProperty(LevelOption.turtleKitLogLevel))){
 			setMadkitProperty(TurtleKit.Option.cuda, "false");
 		}
@@ -100,15 +103,15 @@ public class TKLauncher extends Agent {
 			sendMessage(community, ENGINE_GROUP, SCHEDULER_ROLE, new SchedulingMessage(SchedulingAction.RUN));
 		}
 	}
-	
+
 	protected void live() {	}//avoid the Agent's default live message
-	
+
 	/**
 	 * Creates the simulation agents.
-	 * 
+	 *
 	 * 1. launch core agents : Environment -> Scheduler -> Simulation model
 	 * 2. launchConfigTurtles : launchXmlTurtles -> launch args turtles
-	 * 3. launch viewers 
+	 * 3. launch viewers
 	 * 4. launch xml Agent tag
 	 */
 	protected void createSimulationInstance(){
@@ -121,7 +124,7 @@ public class TKLauncher extends Agent {
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	protected void launchCoreAgents() {
 		if (! launchXMLAgents("Environment")) {
@@ -134,15 +137,18 @@ public class TKLauncher extends Agent {
 		simulationModel = new TKSimulationEngine(this);
 		launchAgent(simulationModel);
 	}
-	
+
 	protected void launchScheduler(){
-		final TKScheduler sch = (TKScheduler) launchAgent(getMadkitProperty(scheduler));
+		final Scheduler sch = (Scheduler) launchAgent(getMadkitProperty(scheduler));
 		try {
-			sch.setSimulationDuration(Integer.parseInt(getMadkitProperty(endTime)));
-		} catch (NumberFormatException | NullPointerException e) {
+			sch.getSimulationTime().setEndTick(BigDecimal.valueOf(Integer.parseInt(getMadkitProperty(endTime))));
+		} catch (UnsupportedOperationException e) {
+			sch.getSimulationTime().setEndDate(sch.getSimulationTime().getCurrentDate().plus(Integer.parseInt(getMadkitProperty(endTime)),ChronoUnit.DAYS));
+		}
+		catch (NumberFormatException | NullPointerException e) {
 		}
 	}
-	
+
 	protected void launchViewers() {
 		final String viewerClasses = getMadkitProperty(viewers);
 		if (viewerClasses != null && ! viewerClasses.equals("null")) {
@@ -150,9 +156,9 @@ public class TKLauncher extends Agent {
 				launchAgent(v, true);
 			}
 		}
-//		launchJfxViewer();
+		launchJfxViewer();
 	}
-	
+
 	protected void launchJfxViewer() {
 		new Thread(new Runnable() {
 		    public void run() {
@@ -170,11 +176,11 @@ public class TKLauncher extends Agent {
 		launchAgent(name);
 		JfxViewerApplication.setMyAgent(name);
 	}
-	
+
 	private NodeList getDomNodes(String nodeName){
 		return dom.getElementsByTagName(nodeName);
 	}
-	
+
 	private boolean launchXMLAgents(String type){
 		boolean done = false;
 		if (dom != null) {
@@ -188,7 +194,7 @@ public class TKLauncher extends Agent {
 		}
 		return done;
 	}
-	
+
 	private void launchXmlTurtles(){
 		if (dom != null) {
 			NodeList nodes = getDomNodes("Turtle");
@@ -210,7 +216,7 @@ public class TKLauncher extends Agent {
 			}
 		}
 	}
-	
+
 	<T extends Turtle> T getTurtleNewInstance(Class<T> type){
 		try {
 			return type.newInstance();
@@ -231,7 +237,7 @@ public class TKLauncher extends Agent {
 
 	/**
 	 * @param turtleNode
-	 * @param turtleRole 
+	 * @param turtleRole
 	 */
 	private void appendBucketModeNode(final Node turtleNode, String role) {
 		Element turtleRole = dom.createElement(XMLUtilities.BUCKET_MODE_ROLE);
@@ -242,7 +248,7 @@ public class TKLauncher extends Agent {
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	protected void initProperties(){
 		String modelFile = getMadkitProperty(model);
@@ -292,19 +298,19 @@ public class TKLauncher extends Agent {
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	public static void main(String[] args) {
 		executeThisAgent(1,false,Option.configFile.toString(),"turtlekit/kernel/turtlekit.properties",cuda.toString(), turtles.toString(),Turtle.class.getName());
 	}
-	
+
 
 	/**
-	 * This offers a convenient way to create a main method 
+	 * This offers a convenient way to create a main method
 	 * that launches a simulation using the environment
-	 * class under development. 
+	 * class under development.
 	 * This call only works in the main method of the environment.
-	 * 
+	 *
 	 * @param args
 	 *           MaDKit or TurtleKit options
 	 * @see #executeThisAgent(int, boolean, String...)

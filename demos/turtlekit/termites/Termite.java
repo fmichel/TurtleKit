@@ -1,17 +1,17 @@
 /*******************************************************************************
  * TurtleKit 3 - Agent Based and Artificial Life Simulation Platform
  * Copyright (C) 2011-2014 Fabien Michel
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
@@ -25,7 +25,7 @@ import turtlekit.kernel.TurtleKit.Option;
 /**
  * The TK Termite version of the famous termites example.
  * @author Fabien MICHEL
- * @version 
+ * @version
  */
 
 @SuppressWarnings("serial")
@@ -45,7 +45,7 @@ public class Termite extends Turtle {
 
 	// ////////here begin the methods that are used to define the termite's
 	// behavior
-	
+
 	/**
 	 * findEmptyPatch is a one time step behavior corresponding to a list of
 	 * actions. So this method will be entirely executed, sure that no other
@@ -57,7 +57,7 @@ public class Termite extends Turtle {
 		if (getPatchColor() == Color.BLACK) {
 			setPatchColor(Color.yellow);
 			return ("getAway");
-		} 
+		}
 		return SAME_BEHAVIOR;
 	}
 
@@ -77,7 +77,7 @@ public class Termite extends Turtle {
 			setPatchColor(Color.BLACK);
 			fd(20);
 			return ("findNewPile");
-		} 
+		}
 		return SAME_BEHAVIOR;
 	}
 
@@ -91,11 +91,10 @@ public class Termite extends Turtle {
 
 	public static void main(String[] args) {
 		executeThisTurtle(1000
-				,Option.envDimension.toString(),"1024,1024"
-				,Option.envDimension.toString(),"2048,2048"
+				,Option.envDimension.toString(),"512,512"
 				,Option.viewers.toString(),	TermiteViewer.class.getName()
 				,Option.startSimu.toString()
-				
+
 //				+";"+
 //						JOGLViewer.class.getName()+";"+
 //				GLViewer.class.getName()

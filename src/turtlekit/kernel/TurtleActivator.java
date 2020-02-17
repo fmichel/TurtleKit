@@ -1,35 +1,35 @@
 /*******************************************************************************
  * TurtleKit 3 - Agent Based and Artificial Life Simulation Platform
  * Copyright (C) 2011-2014 Fabien Michel
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 /*
  * Copyright 1997-2011 Fabien Michel, Olivier Gutknecht, Jacques Ferber
- * 
+ *
  * This file is part of MadKit.
- * 
+ *
  * MadKit is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * MadKit is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License
  * along with MadKit. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -48,13 +48,13 @@ import turtlekit.agr.TKOrganization;
 
 /**
  * The turtle activator : allow to make the turtles work like finite state automata.
- * 
+ *
  * @author Fabien Michel
  * @version 1.1
- * 
+ *
  */
 public class TurtleActivator extends Activator<Turtle>
-{     
+{
 	private final static ConcurrentHashMap<Class<? extends Turtle>,Map<String,Method>> methodTable = new ConcurrentHashMap<>();
 
 	public TurtleActivator(String community) {
@@ -76,7 +76,7 @@ public class TurtleActivator extends Activator<Turtle>
 //			methodTable.put((Class<Turtle>) t.getClass(), new HashMap<String, Method>());
 //		}
 //	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	protected void adding(Turtle agent) {
@@ -85,9 +85,9 @@ public class TurtleActivator extends Activator<Turtle>
 			methodTable.put(c, new HashMap<String,Method>());
 		}
 	}
-	
+
 	public void execute(final List<Turtle> agents, Object... args) {
-//		Collections.shuffle(agents); 
+//		Collections.shuffle(agents);
 //		agents.parallelStream().forEach(t -> {
 //			if (t.getPatch() == null) // killed by another before its turn
 //				return;
@@ -104,7 +104,7 @@ public class TurtleActivator extends Activator<Turtle>
 //					System.err.println("Can't invoke: " + nextAction + "\n");//let the others go on running : no global exception
 //					cause.printStackTrace();
 //				}
-//			} 
+//			}
 //			catch (Exception e) {
 //				System.err.println("Can't invoke: " + nextAction + "\n");//let the others go on running : no global exception
 //				e.printStackTrace();
@@ -124,7 +124,7 @@ public class TurtleActivator extends Activator<Turtle>
 //					t.killAgent(t);
 //				}
 //			}
-//			
+//
 //		});
 //		Collections.sort(agents);
 		for (Turtle t : agents) // TODO shuffle or not !!
@@ -144,7 +144,7 @@ public class TurtleActivator extends Activator<Turtle>
 					System.err.println("Can't invoke: " + nextAction + "\n");//let the others go on running : no global exception
 					cause.printStackTrace();
 				}
-			} 
+			}
 			catch (Exception e) {
 				System.err.println("Can't invoke: " + nextAction + "\n");//let the others go on running : no global exception
 				e.printStackTrace();
@@ -167,7 +167,7 @@ public class TurtleActivator extends Activator<Turtle>
 			}
 		}
 	}
-	
+
 	private static <T extends Turtle> Method getMethodOnTurtle(Class<T> agentClass, final String methodName) {
 		Method m = methodTable.get(agentClass).get(methodName);
 		if (m == null) {
@@ -186,7 +186,7 @@ public class TurtleActivator extends Activator<Turtle>
 	public String toString() {
 		return getClass().getSimpleName()+"<"+getRole()+"-> "+size()+" agents";
 	}
-	
+
 }
 
 

@@ -18,6 +18,7 @@
 package turtlekit.viewer;
 
 import madkit.kernel.Probe;
+import madkit.kernel.Scheduler;
 import madkit.kernel.Watcher;
 import turtlekit.agr.TKOrganization;
 import turtlekit.kernel.TKEnvironment;
@@ -38,7 +39,7 @@ public abstract class AbstractObserver extends Watcher{
 	
 	private TKLauncher launcher;
 	private TKEnvironment environment;
-	private TKScheduler scheduler;
+	private Scheduler scheduler;
 
 	@Override
 	protected void activate() {
@@ -81,7 +82,7 @@ public abstract class AbstractObserver extends Watcher{
 	/**
 	 * @return the scheduler
 	 */
-	public TKScheduler getScheduler() {
+	public Scheduler getScheduler() {
 		return scheduler;
 	}
 

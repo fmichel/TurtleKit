@@ -95,6 +95,12 @@ public class CudaKernel {
 				// TODO Auto-generated method stub
 				return 0;
 			}
+
+			@Override
+			public KernelConfiguration getKernelConfiguration() {
+			    // TODO Auto-generated method stub
+			    return null;
+			}
 		};
 		CudaEngine.init(Level.ALL.toString());
 		CudaEngine ce = CudaEngine.getCudaEngine(name);
