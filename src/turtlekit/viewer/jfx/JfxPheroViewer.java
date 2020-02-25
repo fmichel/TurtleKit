@@ -5,19 +5,17 @@ import java.util.ConcurrentModificationException;
 import java.util.Map;
 import java.util.Random;
 
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Paint;
 import madkit.simulation.probe.SingleAgentProbe;
 import turtlekit.agr.TKOrganization;
 import turtlekit.kernel.Patch;
 import turtlekit.kernel.TKEnvironment;
-import turtlekit.kernel.TKScheduler;
 import turtlekit.kernel.Turtle;
 import turtlekit.pheromone.Pheromone;
 import turtlekit.pheromone.PheromoneView;
 
 
-public class JfxPheroViewer extends JfxDefaultViewer {
+public class JfxPheroViewer extends JFXViewer {
 
 	private SingleAgentProbe<TKEnvironment, Map<String, Pheromone<Float>>> pheroProbe;
 	private Pheromone<Float> selectedPheromone;
@@ -100,18 +98,17 @@ public class JfxPheroViewer extends JfxDefaultViewer {
 	}
    }
     
-    public JfxPheroViewer(GraphicsContext gc) {
-	super(gc);
-    }
+//    public JfxPheroViewer(GraphicsContext gc) {
+//	super(gc);
+//    }
 
-    @Override
-    protected void activate() {
-	requestRole(getCommunity(), TKOrganization.ENGINE_GROUP,TKOrganization.VIEWER_ROLE);
-	getLogger().info("I am alive");
-	initProbes();
-	SingleAgentProbe<TKScheduler,Double> p = new SingleAgentProbe<>(getCommunity(), TKOrganization.ENGINE_GROUP, TKOrganization.SCHEDULER_ROLE,"GVT");
-	addProbe(p);
-   }
+//    @Override
+//    protected void activate() {
+//	super.activate();
+//	initProbes();
+////	SingleAgentProbe<TKScheduler,Double> p = new SingleAgentProbe<>(getCommunity(), TKOrganization.ENGINE_GROUP, TKOrganization.SCHEDULER_ROLE,"GVT");
+////	addProbe(p);
+//   }
 
 	@Override
 	public void paintPatch(final Patch p, final int x, final int y, final int index) {

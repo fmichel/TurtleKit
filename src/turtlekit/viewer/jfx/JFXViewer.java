@@ -1,6 +1,8 @@
 package turtlekit.viewer.jfx;
 
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.util.ConcurrentModificationException;
 
 import javafx.scene.canvas.GraphicsContext;
@@ -10,16 +12,16 @@ import turtlekit.agr.TKOrganization;
 import turtlekit.kernel.Patch;
 import turtlekit.kernel.TKEnvironment;
 import turtlekit.kernel.TKGridModel;
-import turtlekit.kernel.TKScheduler;
 import turtlekit.kernel.Turtle;
 import turtlekit.kernel.TurtleKit;
 
 
-public class JfxDefaultViewer extends Watcher {
+public class JFXViewer extends Watcher {
 
-    protected GraphicsContext gc;
-	protected int cellSize = 4;
+    	protected GraphicsContext gc;
+	protected int cellSize = 5;
 	private SingleAgentProbe<TKEnvironment, Patch[]> gridProbe;
+	
 	/**
 	 * @deprecated replaced by using directly {@link #getCurrentEnvironment()}
 	 */
@@ -32,9 +34,9 @@ public class JfxDefaultViewer extends Watcher {
 		return gridModelProbe;
 	}
 
-	private SingleAgentProbe<TKScheduler,Double> timeProbe;
 	private SingleAgentProbe<TKEnvironment, Integer> widthProbe;
 	private SingleAgentProbe<TKEnvironment, Integer> heightProbe;
+	private AgentFxWindow myStage;
 	
 	protected void initProbes(){
 		gridModelProbe = new SingleAgentProbe<TKEnvironment, TKGridModel>(
@@ -101,20 +103,27 @@ public class JfxDefaultViewer extends Watcher {
 	}
    }
     
-    public JfxDefaultViewer(GraphicsContext gc) {
-	this.gc = gc;
-	System.err.println(gc);
-    }
-
     @Override
     protected void activate() {
 	requestRole(getCommunity(), TKOrganization.ENGINE_GROUP,TKOrganization.VIEWER_ROLE);
-	getLogger().info("I am alive");
 	initProbes();
-	SingleAgentProbe<TKScheduler,Double> p = new SingleAgentProbe<>(getCommunity(), TKOrganization.ENGINE_GROUP, TKOrganization.SCHEDULER_ROLE,"GVT");
-	addProbe(p);
+	initFxWindow();
    }
 
+    /**
+     * 
+     */
+    private void initFxWindow() {
+	final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+	double screenW = screenSize.getWidth();
+	double screenH = screenSize.getHeight();
+	while((getWidth()*cellSize > screenW - 200 || getHeight()*cellSize > screenH-300) && cellSize > 1){
+		cellSize--;
+	}
+	myStage = JFXManager.createNewWindow(this,getWidth()*cellSize, getHeight()*cellSize);
+	gc = myStage.getGc();
+    }
+    
     public void paintTurtle(final Turtle t, final int i, final int j) {
 	switchToJPaintColor(t.getColor());
 	gc.fillRect(i, j, cellSize, cellSize);
@@ -193,5 +202,5 @@ public class JfxDefaultViewer extends Watcher {
 	public void setCellSize(int cellSize) {
 		this.cellSize = cellSize;
 	}
-
+	
 }

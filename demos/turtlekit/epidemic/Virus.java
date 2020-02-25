@@ -44,6 +44,7 @@ import turtlekit.kernel.Turtle;
 import turtlekit.kernel.TurtleKit.Option;
 import turtlekit.viewer.PopulationCharter;
 import turtlekit.viewer.TKDefaultViewer;
+import turtlekit.viewer.jfx.JFXViewer;
 
 
 /** 
@@ -111,12 +112,13 @@ public class Virus extends Turtle
 
 
 	public static void main(String[] args) {
-		executeThisTurtle(100000
+		executeThisTurtle(50000
 				, Option.envDimension.toString(),"500,500"
 //				,Option.startSimu.toString()
 				,Option.viewers.toString(),
 				PopulationCharter.class.getName()+";"+
-				TKDefaultViewer.class.getName()
+				TKDefaultViewer.class.getName()+";"+
+				JFXViewer.class.getName()
 				,startSimu.toString()
 				);
 

@@ -63,6 +63,8 @@ import madkit.util.XMLUtilities;
 import turtlekit.agr.TKOrganization;
 import turtlekit.cuda.CudaEngine;
 import turtlekit.kernel.TurtleKit.LevelOption;
+import turtlekit.viewer.jfx.JFXManager;
+import turtlekit.viewer.jfx.JFXViewer;
 import turtlekit.viewer.jfx.JfxPheroViewer;
 import turtlekit.viewer.jfx.JfxViewerApplication;
 
@@ -82,6 +84,7 @@ public class TKLauncher extends Agent {
 
 	private Document dom;
 	private TKSimulationEngine simulationModel;
+	private JFXManager myJfxApplication;
 
 	public TKLauncher() {
 	}
@@ -118,6 +121,7 @@ public class TKLauncher extends Agent {
 		launchCoreAgents();
 		launchConfigTurtles();
 		if (! launchXMLAgents("Viewer")) {
+		    startFX();
 			launchViewers();
 		}
 		launchXMLAgents("Agent");
@@ -153,14 +157,24 @@ public class TKLauncher extends Agent {
 		final String viewerClasses = getMadkitProperty(viewers);
 		if (viewerClasses != null && ! viewerClasses.equals("null")) {
 			for (final String v : viewerClasses.split(";")) {
-				launchAgent(v, true);
+				if (v.contains(JFXViewer.class.getName())) {
+				    launchAgent(v, false);
+				}
+				else {
+				    launchAgent(v, true);
+				}
 			}
 		}
-		launchJfxViewer();
+//		launchJfxViewer();
+	}
+	
+	protected void startFX() {
+		new Thread(() -> JFXManager.launch(JFXManager.class)).start();
+		myJfxApplication = JFXManager.waitForFxInitialization();
 	}
 
 	protected void launchJfxViewer() {
-		new Thread(new Runnable() {
+	    new Thread(new Runnable() {
 		    public void run() {
 			JfxViewerApplication.main(null);
 		    }
@@ -172,9 +186,8 @@ public class TKLauncher extends Agent {
 		    if(gc != null)
 			break;
 		}
-		JfxPheroViewer name = new JfxPheroViewer(gc);
+		JfxPheroViewer name = new JfxPheroViewer();
 		launchAgent(name);
-		JfxViewerApplication.setMyAgent(name);
 	}
 
 	private NodeList getDomNodes(String nodeName){
