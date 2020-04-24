@@ -4,7 +4,7 @@ import jcuda.Pointer;
 import jcuda.driver.CUdeviceptr;
 import turtlekit.pheromone.DataGrid;
 
-public abstract class CudaAverageField extends DataGrid<Integer> implements CudaObject {
+public class CudaAverageField extends DataGrid<Integer> implements CudaObject {
 	
 	public final static int DEFAULT_DEPTH = 5;
 	
@@ -32,7 +32,11 @@ public abstract class CudaAverageField extends DataGrid<Integer> implements Cuda
 		initKernels();
 	}
 	
-	
+	@Override
+	public void set(int index, Integer value) {
+		values.put(index, value);
+	}
+
 //	private void initValues(float[] valuesAverage) {//TODO
 //		values.rewind();
 //		result.rewind();

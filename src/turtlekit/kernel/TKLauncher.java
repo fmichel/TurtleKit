@@ -51,7 +51,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import javafx.scene.canvas.GraphicsContext;
 import madkit.action.SchedulingAction;
 import madkit.i18n.ErrorMessages;
 import madkit.kernel.Agent;
@@ -65,8 +64,6 @@ import turtlekit.cuda.CudaEngine;
 import turtlekit.kernel.TurtleKit.LevelOption;
 import turtlekit.viewer.jfx.JFXManager;
 import turtlekit.viewer.jfx.JFXViewer;
-import turtlekit.viewer.jfx.JfxPheroViewer;
-import turtlekit.viewer.jfx.JfxViewerApplication;
 
 public class TKLauncher extends Agent {
 
@@ -171,23 +168,6 @@ public class TKLauncher extends Agent {
 	protected void startFX() {
 		new Thread(() -> JFXManager.launch(JFXManager.class)).start();
 		myJfxApplication = JFXManager.waitForFxInitialization();
-	}
-
-	protected void launchJfxViewer() {
-	    new Thread(new Runnable() {
-		    public void run() {
-			JfxViewerApplication.main(null);
-		    }
-		}).start();
-		GraphicsContext gc;
-		while (true) {
-		    pause(1000);
-		    gc = JfxViewerApplication.getGc();
-		    if(gc != null)
-			break;
-		}
-		JfxPheroViewer name = new JfxPheroViewer();
-		launchAgent(name);
 	}
 
 	private NodeList getDomNodes(String nodeName){
