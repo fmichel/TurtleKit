@@ -24,81 +24,74 @@ import turtlekit.kernel.TurtleKit.Option;
 
 /**
  * The TK Termite version of the famous termites example.
+ *
  * @author Fabien MICHEL
  * @version
  */
 
-@SuppressWarnings("serial")
 public class Termite extends Turtle {
-	/** the first time behavior of a turtle will be "searchForChip" */
-	public Termite() {
-		super("searchForChip");
+
+    /** the first time behavior of a turtle will be "searchForChip" */
+    public Termite() {
+	super("searchForChip");
+    }
+
+    @Override
+    protected void activate() {
+	super.activate();
+	setColor(Color.red);
+	randomHeading();
+	randomLocation();
+    }
+
+    // ////////here begin the methods that are used to define the termite's
+    // behavior
+
+    /**
+     * findEmptyPatch is a one time step behavior corresponding to a list of actions. So this method will be entirely
+     * executed, sure that no other turtle of the simulation is activated. It returns a String as the behavior that the
+     * turtle will take for the next time step
+     */
+    public void findEmptyPatch() {
+	wiggle();
+	if (getPatchColor() == Color.BLACK) {
+	    setPatchColor(Color.yellow);
+	    changeNextBehavior("getAway");
 	}
+    }
 
-	@Override
-	protected void activate() {
-		super.activate();
-		setColor(Color.red);
-		randomHeading();
-		randomLocation();
+    /** another one step behavior */
+    public void getAway() {
+	if (getPatchColor() == Color.BLACK)
+	    changeNextBehavior("searchForChip");
+	randomHeading();
+	fd(20);
+    }
+
+    /** another one step behavior */
+    public void searchForChip() {
+	wiggle();
+	if (getPatchColor() == Color.YELLOW) {
+	    setPatchColor(Color.BLACK);
+	    fd(20);
+	    changeNextBehavior("findNewPile");
 	}
+    }
 
-	// ////////here begin the methods that are used to define the termite's
-	// behavior
+    /** another one step behavior */
+    public void findNewPile() {
+	if (getPatchColor() == Color.YELLOW)
+	    changeNextBehavior("findEmptyPatch");
+	wiggle();
+    }
 
-	/**
-	 * findEmptyPatch is a one time step behavior corresponding to a list of
-	 * actions. So this method will be entirely executed, sure that no other
-	 * turtle of the simulation is activated. It returns a String as the behavior
-	 * that the turtle will take for the next time step
-	 */
-	public String findEmptyPatch() {
-		wiggle();
-		if (getPatchColor() == Color.BLACK) {
-			setPatchColor(Color.yellow);
-			return ("getAway");
-		}
-		return SAME_BEHAVIOR;
-	}
+    public static void main(String[] args) {
+	executeThisTurtle(1000, Option.envDimension.toString(), "512,512", Option.viewers.toString(), TermiteViewer.class.getName(), Option.startSimu.toString()
 
-	/** another one step behavior */
-	public String getAway() {
-		if (getPatchColor() == Color.BLACK)
-			return ("searchForChip");
-		randomHeading();
-		fd(20);
-		return SAME_BEHAVIOR;
-	}
-
-	/** another one step behavior */
-	public String searchForChip() {
-		wiggle();
-		if (getPatchColor() == Color.YELLOW) {
-			setPatchColor(Color.BLACK);
-			fd(20);
-			return ("findNewPile");
-		}
-		return SAME_BEHAVIOR;
-	}
-
-	/** another one step behavior */
-	public String findNewPile() {
-		if (getPatchColor() == Color.YELLOW)
-			return ("findEmptyPatch");
-		wiggle();
-		return SAME_BEHAVIOR;
-	}
-
-	public static void main(String[] args) {
-		executeThisTurtle(1000
-				,Option.envDimension.toString(),"512,512"
-				,Option.viewers.toString(),	TermiteViewer.class.getName()
-				,Option.startSimu.toString()
-
-//				+";"+
-//						JOGLViewer.class.getName()+";"+
-//				GLViewer.class.getName()
-				);
-	}
+	// +";"+
+	// JOGLViewer.class.getName()+";"+
+	// GLViewer.class.getName()
+	);
+    }
 
 }

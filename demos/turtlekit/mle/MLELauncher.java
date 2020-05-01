@@ -31,36 +31,27 @@ import turtlekit.kernel.TurtleKit.Option;
 import turtlekit.viewer.PheromoneViewer;
 
 public class MLELauncher extends TKLauncher {
-	
-	@Override
-	protected void activate() {
-//		setMadkitProperty("GPU_gradients", "true");
-		Object[] tab = { "50","100", "256","512","1024","1536","2048" };
-		Object size = JOptionPane.showInputDialog(null,
-				"environment size", "MLE world size",
-				JOptionPane.QUESTION_MESSAGE, null, tab, "256");
-		setMadkitProperty(envDimension, size.toString());
-		Object[] tab2 = { "1", "5", "10", "20","30","40","50","60","70","80","90","100","120","140" };
-		size = JOptionPane.showInputDialog(null, "MLE population density",
-				"population density", JOptionPane.QUESTION_MESSAGE, null, tab2,
-				"10");
-		setMadkitProperty("popDensity", size.toString());
-		initProperties();
-		setMadkitProperty(startSimu, "true");
-		setMadkitProperty(viewers, PheromoneViewer.class.getName());
-		setMadkitProperty(scheduler, MLEScheduler.class.getName());
-		setMadkitProperty(environment, MLEEnvironment.class.getName());
-		setMadkitProperty(turtles, Particule.class.getName()+","+(int) Math.ceil(Double.parseDouble(getMadkitProperty("popDensity"))*getWidth()*getHeight()/100));
-		super.activate();
-	}
 
-	
-	public static void main(String[] args) {
-		executeThisLauncher(
-			"--popDensity",
-			"100",
-			Option.cuda.toString()
-);
-	}
+    @Override
+    protected void activate() {
+	// setMadkitProperty("GPU_gradients", "true");
+	Object[] tab = { "50", "100", "256", "512", "1024", "1536", "2048" };
+	Object size = JOptionPane.showInputDialog(null, "environment size", "MLE world size", JOptionPane.QUESTION_MESSAGE, null, tab, "256");
+	setMadkitProperty(envDimension, size.toString());
+	int sizeNb = Integer.parseInt((String) size);
+	Object[] tab2 = { "1", "5", "10", "20", "30", "40", "50", "60", "70", "80", "90", "100", "120", "140" };
+	size = JOptionPane.showInputDialog(null, "MLE population density", "population density", JOptionPane.QUESTION_MESSAGE, null, tab2, "10");
+	setMadkitProperty("popDensity", size.toString());
+	setMadkitProperty(startSimu, "true");
+	setMadkitProperty(viewers, PheromoneViewer.class.getName());
+	setMadkitProperty(scheduler, MLEScheduler.class.getName());
+	setMadkitProperty(environment, MLEEnvironment.class.getName());
+	setMadkitProperty(turtles, Particule.class.getName() + "," + (int) Math.ceil(Double.parseDouble(getMadkitProperty("popDensity")) * (sizeNb * sizeNb) / 100));
+	super.activate();
+    }
+
+    public static void main(String[] args) {
+	executeThisLauncher("--popDensity", "100", Option.cuda.toString());
+    }
 
 }

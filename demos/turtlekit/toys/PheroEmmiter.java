@@ -32,7 +32,7 @@ public class PheroEmmiter extends Turtle {
 	@Override
 	protected void activate() {
 		super.activate();
-		setNextAction("fly");
+		changeNextBehavior("fly");
 		randomLocation();
 		randomHeading();
 		setColor(new Color((int) (Math.random() * 256),(int) (Math.random() * 256), (int) (Math.random() * 256)));

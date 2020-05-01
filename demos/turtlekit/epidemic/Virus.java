@@ -54,7 +54,6 @@ import turtlekit.viewer.jfx.JFXViewer;
   @author Fabien MICHEL
   @version 1.3 */
 
-@SuppressWarnings("serial")
 public class Virus extends Turtle 
 {
 	
@@ -69,15 +68,14 @@ public class Virus extends Turtle
 		playRole("healty");
 	}
 	
-	public String go(){
+	public void go(){
 		if(getColor() == Color.RED)
-			return "infected";
+		    changeNextBehavior("infected");
 		if (generator.nextDouble() < 0.000001) {
 			getInfected();
-			return "infected";
+			changeNextBehavior("infected");
 		}
 		wiggle();
-		return "go";
 	}
 	
 	private void getInfected(){
@@ -92,7 +90,7 @@ public class Virus extends Turtle
 		playRole("healty");
 	}
 	
-	public String infected(){
+	public void infected(){
 //		if(getCurrentBehaviorCount() == 30)
 //			return null;
 		wiggle();
@@ -105,9 +103,8 @@ public class Virus extends Turtle
 		}
 		if (generator.nextDouble() < 0.1) {
 			getCured();
-			return "go";
+			changeNextBehavior("go");
 		}
-		return "infected";
 	}
 
 

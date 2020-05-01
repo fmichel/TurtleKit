@@ -42,70 +42,72 @@ import turtlekit.kernel.Turtle;
 import turtlekit.kernel.TurtleKit.Option;
 
 /**
- *          this turtle turns around the nearest BlackKole. If two black holes
- *          are near it just goes forward
+ * this turtle turns around the nearest BlackKole. If two black holes are near it just goes forward
+ * 
  * @author Fabien MICHEL
  * @version 1.3 4/1/2013
  */
 
 @SuppressWarnings("serial")
 public class Star extends Turtle {
-	private int rayon;
-	private Turtle myBlackHole;
 
-	public Star() {
-		super("fall");
-	}
+    private int rayon;
+    private Turtle myBlackHole;
 
-	@Override
-	protected void activate() {
-		super.activate();
-		setColor(Color.WHITE);
-		randomLocation();
-		randomHeading();
-		final String maxR = getMadkitProperty("maxRadius");
-		int parseInt = 13;
-		if (maxR != null) {
-			try {
-				parseInt = Integer.parseInt(maxR);
-			} catch (NumberFormatException e) {
-				e.printStackTrace();
-			}
-		}
-		this.rayon = ((int) (Math.random() * parseInt)) + 1;
-	}
+    public Star() {
+	super("fall");
+    }
 
-	public String fall() {
-		double dist1 = 50, dist2 = 50;
-		List<Turtle> holes = getEnvironment().getTurtlesWithRoles("black hole");
-		for (Turtle hole : holes) {
-			final double distance = distance(hole);
-			if (distance < dist1) {
-				myBlackHole = hole;
-				dist2 = dist1;
-				dist1 = distance;
-			}
-		}
-		if (dist2 - dist1 > 10 && dist1 < 37) {
-			final double distance = distance(myBlackHole);
-			if (distance > rayon + 2)
-				setHeadingTowards(myBlackHole);
-			else
-				setHeadingTowards(myBlackHole, 90);
-			if (distance > rayon)
-				turnLeft(15);
-			fd(1);
-		} else {
-			fd(2);
-		}
-		return "fall";
+    @Override
+    protected void activate() {
+	super.activate();
+	setColor(Color.WHITE);
+	randomLocation();
+	randomHeading();
+	final String maxR = getMadkitProperty("maxRadius");
+	int parseInt = 13;
+	if (maxR != null) {
+	    try {
+		parseInt = Integer.parseInt(maxR);
+	    }
+	    catch(NumberFormatException e) {
+		e.printStackTrace();
+	    }
 	}
+	this.rayon = ((int) (Math.random() * parseInt)) + 1;
+    }
+
+    public void fall() {
+	double dist1 = 50, dist2 = 50;
+	List<Turtle> holes = getEnvironment().getTurtlesWithRoles("black hole");
+	for (Turtle hole : holes) {
+	    final double distance = distance(hole);
+	    if (distance < dist1) {
+		myBlackHole = hole;
+		dist2 = dist1;
+		dist1 = distance;
+	    }
+	}
+	if (dist2 - dist1 > 10 && dist1 < 37) {
+	    final double distance = distance(myBlackHole);
+	    if (distance > rayon + 2)
+		setHeadingTowards(myBlackHole);
+	    else
+		setHeadingTowards(myBlackHole, 90);
+	    if (distance > rayon)
+		turnLeft(15);
+	    fd(1);
+	}
+	else {
+	    fd(2);
+	}
+    }
 
 	public static void main(String[] args) {
 		executeThisTurtle(1500, Option.turtles.toString(),
 				BlackHole.class.getName() + ",4"
 				, "--maxRadius", "22"
-				,Option.startSimu.toString()
+				, Option.startSimu.toString()
 				, Option.envDimension.toString(),"400,400"
 				);
 	}

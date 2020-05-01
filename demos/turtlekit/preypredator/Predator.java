@@ -24,81 +24,65 @@ import turtlekit.kernel.TurtleKit.Option;
 import turtlekit.viewer.PopulationCharter;
 import turtlekit.viewer.TKDefaultViewer;
 
+public class Predator extends Turtle {
 
-@SuppressWarnings("serial")
-public class Predator extends Turtle 
-{
+    private Prey target;
+    private int visionRadius = 10;
 
-	private Prey target;
-	private int visionRadius = 10;
+    @Override
+    protected void activate() {
+	super.activate();
+	playRole("predator");
+	changeNextBehavior("live");
+	setColor(Color.red);
+	randomLocation();
+	randomHeading();
+	// setLogLevel(Level.INFO);
+    }
 
-	@Override
-	protected void activate() {
-		super.activate();
-		playRole("predator");
-		setNextAction("live");
-		setColor(Color.red);
-		randomLocation();
-		randomHeading();
-//		setLogLevel(Level.INFO);
+    public String live() {
+	setTarget(towardsPrey());
+	wiggle(20);
+	// step();
+	return "live";
+    }
+
+    /**
+     * @return
+     * 
+     */
+    public Prey towardsPrey() {
+	Prey p = getNearestTurtle(getVisionRadius(), Prey.class);
+	if (p != null) {
+	    setHeadingTowards(p);
 	}
-	
-	public String live()
-	{
-		setTarget(towardsPrey());
-		wiggle(20);
-//		step();
-		return "live";
-	}
+	return p;
+    }
 
-	/**
-	 * @return 
-	 * 
-	 */
-	public Prey towardsPrey() {
-		Prey p = getNearestTurtle(getVisionRadius(), Prey.class);
-		if (p != null) {
-			setHeadingTowards(p);
-		}
-		return p;
-	}
+    public static void main(String[] args) {
+	executeThisTurtle(500, Option.turtles.toString(), Prey.class.getName() + ",10000"
+	// ,Option.cuda.toString()
+		, Option.viewers.toString(), PopulationCharter.class.getName() + ";" + TKDefaultViewer.class.getName(), Option.startSimu.toString()
+	// ,Option.scheduler.toString(),BenchScheduler.class.getName()
+	);
+    }
 
-	public static void main(String[] args) {
-		executeThisTurtle(500
-				,Option.turtles.toString(),Prey.class.getName()+",10000"
-//				,Option.cuda.toString()
-				,Option.viewers.toString(),PopulationCharter.class.getName()+";"+TKDefaultViewer.class.getName()
-				,Option.startSimu.toString()
-//				,Option.scheduler.toString(),BenchScheduler.class.getName()
-				);
-	}
+    public int getVisionRadius() {
+	return visionRadius;
+    }
 
-	public int getVisionRadius() {
-		return visionRadius;
-	}
+    public void setVisionRadius(int visionRadius) {
+	this.visionRadius = visionRadius;
+    }
 
-	public void setVisionRadius(int visionRadius) {
-		this.visionRadius = visionRadius;
+    public Prey getTarget() {
+	if (target != null && !target.isAlive()) {
+	    target = null;
 	}
+	return target;
+    }
 
-	public Prey getTarget() {
-		if (target != null && ! target.isAlive()) {
-			target = null;
-		}
-		return target;
-	}
-
-	public void setTarget(Prey target) {
-		this.target = target;
-	}
+    public void setTarget(Prey target) {
+	this.target = target;
+    }
 }
-
-
-
-
-
-
-
-
-
-

@@ -35,165 +35,42 @@
  */
 package turtlekit.kernel;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import madkit.kernel.Activator;
-import madkit.simulation.SimulationException;
 import turtlekit.agr.TKOrganization;
 
 /**
- * The turtle activator : allow to make the turtles work like finite state automata.
+ * The default turtle activator: trigger the behavior of all turtles having a specific role
  *
  * @author Fabien Michel
- * @version 1.1
+ * @version 4
  *
  */
-public class TurtleActivator extends Activator<Turtle>
-{
-	private final static ConcurrentHashMap<Class<? extends Turtle>,Map<String,Method>> methodTable = new ConcurrentHashMap<>();
+public class TurtleActivator extends Activator<Turtle> {
 
-	public TurtleActivator(String community) {
-		this(community, TKOrganization.TURTLES_GROUP, TKOrganization.TURTLE_ROLE);
+    public TurtleActivator(String community) {
+	this(community, TKOrganization.TURTLES_GROUP, TKOrganization.TURTLE_ROLE);
+    }
+
+    public TurtleActivator(String community, String role) {
+	this(community, TKOrganization.TURTLES_GROUP, role);
+    }
+
+    public TurtleActivator(String community, String group, String role) {
+	super(community, group, role);
+    }
+
+    public void execute(final List<Turtle> agents, Object... args) {
+	for (Turtle t : agents) // TODO shuffle or not !!
+	{
+	    t.executeBehavior();
 	}
+    }
 
-	public TurtleActivator(String community, String role) {
-		this(community, TKOrganization.TURTLES_GROUP, role);
-	}
-
-	public TurtleActivator(String community, String group, String role) {
-		super(community, group, role);
-//		useMulticore(Runtime.getRuntime().availableProcessors()); //TODO add the options
-	}
-
-//	@SuppressWarnings("unchecked")
-//	public void initialize() {
-//		for (Turtle t : getCurrentAgentsList()) {
-//			methodTable.put((Class<Turtle>) t.getClass(), new HashMap<String, Method>());
-//		}
-//	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	protected void adding(Turtle agent) {
-		final Class<? extends Turtle> c = agent.getClass();
-		if(methodTable.get(c) == null){
-			methodTable.put(c, new HashMap<String,Method>());
-		}
-	}
-
-	public void execute(final List<Turtle> agents, Object... args) {
-//		Collections.shuffle(agents);
-//		agents.parallelStream().forEach(t -> {
-//			if (t.getPatch() == null) // killed by another before its turn
-//				return;
-//			String nextMethod = null;
-//
-//			final Method nextAction = t.getNextAction();
-//			try {
-//				nextMethod = (String) nextAction.invoke(t);
-//			} catch (NullPointerException e) {
-//				throw new SimulationException(t.getClass()+"'s initial behavior not set", null);
-//			} catch (InvocationTargetException e) {
-//				Throwable cause = e.getCause();
-//				if(! (cause instanceof ThreadDeath)){
-//					System.err.println("Can't invoke: " + nextAction + "\n");//let the others go on running : no global exception
-//					cause.printStackTrace();
-//				}
-//			}
-//			catch (Exception e) {
-//				System.err.println("Can't invoke: " + nextAction + "\n");//let the others go on running : no global exception
-//				e.printStackTrace();
-//			} catch(AssertionError e){
-//				throw e;
-//			}
-//			if (nextMethod != null) {
-//				if (nextMethod.equals(Turtle.SAME_BEHAVIOR) || nextMethod.equals(nextAction.getName())) {
-//					t.incrementBehaviorCount();
-//				} else {
-//					t.setCurrentBehaviorCount(0);
-//					t.setNextMethod(getMethodOnTurtle(t.getClass(),nextMethod));
-//				}
-//			} else {
-//				if (t.isAlive()) {
-//					// t.setNextAction(null);
-//					t.killAgent(t);
-//				}
-//			}
-//
-//		});
-//		Collections.sort(agents);
-		for (Turtle t : agents) // TODO shuffle or not !!
-		{
-			if (t.getPatch() == null) // killed by another before its turn
-				return;
-			String nextMethod = null;
-
-			final Method nextAction = t.getNextAction();
-			try {
-				nextMethod = (String) nextAction.invoke(t);
-			} catch (NullPointerException e) {
-				throw new SimulationException(t.getClass()+"'s initial behavior not set", null);
-			} catch (InvocationTargetException e) {
-				Throwable cause = e.getCause();
-				if(! (cause instanceof ThreadDeath)){
-					System.err.println("Can't invoke: " + nextAction + "\n");//let the others go on running : no global exception
-					cause.printStackTrace();
-				}
-			}
-			catch (Exception e) {
-				System.err.println("Can't invoke: " + nextAction + "\n");//let the others go on running : no global exception
-				e.printStackTrace();
-			} catch(AssertionError e){
-				throw e;
-			}
-			if (nextMethod != null) {
-				if (nextMethod.equals(Turtle.SAME_BEHAVIOR) || nextMethod.equals(nextAction.getName())) {
-					t.incrementBehaviorCount();
-					continue;
-				} else {
-					t.setCurrentBehaviorCount(1);
-				}
-				t.setNextMethod(getMethodOnTurtle(t.getClass(),nextMethod));
-			} else {
-				if (t.isAlive()) {
-					// t.setNextAction(null);
-					t.killAgent(t);
-				}
-			}
-		}
-	}
-
-	private static <T extends Turtle> Method getMethodOnTurtle(Class<T> agentClass, final String methodName) {
-		Method m = methodTable.get(agentClass).get(methodName);
-		if (m == null) {
-			try {
-				m = Activator.findMethodOn(agentClass, methodName);
-				methodTable.get(agentClass).put(methodName, m);
-			} catch (NoSuchMethodException | SecurityException e) {
-				System.err.println("Can't use method: " + methodName);
-				e.printStackTrace();
-			}
-		}
-		return m;
-	}
-
-	@Override
-	public String toString() {
-		return getClass().getSimpleName()+"<"+getRole()+"-> "+size()+" agents";
-	}
+    @Override
+    public String toString() {
+	return getClass().getSimpleName() + "<" + getRole() + "-> " + size() + " agents";
+    }
 
 }
-
-
-
-
-
-
-
-
-

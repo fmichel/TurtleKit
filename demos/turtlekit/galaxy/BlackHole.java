@@ -36,7 +36,7 @@ public class BlackHole extends Turtle {
 		randomHeading();
 		randomLocation();
 		setColor(Color.cyan);
-		setNextAction("move");
+		changeNextBehavior("move");
 	}
 	
 	/** the only behavior of what we shamelessly call a BlackHole */

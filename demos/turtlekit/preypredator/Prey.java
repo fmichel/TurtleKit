@@ -43,58 +43,46 @@ import turtlekit.kernel.TurtleKit.Option;
 import turtlekit.viewer.PopulationCharter;
 import turtlekit.viewer.TKDefaultViewer;
 
+public class Prey extends Turtle {
 
-@SuppressWarnings("serial")
-public class Prey extends Turtle 
-{
+    private int visionRadius = 1;
 
-	private double life;
-	private int visionRadius=1;
+    @Override
+    protected void activate() {
+	super.activate();
+	// setLogLevel(Level.ALL);
+	playRole("prey");
+	randomHeading();
+	randomLocation();
+	setColor(Color.white);
+	changeNextBehavior("live");
+    }
 
-	@Override
-	protected void activate() {
-		super.activate();
-//		setLogLevel(Level.ALL);
-		playRole("prey");
-		randomHeading();
-		randomLocation();
-		setColor(Color.white);
-		setNextAction("live");
-	}
-
-	//a behavior
-	public String live()
-	{
-		final List<Predator> predatorsHere = getPatch().getTurtles(Predator.class);
-		if(predatorsHere.size() > 2){
-			int targetedBy = 0;
-			for (Predator predator : predatorsHere) {
-				if(predator.getTarget() == this && ++targetedBy == 4){
-					return null; //die
-				}
-			}
+    // a behavior
+    public String live() {
+	final List<Predator> predatorsHere = getPatch().getTurtles(Predator.class);
+	if (predatorsHere.size() > 2) {
+	    int targetedBy = 0;
+	    for (Predator predator : predatorsHere) {
+		if (predator.getTarget() == this && ++targetedBy == 4) {
+		    return null; // die
 		}
-		Predator turtle = getNearestTurtle(visionRadius,Predator.class);
-		if(turtle != null){
-			setHeading(towards(turtle)+180);//flee
-		}
-		
-		wiggle(20);
-		return "live";
+	    }
+	}
+	Predator turtle = getNearestTurtle(visionRadius, Predator.class);
+	if (turtle != null) {
+	    setHeading(towards(turtle) + 180);// flee
 	}
 
-	public static void main(String[] args) {
-		executeThisTurtle(10000
-				,Option.turtles.toString(),Predator.class.getName()+",100"
-//				,Option.envDimension.toString(),"20,20"
-//				,Option.cuda.toString()
-				,Option.startSimu.toString()
-				,Option.viewers.toString(),PopulationCharter.class.getName()+";"+TKDefaultViewer.class.getName()
-				);
-	}
+	wiggle(20);
+	return "live";
+    }
+
+    public static void main(String[] args) {
+	executeThisTurtle(10000, Option.turtles.toString(), Predator.class.getName() + ",100"
+	// ,Option.envDimension.toString(),"20,20"
+	// ,Option.cuda.toString()
+		, Option.startSimu.toString(), Option.viewers.toString(), PopulationCharter.class.getName() + ";" + TKDefaultViewer.class.getName());
+    }
 
 }
-
-
-
-

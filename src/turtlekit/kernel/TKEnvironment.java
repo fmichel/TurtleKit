@@ -405,7 +405,7 @@ public class TKEnvironment extends Watcher {
      * @return the pheromone
      */
     public Pheromone<Float> getPheromone(String name, int evaporationPercentage, int diffusionPercentage) {
-	return getPheromone(name, evaporationPercentage / 100f, diffusionPercentage / 100f);
+	return getSobelPheromone(name, evaporationPercentage / 100f, diffusionPercentage / 100f);
     }
 
     public Pheromone<Float> getCudaPheromoneWithBlock(String name, int evaporationPercentage, int diffusionPercentage) {

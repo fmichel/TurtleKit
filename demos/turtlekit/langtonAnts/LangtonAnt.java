@@ -8,37 +8,36 @@ import turtlekit.viewer.TKDefaultViewer;
 import turtlekit.viewer.TimeUnitsPerSecondCharter;
 
 public class LangtonAnt extends Turtle {
-	
-	@Override
-	protected void activate() {
-		super.activate();
-		setNextAction("doIt");
-		home();
-		fd(0.5);
-		setHeading(90);
-		fd(0.5);
-	}
-	
-	public String doIt(){
-		if(getPatchColor() == Color.BLACK){
-			setPatchColor(Color.WHITE);
-			turnLeft(90);
-		}
-		else {
-			setPatchColor(Color.BLACK);
-			turnRight(90);
-		}
-		fd(1);
-		return "doIt";
-	}
 
-	public static void main(String[] args) {
-		executeThisTurtle(1
-				,Option.envDimension.toString(),"1000,1000"
-				,Option.renderingInterval.toString(),"550"
-				,Option.viewers.toString(),TimeUnitsPerSecondCharter.class.getName()+";"+TKDefaultViewer.class.getName()
-				,Option.startSimu.toString()
-				);
+    @Override
+    protected void activate() {
+	super.activate();
+	changeNextBehavior("doIt");
+	home();
+	fd(0.5);
+	setHeading(90);
+	fd(0.5);
+    }
+
+    public String doIt() {
+	if (getPatchColor() == Color.BLACK) {
+	    setPatchColor(Color.WHITE);
+	    turnLeft(90);
 	}
+	else {
+	    setPatchColor(Color.BLACK);
+	    turnRight(90);
+	}
+	fd(1);
+	return "doIt";
+    }
+
+    public static void main(String[] args) {
+	executeThisTurtle(1, 
+		Option.envDimension.toString(), "1000,1000", 
+		Option.renderingInterval.toString(), "550", 
+		Option.viewers.toString(), TimeUnitsPerSecondCharter.class.getName() + ";" + TKDefaultViewer.class.getName(), 
+		Option.startSimu.toString());
+    }
 
 }

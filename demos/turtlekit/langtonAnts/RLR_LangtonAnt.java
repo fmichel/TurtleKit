@@ -10,7 +10,7 @@ public class RLR_LangtonAnt extends Turtle {
 	@Override
 	protected void activate() {
 		super.activate();
-		setNextAction("black");
+		changeNextBehavior("black");
 		home();
 		fd(0.5);
 		setHeading(90);
