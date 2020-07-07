@@ -62,8 +62,6 @@ import madkit.util.XMLUtilities;
 import turtlekit.agr.TKOrganization;
 import turtlekit.cuda.CudaEngine;
 import turtlekit.kernel.TurtleKit.LevelOption;
-import turtlekit.viewer.jfx.JFXManager;
-import turtlekit.viewer.jfx.JFXViewer;
 
 public class TKLauncher extends Agent {
 
@@ -81,7 +79,6 @@ public class TKLauncher extends Agent {
 
     private Document dom;
     private TKSimulationEngine simulationModel;
-    private JFXManager myJfxApplication;
 
     public TKLauncher() {
     }
@@ -123,23 +120,11 @@ public class TKLauncher extends Agent {
 	}
     }
 
-    protected void startFX() {
-	Thread t = new Thread(() -> JFXManager.launch(JFXManager.class));
-	t.setDaemon(true);
-	t.start();
-	myJfxApplication = JFXManager.waitForFxInitialization();
-    }
-
     protected void launchViewers() {
 	final String viewerClasses = getMadkitProperty(viewers);
 	if (viewerClasses != null && !viewerClasses.equals("null")) {
 	    for (final String v : viewerClasses.split(";")) {
-		if (v.contains(JFXViewer.class.getName())) {
-		    launchAgent(v, false);
-		}
-		else {
 		    launchAgent(v, true);
-		}
 	    }
 	}
     }
@@ -180,7 +165,7 @@ public class TKLauncher extends Agent {
 	launchCoreAgents();
 	launchConfigTurtles();
 	if (!launchXMLAgents("Viewer")) {
-	    startFX();
+//	    startFX();
 	    launchViewers();
 	}
 	launchXMLAgents("Agent");

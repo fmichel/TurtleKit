@@ -43,7 +43,6 @@ import java.util.List;
 import turtlekit.kernel.Turtle;
 import turtlekit.kernel.TurtleKit.Option;
 import turtlekit.viewer.PopulationCharter;
-import turtlekit.viewer.TKDefaultViewer;
 import turtlekit.viewer.jfx.JFXViewer;
 
 
@@ -114,7 +113,6 @@ public class Virus extends Turtle
 //				,Option.startSimu.toString()
 				,Option.viewers.toString(),
 				PopulationCharter.class.getName()+";"+
-				TKDefaultViewer.class.getName()+";"+
 				JFXViewer.class.getName()
 				,startSimu.toString()
 				);

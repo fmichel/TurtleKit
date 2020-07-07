@@ -2,7 +2,6 @@ package turtlekit.viewer.jfx;
 
 import java.util.concurrent.CountDownLatch;
 
-import javafx.animation.AnimationTimer;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -31,14 +30,14 @@ public class AgentFxWindow extends javafx.stage.Stage {
 	root.getChildren().add(canvas);
 	setScene(new Scene(root));
 	show();
-	new AnimationTimer() {
-	    @Override
-	    public void handle(long now) {
-		if (myAgent != null) {
-		    myAgent.observe2();
-		}
-	    }
-	}.start();
+//	new AnimationTimer() {
+//	    @Override
+//	    public void handle(long now) {
+//		if (myAgent != null) {
+//		    myAgent.observe2();
+//		}
+//	    }
+//	}.start();
 	window = this;
 	myAgent = jfxViewer;
 	JFXManager.fxDone.signal();

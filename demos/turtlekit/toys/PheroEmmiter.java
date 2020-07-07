@@ -19,11 +19,10 @@ package turtlekit.toys;
 
 import java.awt.Color;
 
-import turtlekit.cuda.CudaPheromone;
 import turtlekit.kernel.Turtle;
 import turtlekit.kernel.TurtleKit.Option;
 import turtlekit.pheromone.Pheromone;
-import turtlekit.viewer.PheromoneViewer;
+import turtlekit.viewer.jfx.JfxPheroViewer;
 
 public class PheroEmmiter extends Turtle {
 	
@@ -38,7 +37,7 @@ public class PheroEmmiter extends Turtle {
 		setColor(new Color((int) (Math.random() * 256),(int) (Math.random() * 256), (int) (Math.random() * 256)));
 //		pheromone = getEnvironment().getPheromone("test",0.333f,0.3f);
 		pheromone = getEnvironment().getPheromone("test",20,60);
-		System.err.println(pheromone instanceof CudaPheromone);
+//		System.err.println(pheromone instanceof CudaPheromone);
 	}
 	
 	
@@ -52,12 +51,14 @@ public class PheroEmmiter extends Turtle {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		executeThisTurtle(10
-				,Option.viewers.toString(),PheromoneViewer.class.getName()
-				,Option.envHeight.toString(),"256"
-				,Option.envWidth.toString(),"256"
+		executeThisTurtle(100
+//				,Option.viewers.toString(),PheromoneViewer.class.getName()
+				,Option.envHeight.toString(),"512"
+				,Option.envWidth.toString(),"512"
+				,Option.viewers.toString(),JfxPheroViewer.class.getName()
+//				,Option.viewers.toString(),JFXViewer.class.getName(),BooleanOption.JavaFX.toString()
 				,Option.cuda.toString()
-//				,Option.startSimu.toString()
+				,Option.startSimu.toString()
 				);
 	}
 

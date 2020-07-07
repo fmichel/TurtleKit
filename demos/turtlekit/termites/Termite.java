@@ -86,11 +86,10 @@ public class Termite extends Turtle {
     }
 
     public static void main(String[] args) {
-	executeThisTurtle(1000, Option.envDimension.toString(), "512,512", Option.viewers.toString(), TermiteViewer.class.getName(), Option.startSimu.toString()
-
-	// +";"+
-	// JOGLViewer.class.getName()+";"+
-	// GLViewer.class.getName()
+	executeThisTurtle(1000, Option.envDimension.toString(), "512,512"
+		,Option.viewers.toString(),TermiteViewer.class.getName()
+		,Option.viewers.toString(),FxTermiteViewer.class.getName()
+		,Option.startSimu.toString()
 	);
     }
 
