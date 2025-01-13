@@ -1,0 +1,14 @@
+extraJavaModuleInfo {
+    module("org.jcuda:jcuda","jcuda") {
+        exportAllPackages() // Adds an `exports` for each package found in the Jar
+        requires("java.logging")        
+    }
+    module("org.jcuda:jcuda-natives","jcuda.natives") {
+        exportAllPackages() // Adds an `exports` for each package found in the Jar
+        //requireAllDefinedDependencies() // Adds `requires (transitive|static)` directives based on dependencies defined in the component's metadata    
+    }
+    automaticModule("commons-collections:commons-collections", "commons.collections")
+    
+	automaticModule("commons-beanutils:commons-beanutils", "commons.beanutils")
+    
+}

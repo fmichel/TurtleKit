@@ -1,0 +1,125 @@
+plugins {
+	id 'buildlogic.java-common-conventions'
+    id 'org.gradlex.extra-java-module-info'
+}
+
+repositories {
+	mavenCentral()
+	    maven {
+      	  url "https://s01.oss.sonatype.org/content/repositories/snapshots"
+  	  }
+}
+
+dependencies {
+    // JCuda dependencies are below
+    def classifier = getOsString() + "-" + getArchString()
+
+    def jCudaVersion = "12.0.0"
+
+    // JCuda Java libraries
+    implementation(group: 'org.jcuda', name: 'jcuda', version: jCudaVersion) {
+	    transitive = false
+    }
+    
+    // JCuda native libraries
+    implementation group: 'org.jcuda', name: 'jcuda-natives', classifier: classifier, version: jCudaVersion
+}
+
+configurations.all {
+    // check for updates every build
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
+extraJavaModuleInfo {
+
+    automaticModule("net.jodah:concurrentunit", "net.jodah.concurrentunit")
+
+    automaticModule("com.beust:jcommander", "com.beust.jcommander")
+
+    automaticModule("org.webjars:jquery", "org.webjars.jquery")
+
+    automaticModule("commons-collections:commons-collections", "org.apache.commons.collections")
+  
+    module("commons-beanutils:commons-beanutils", "org.apache.commons.beanutils") {
+        requiresTransitive("org.apache.commons.logging")
+        requires("java.sql")
+        requires("java.desktop")
+        exportAllPackages() 
+    }
+    
+    module("org.apache.commons:commons-configuration2","org.apache.commons.configuration2") {
+        patchRealModule()
+        requires ("org.apache.commons.beanutils")
+        requires ("org.apache.commons.text")
+        requires ("org.apache.commons.lang3")
+        exportAllPackages() 
+    }
+    
+    module("org.apache.commons:commons-text", "org.apache.commons.text"){
+        patchRealModule()
+        requires("org.apache.commons.lang3")
+        exportAllPackages() 
+    }
+
+    module("org.apache.commons:commons-lang3", "org.apache.commons.lang3"){
+        patchRealModule()
+        exportAllPackages() 
+    }
+
+    module("org.jcuda:jcuda","jcuda") {
+        exportAllPackages() // Adds an `exports` for each package found in the Jar
+        requires("java.logging")        
+    }
+    module("org.jcuda:jcuda-natives","jcuda.natives") {
+        exportAllPackages() // Adds an `exports` for each package found in the Jar
+        //requireAllDefinedDependencies() // Adds `requires (transitive|static)` directives based on dependencies defined in the component's metadata    
+    }
+}
+
+def static getOsString() {
+    String vendor = System.getProperty("java.vendor");
+    if ("The Android Project" == vendor) {
+    return "android";
+    } else {
+    String osName = System.getProperty("os.name");
+    osName = osName.toLowerCase(Locale.ENGLISH);
+    if (osName.startsWith("windows")) {
+        return "windows";
+    } else if (osName.startsWith("mac os")) {
+        return "apple";
+    } else if (osName.startsWith("linux")) {
+        return "linux";
+    } else if (osName.startsWith("sun")) {
+        return "sun"
+    }
+    return "unknown"
+    }
+}
+
+def static getArchString() {
+    String osArch = System.getProperty("os.arch");
+    osArch = osArch.toLowerCase(Locale.ENGLISH);
+    if ("i386" == osArch || "x86" == osArch || "i686" == osArch) {
+    return "x86";
+    } else if (osArch.startsWith("amd64") || osArch.startsWith("x86_64")) {
+    return "x86_64";
+    } else if (osArch.startsWith("arm64")) {
+    return "arm64";
+    } else if (osArch.startsWith("arm")) {
+    return "arm";
+    } else if ("ppc" == osArch || "powerpc" == osArch) {
+    return "ppc";
+    } else if (osArch.startsWith("ppc")) {
+    return "ppc_64";
+    } else if (osArch.startsWith("sparc")) {
+    return "sparc";
+    } else if (osArch.startsWith("mips64")) {
+    return "mips64";
+    } else if (osArch.startsWith("mips")) {
+    return "mips";
+    } else if (osArch.contains("risc")) {
+    return "risc";
+    }
+    return "unknown";
+}
+

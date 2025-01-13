@@ -1,0 +1,11 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="MySuite">
+    <system-properties>
+        <property name="java.library.path" value="/tmp/tklib/lib"/>
+    </system-properties>
+    <test name="MyTest">
+        <classes>
+            <class name="*"/>
+        </classes>
+    </test>
+</suite>

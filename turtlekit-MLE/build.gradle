@@ -1,0 +1,4 @@
+plugins {
+	id 'buildlogic.turtlekit-models-common-conventions'
+}
+

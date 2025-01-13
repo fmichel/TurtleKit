@@ -1,0 +1,191 @@
+plugins {
+	id 'buildlogic.turtlekit-common-conventions'
+	id 'application'
+	id 'maven-publish'
+   	id 'signing'
+   	id 'org.gradlex.java-module-testing'
+   	id 'jacoco'
+   	id "org.sonarqube" version "6.0.1.5171"
+}
+
+group = 'io.github.fmichel'
+
+dependencies {
+}
+
+application {
+    mainClass = 'turtlekit.kernel.TutleKit4'
+    application.mainModule = 'turtlekit.base'
+}
+
+dependencies {
+    implementation libs.picocli
+    implementation libs.typetools
+    
+    testImplementation libs.testng
+    testImplementation libs.concurrentunit
+    testImplementation libs.slf4j
+    testImplementation libs.assertJ
+
+	api 'io.github.fmichel:madkit:6.0.0-SNAPSHOT'
+	
+    // JCuda dependencies are below
+    def classifier = getOsString() + "-" + getArchString()
+
+    def jCudaVersion = "12.0.0"
+
+    // JCuda Java libraries
+    implementation(group: 'org.jcuda', name: 'jcuda', version: jCudaVersion) {
+	    transitive = false
+    }
+    
+    // JCuda native libraries
+    implementation group: 'org.jcuda', name: 'jcuda-natives', classifier: classifier, version: jCudaVersion
+    
+}
+
+configurations.all {
+    // check for updates every build
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
+jar {
+    manifest {
+    	attributes 'Main-Class': 'turtlekit.kernel.Turtlekit'
+	}
+}
+
+javaModuleTesting.whitebox(testing.suites.getByName("test")){
+	requires.add("org.testng")
+	opensTo.add("org.testng")
+	requires.add("org.assertj.core")
+}
+
+jacocoTestReport {
+    reports {
+        xml.required = true
+    }
+}
+test.finalizedBy jacocoTestReport
+
+tasks.named('test') {
+    systemProperty 'java.library.path', '/tmp/tklib/lib'
+    // Use TestNG for unit tests.
+    useTestNG()
+    minHeapSize = "1024m"
+    maxHeapSize = "4096m"
+}
+
+
+sonar {
+  properties {
+    property "sonar.projectKey", "michel_turtlekit-4_AZRgnE-m09doS9Rmomlt"
+    property "sonar.projectName", "TurtleKit-4"
+    property "sonar.qualitygate.wait", false
+  }
+}
+
+ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
+
+publishing {
+    repositories {
+        maven {
+            def releaseRepo = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+            def snapshotRepo = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+            
+            name = "OSSRH"
+            url = isReleaseVersion ? releaseRepo : snapshotRepo
+            credentials {
+                username = findProperty("ORG_GRADLE_PROJECT_sonatypeUsername") ?: System.getenv("ORG_GRADLE_PROJECT_sonatypeUsername")
+                password = findProperty("ORG_GRADLE_PROJECT_sonatypePassword") ?: System.getenv("ORG_GRADLE_PROJECT_sonatypePassword")
+			}
+		}
+	}
+    publications {
+        mavenJava(MavenPublication) {
+                 artifactId = 'turtlekit'
+               from(components.java)
+            pom {
+                name = 'TurtleKit'
+                description = 'ALife library designed with MaDKit'
+                url = 'https://www.madkit.net/turtlekit'
+                licenses {
+                    license {
+                        name = 'CeCILL-C'
+                        url = 'https://cecill.info/licences/Licence_CeCILL-C_V1-en.html'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'fmichel'
+                        name = 'Fabien Michel'
+                        email = 'fmichel@lirmm.fr'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/fmichel/TurtleKit.git'
+                    developerConnection = 'scm:git:ssh://github.com:fmichel/TurtleKit.git'
+                    url = 'https://www.madkit.net/madkit/turtlekit'
+                }
+                
+            }
+        }
+    }
+}
+
+
+signing {
+  useGpgCmd()
+  sign publishing.publications
+}
+
+tasks.withType(Sign) {
+    onlyIf { isReleaseVersion }
+}
+
+def static getOsString() {
+    String vendor = System.getProperty("java.vendor");
+    if ("The Android Project" == vendor) {
+    return "android";
+    } else {
+    String osName = System.getProperty("os.name");
+    osName = osName.toLowerCase(Locale.ENGLISH);
+    if (osName.startsWith("windows")) {
+        return "windows";
+    } else if (osName.startsWith("mac os")) {
+        return "apple";
+    } else if (osName.startsWith("linux")) {
+        return "linux";
+    } else if (osName.startsWith("sun")) {
+        return "sun"
+    }
+    return "unknown"
+    }
+}
+
+def static getArchString() {
+    String osArch = System.getProperty("os.arch");
+    osArch = osArch.toLowerCase(Locale.ENGLISH);
+    if ("i386" == osArch || "x86" == osArch || "i686" == osArch) {
+    return "x86";
+    } else if (osArch.startsWith("amd64") || osArch.startsWith("x86_64")) {
+    return "x86_64";
+    } else if (osArch.startsWith("arm64")) {
+    return "arm64";
+    } else if (osArch.startsWith("arm")) {
+    return "arm";
+    } else if ("ppc" == osArch || "powerpc" == osArch) {
+    return "ppc";
+    } else if (osArch.startsWith("ppc")) {
+    return "ppc_64";
+    } else if (osArch.startsWith("sparc")) {
+    return "sparc";
+    } else if (osArch.startsWith("mips64")) {
+    return "mips64";
+    } else if (osArch.startsWith("mips")) {
+    return "mips";
+    } else if (osArch.contains("risc")) {
+    return "risc";
+    }
+    return "unknown";
+}

@@ -1,0 +1,77 @@
+def static getOsString() {
+    String vendor = System.getProperty("java.vendor");
+    if ("The Android Project" == vendor) {
+    return "android";
+    } else {
+    String osName = System.getProperty("os.name");
+    osName = osName.toLowerCase(Locale.ENGLISH);
+    if (osName.startsWith("windows")) {
+        return "windows";
+    } else if (osName.startsWith("mac os")) {
+        return "apple";
+    } else if (osName.startsWith("linux")) {
+        return "linux";
+    } else if (osName.startsWith("sun")) {
+        return "sun"
+    }
+    return "unknown"
+    }
+}
+
+def static getArchString() {
+    String osArch = System.getProperty("os.arch");
+    osArch = osArch.toLowerCase(Locale.ENGLISH);
+    if ("i386" == osArch || "x86" == osArch || "i686" == osArch) {
+    return "x86";
+    } else if (osArch.startsWith("amd64") || osArch.startsWith("x86_64")) {
+    return "x86_64";
+    } else if (osArch.startsWith("arm64")) {
+    return "arm64";
+    } else if (osArch.startsWith("arm")) {
+    return "arm";
+    } else if ("ppc" == osArch || "powerpc" == osArch) {
+    return "ppc";
+    } else if (osArch.startsWith("ppc")) {
+    return "ppc_64";
+    } else if (osArch.startsWith("sparc")) {
+    return "sparc";
+    } else if (osArch.startsWith("mips64")) {
+    return "mips64";
+    } else if (osArch.startsWith("mips")) {
+    return "mips";
+    } else if (osArch.contains("risc")) {
+    return "risc";
+    }
+    return "unknown";
+}
+
+dependencies {
+
+    // JCuda dependencies are below
+    def classifier = getOsString() + "-" + getArchString()
+
+    // Set JCuda version here, or if multiple modules use JCuda, 
+    // you should set a global variable like so:
+    //
+    // ext {
+    //  jCudaVersion = "11.0.0"
+    // }
+    //
+    // In your *top level* build gradle, and use
+    // rootProject.ext.jCudaVersion instead of jCudaVersion when you need to access it
+
+    def jCudaVersion = "12.0.0"
+
+    // JCuda Java libraries
+
+    implementation(group: 'org.jcuda', name: 'jcuda', version: jCudaVersion) {
+	    transitive = false
+    }
+    
+    // JCuda native libraries
+
+    implementation group: 'org.jcuda', name: 'jcuda-natives', classifier: classifier, version: jCudaVersion
+    
+    
+}
+

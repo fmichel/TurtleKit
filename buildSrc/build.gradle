@@ -1,0 +1,14 @@
+plugins {
+    id 'groovy-gradle-plugin'
+}
+
+dependencies {
+    implementation("org.gradlex:extra-java-module-info:1.9")
+    implementation("org.gradlex:java-module-testing:1.4")
+	implementation("org.openjfx.javafxplugin:org.openjfx.javafxplugin.gradle.plugin:0.1.0")
+}
+
+repositories {
+    gradlePluginPortal()
+	mavenCentral()
+}

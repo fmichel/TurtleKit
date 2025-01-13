@@ -1,0 +1,11 @@
+plugins {
+	id 'buildlogic.turtlekit-common-conventions'
+}
+
+dependencies {
+	implementation project(':TurtleKit')
+}
+
+run {
+    systemProperty 'java.library.path', '/tmp/tklib/lib'
+}
