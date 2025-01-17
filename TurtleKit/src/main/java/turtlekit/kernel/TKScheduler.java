@@ -19,10 +19,12 @@ package turtlekit.kernel;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 
 import jcuda.utils.Timer;
 import madkit.kernel.Agent;
 import madkit.kernel.Scheduler;
+import madkit.simulation.SimuOrganization;
 import madkit.simulation.scheduler.MethodActivator;
 import turtlekit.agr.TKOrganization;
 
@@ -34,7 +36,7 @@ public class TKScheduler extends Scheduler<madkit.simulation.scheduler.TickBased
 	private MethodActivator viewerActivator;
 
 	public TKScheduler() {
-//		getLogger().setLevel(Level.ALL);
+		getLogger().setLevel(Level.ALL);
 //		setPause(1000);
 	}
 
@@ -137,7 +139,7 @@ public class TKScheduler extends Scheduler<madkit.simulation.scheduler.TickBased
 	 * @return the corresponding turtleActivator
 	 */
 	public TurtleActivator getTurtleActivator(String targetedRole) {
-		return turtleActivators.computeIfAbsent(targetedRole, k -> {
+		return turtleActivators.computeIfAbsent(targetedRole, _ -> {
 			TurtleActivator ta = new TurtleActivator(getModelGroup(), targetedRole);
 			addActivator(ta);
 			return ta;
@@ -150,7 +152,7 @@ public class TKScheduler extends Scheduler<madkit.simulation.scheduler.TickBased
 	public MethodActivator getEnvironmentUpdateActivator() {
 		if (environmentUpdateActivator == null) {
 			environmentUpdateActivator = new MethodActivator(getModelGroup(),
-					TKOrganization.ENVIRONMENT_ROLE, "update");
+					SimuOrganization.ENVIRONMENT_ROLE, "update");
 			addActivator(environmentUpdateActivator);
 		}
 		return environmentUpdateActivator;
@@ -173,7 +175,7 @@ public class TKScheduler extends Scheduler<madkit.simulation.scheduler.TickBased
 	 */
 	public MethodActivator getPheroMaxReset() {
 		if (pheroMaxReset == null) {
-			pheroMaxReset = new MethodActivator(TKOrganization.MODEL_GROUP, TKOrganization.ENVIRONMENT_ROLE,
+			pheroMaxReset = new MethodActivator(SimuOrganization.MODEL_GROUP, SimuOrganization.ENVIRONMENT_ROLE,
 					"resetPheroMaxValues");
 			addActivator(pheroMaxReset);
 		}

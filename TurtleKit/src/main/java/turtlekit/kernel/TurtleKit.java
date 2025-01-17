@@ -31,7 +31,7 @@ import madkit.simulation.SimuLauncher;
 import turtlekit.cuda.CudaPlatform;
 import turtlekit.viewer.TKViewer;
 
-@EngineAgents(scheduler = TKScheduler.class, environment = TKEnvironment.class, viewers = {TKViewer.class })
+@EngineAgents(scheduler = TKScheduler.class, environment = TKEnvironment.class, viewers = { TKViewer.class })
 public class TurtleKit extends SimuLauncher {
 
 	private static final String TK_LOGGER_NAME = "[* TURTLEKIT *] ";

@@ -3,130 +3,97 @@
  */
 package turtlekit.pheromone;
 
+import java.util.random.RandomGenerator;
+
 import madkit.gui.SliderProperty;
 import madkit.gui.UIProperty;
+import turtlekit.kernel.TKEnvironment;
 
 /**
  * @author Fabien Michel
  *
  */
-public abstract class AbstractPheromoneGrid<T> extends DataGrid<T> implements Pheromone<T> {
+public abstract class AbstractPheromoneGrid<T> extends DataGrid<T>
+		implements Pheromone<T> {
 
-	private T maximum;
+	private T maxEncounteredValue;
+	private double logMaxValue = 0;
+	private final RandomGenerator prng;
 	
 	@SliderProperty(minValue = 0, maxValue = 1, scrollPrecision = .01)
 	@UIProperty(category = "Phero", displayName = "diffusion")
-	private double diffusionCoef = 0.5;
+	private double diffusionCoefficient = 0.5;
 
 	@SliderProperty(minValue = 0, maxValue = 1, scrollPrecision = .01)
 	@UIProperty(category = "Phero", displayName = "evaporation")
-	private double evaporationCoef = 0.5;
+	private double evaporationCoefficient = 0.5;
 
+	private PheroColorModel colorModel;
+
+	protected final int[] neighborsIndexes;
 	/**
-	 * @return the diffusionCoef
+	 * @param name
+	 * @param environment
+	 * @param evaporationCoeff
+	 * @param diffusionCoeff
 	 */
-	public double getDiffusionCoef() {
-		return diffusionCoef;
+	protected AbstractPheromoneGrid(String name, TKEnvironment<?> environment, float evaporationCoeff, float diffusionCoeff) {
+		super(name, environment.getWidth(), environment.getHeight());
+		colorModel = new PheroColorModel();
+		setEvaporationCoefficient(evaporationCoeff);
+		setDiffusionCoefficient(diffusionCoeff);
+		prng = environment.prng();
+		neighborsIndexes = environment.getNeighborsIndexes();
+	}
+
+	@Override
+	public PheroColorModel getColorModel() {
+		return colorModel;
+	}
+
+	public void setColorModel(PheroColorModel colorModel) {
+		this.colorModel = colorModel;
 	}
 
 	/**
 	 * @param diffusionCoef the diffusionCoef to set
 	 */
-	public void setDiffusionCoef(double diffusionCoef) {
-		this.diffusionCoef = diffusionCoef;
+	public void setDiffusionCoefficient(double diffusionCoef) {
+		this.diffusionCoefficient = diffusionCoef;
 	}
 
 	/**
 	 * @return the evaporationCoef
 	 */
-	public double getEvaporationCoef() {
-		return evaporationCoef;
+	public double getEvaporationCoefficient() {
+		return evaporationCoefficient;
 	}
 
 	/**
-	 * @param evaporationCoef the evaporationCoef to set
+	 * @param evaporationCoef the evaporationCoef to setAbstractPheromoneGrid
 	 */
-	public void setEvaporationCoef(double evaporationCoef) {
-		this.evaporationCoef = evaporationCoef;
+	public void setEvaporationCoefficient(double evaporationCoef) {
+		this.evaporationCoefficient = evaporationCoef;
+	}
+
+	public T getMaxEncounteredValue() {
+		return maxEncounteredValue;
 	}
 
 	/**
-	 * @param name
-	 * @param width
-	 * @param height
+	 * @param value the maximum to set
 	 */
-	public AbstractPheromoneGrid(String name, int width, int height, final float evaporationCoeff, final float diffusionCoeff) {
-		super(name, width, height);
-		setEvaporationCoef(evaporationCoeff);
-		setDiffusionCoef(diffusionCoeff);
-	}
-	
-	/**
-	 * @return the maximum
-	 */
-	public T getMaximum() {
-		return maximum;
-	}
-
-	/**
-	 * @param maximum the maximum to set
-	 */
-	public void setMaximum(T maximum) {
-		this.maximum = maximum;
+	public void setMaxEncounteredValue(T value) {
+		this.maxEncounteredValue = value;
 	}
 
 	/**
 	 * @return the diffusion coefficient as a float between 0 and 1, e.g. 0.33 for 33% 
 	 */
-	public final double getDiffusionCoefficient(){
-		return diffusionCoef;
+	public double getDiffusionCoefficient() {
+		return diffusionCoefficient;
 	}
 
-	/**
-	 * @return the evaporation coefficient as a float between 0 and 1, e.g. 0.33 for 33% 
-	 */
-	public final double getEvaporationCoefficient(){
-		return evaporationCoef;
-	}
-	
-	protected abstract void diffuseValuesToTmpGridKernel();
-	
-	protected abstract void diffusionUpdateKernel();
-
-	public void diffusion(){
-		if (getDiffusionCoefficient() != 0) {
-			diffuseValuesToTmpGridKernel();
-			diffusionUpdateKernel();
-		}
-	}
-	
-	/**
-	 * This is faster than calling them sequentially: 
-	 * Only one GPU kernel is called.
-	 * 
-	 */
-	public void diffusionAndEvaporation() {
-		if(getDiffusionCoefficient() != 0 && getEvaporationCoefficient() != 0){
-			diffuseValuesToTmpGridKernel();
-			diffusionAndEvaporationUpdateKernel();
-		}
-		else{
-			diffusion();
-			evaporation();
-		}
-	}
-	
-	
-
-	public abstract void diffusionAndEvaporationUpdateKernel();
-
-	public void evaporation() {
-		if (getEvaporationCoefficient() != 0) {
-			evaporationKernel();
-		}
-	}
-
-	public abstract void evaporationKernel();
 	/**
 	 * helper
 	 * 
@@ -141,8 +108,20 @@ public abstract class AbstractPheromoneGrid<T> extends DataGrid<T> implements Ph
 			return 0;
 		return x;
 	}
-	
-public abstract int getMaxDirection(int xcor, int ycor) ;
 
-	public abstract int getMinDirection(int i, int j);
-}
+	public double getLogMaxValue() {
+		return logMaxValue;
+	}
+
+	public void setLogMaxValue(double logMaxValue) {
+		this.logMaxValue = logMaxValue;
+	}
+
+	public RandomGenerator prng() {
+        return prng;
+    }
+
+		public int[] getNeighborsIndexes() {
+			return neighborsIndexes;
+		}
+	}

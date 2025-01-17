@@ -15,6 +15,5 @@ open module turtlekit.base {
 	exports turtlekit.kernel.activator;
 	exports turtlekit.agr;
 	exports turtlekit.pheromone;
-	exports turtlekit.viewer.jfx;
 	exports turtlekit.viewer;
 }

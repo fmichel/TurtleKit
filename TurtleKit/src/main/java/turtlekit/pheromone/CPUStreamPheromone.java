@@ -20,36 +20,23 @@ package turtlekit.pheromone;
 
 import java.util.stream.IntStream;
 
+import turtlekit.kernel.TKEnvironment;
+
 /**
- * @author Fabien Michel
- *
+ * A pheromone grid that uses a float array to store values. It is used for CPU
+ * computations.
  */
 public class CPUStreamPheromone extends AbstractPheromoneGrid<Float> {
 
-	/**
-	 * @param name
-	 * @param width
-	 * @param height
-	 * @param evaporationCoeff
-	 * @param diffusionCoeff
-	 */
-
 	private final float[] values;
 	private final float[] tmp;
-	private final int[] neighborsIndexes;
 
-	public CPUStreamPheromone(
-			String name, 
-			int width, 
-			int height, 
-			float evaporationCoeff, 
-			float diffusionCoeff, 
-			int[] neighborsIndexes2) {
-		super(name, width, height, evaporationCoeff, diffusionCoeff);
-		values = new float[width * height];
-		tmp = new float[width * height];
-		neighborsIndexes = neighborsIndexes2;
-		setMaximum(0f);
+	public CPUStreamPheromone(String name, TKEnvironment<?> environment, float evaporationCoeff, float diffusionCoeff) {
+		super(name, environment, evaporationCoeff, diffusionCoeff);
+		int gridSize = getWidth() * getHeight();
+		values = new float[gridSize];
+		tmp = new float[gridSize];
+		setMaxEncounteredValue(Float.NEGATIVE_INFINITY);
 	}
 
 	@Override
@@ -59,141 +46,57 @@ public class CPUStreamPheromone extends AbstractPheromoneGrid<Float> {
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see turtlekit.pheromone.DataGrid#set(int, java.lang.Object)
 	 */
 	@Override
 	public void set(int index, Float value) {
-		if (value > getMaximum())
-			setMaximum(value);
 		values[index] = value;
 	}
 
 	public int getMaxDirection(int xcor, int ycor) {
-		float max = get(normeValue(xcor + 1, getWidth()), ycor);
-		int maxDir = 0;
-
-		float current = get(normeValue(xcor + 1, getWidth()), normeValue(ycor + 1, getHeight()));
-		if (current > max) {
-			max = current;
-			maxDir = 45;
-		}
-
-		current = get(xcor, normeValue(ycor + 1, getHeight()));
-		if (current > max) {
-			max = current;
-			maxDir = 90;
-		}
-
-		current = get(normeValue(xcor - 1, getWidth()), normeValue(ycor + 1, getHeight()));
-		if (current > max) {
-			max = current;
-			maxDir = 135;
-		}
-
-		current = get(normeValue(xcor - 1, getWidth()), ycor);
-		if (current > max) {
-			max = current;
-			maxDir = 180;
-		}
-
-		current = get(normeValue(xcor - 1, getWidth()), normeValue(ycor - 1, getHeight()));
-		if (current > max) {
-			max = current;
-			maxDir = 225;
-		}
-
-		current = get(xcor, normeValue(ycor - 1, getHeight()));
-		if (current > max) {
-			max = current;
-			maxDir = 270;
-		}
-
-		current = get(normeValue(xcor + 1, getWidth()), normeValue(ycor - 1, getHeight()));
-		if (current > max) {
-
-			max = current;
-			maxDir = 315;
-		}
-		return maxDir;
+//		return getMaxDirectionNoRandom(xcor, ycor);
+		return getMaxDirectionRandomWhenEquals(xcor, ycor);
 	}
 
-	public int getMinDirection(int i, int j) {
-		float min = get(normeValue(i + 1, getWidth()), j);
-		int minDir = 0;
+	public int getMinDirection(int xcor, int ycor) {
+//		return getMinDirectionNoRandom(xcor, ycor);
+		return getMinDirectionRandomWhenEquals(xcor, ycor);
+	}
 
-		float current = get(normeValue(i + 1, getWidth()), normeValue(j + 1, getHeight()));
-		if (current < min) {
-			min = current;
-			minDir = 45;
-		}
+	public int getMaxDirectionRandomWhenEquals(int xcor, int ycor) {
+		int index = get1DIndex(xcor, ycor) * 8;
+		return (int) GradientsCalculator.getMaxDirectionRandomWhenEquals(this, index);
+	}
 
-		current = get(i, normeValue(j + 1, getHeight()));
-		if (current < min) {
-			min = current;
-			minDir = 90;
-		}
+	public int getMaxDirectionNoRandom(int xcor, int ycor) {
+		int index = get1DIndex(xcor, ycor) * 8;
+		return (int) GradientsCalculator.getMaxDirectionNoRandom(this, index);
+	}
 
-		current = get(normeValue(i - 1, getWidth()), normeValue(j + 1, getHeight()));
-		if (current < min) {
-			min = current;
-			minDir = 135;
-		}
+	public int getMinDirectionRandomWhenEquals(int xcor, int ycor) {
+		int index = get1DIndex(xcor, ycor) * 8;
+		return (int) GradientsCalculator.getMinDirectionRandomWhenEquals(this, index);
+	}
 
-		current = get(normeValue(i - 1, getWidth()), j);
-		if (current < min) {
-			min = current;
-			minDir = 180;
-		}
-
-		current = get(normeValue(i - 1, getWidth()), normeValue(j - 1, getHeight()));
-		if (current < min) {
-			min = current;
-			minDir = 225;
-		}
-
-		current = get(i, normeValue(j - 1, getHeight()));
-		if (current < min) {
-			min = current;
-			minDir = 270;
-		}
-
-		current = get(normeValue(i + 1, getWidth()), normeValue(j - 1, getHeight()));
-		if (current < min) {
-			minDir = 315;
-		}
-		return minDir;
+	public int getMinDirectionNoRandom(int xcor, int ycor) {
+		int index = get1DIndex(xcor, ycor) * 8;
+		return (int) GradientsCalculator.getMinDirectionNoRandom(this, index);
 	}
 
 	@Override
-	protected void diffusionUpdateKernel() {
-		IntStream.range(0, getWidth()).parallel().forEach(i -> {
-			IntStream.range(0, getHeight()).parallel().forEach(j -> {
-				values[get1DIndex(i, j)] += getTotalUpdateFromNeighbors(i, j);
-			});
+	public void updateValuesFromTmpGridKernel() {
+		IntStream.range(0, values.length).parallel().forEach(i -> {
+			values[i] += getTotalUpdateFromNeighbors(i * 8);
 		});
 	}
 
 	public void diffusionAndEvaporationUpdateKernel() {
 		float evapCoef = (float) getEvaporationCoefficient();
-		IntStream.range(0, getWidth()).parallel().forEach(i -> 
-			IntStream.range(0, getHeight()).parallel().forEach(j -> {
-				int k = get1DIndex(i, j);
-				values[k] += getTotalUpdateFromNeighbors(i, j);
-				values[k] -= values[k] * evapCoef;
-			}));
-	}
-	
-//	public void applyFunctionToGrid(Function<Float,Void> f) {
-//		IntStream.range(0, getWidth()).parallel().forEach(i -> 
-//		IntStream.range(0, getHeight()).parallel().forEach(j -> 
-//		f.apply(values[get1DIndex(i, j)])));
-//	}
-
-	float getTotalUpdateFromNeighbors(int i, int j) {
-		int index = get1DIndex(i, j) * 8;
-
-		return tmp[neighborsIndexes[index]] + tmp[neighborsIndexes[++index]] + tmp[neighborsIndexes[++index]] + tmp[neighborsIndexes[++index]] + tmp[neighborsIndexes[++index]]
-				+ tmp[neighborsIndexes[++index]] + tmp[neighborsIndexes[++index]] + tmp[neighborsIndexes[++index]];
+		IntStream.range(0, values.length).parallel().forEach(i -> {
+			values[i] += getTotalUpdateFromNeighbors(i * 8);
+			values[i] -= values[i] * evapCoef;
+		});
 	}
 
 	@Override
@@ -210,8 +113,14 @@ public class CPUStreamPheromone extends AbstractPheromoneGrid<Float> {
 	public void evaporationKernel() {
 		float evapCoef = (float) getEvaporationCoefficient();
 		if (evapCoef != 0) {
-			IntStream.range(0, values.length).parallel().forEach(i -> values[i] -=  values[i] * evapCoef);
+			IntStream.range(0, values.length).parallel().forEach(i -> values[i] -= values[i] * evapCoef);
 		}
+	}
+
+	float getTotalUpdateFromNeighbors(int index) {
+		return tmp[neighborsIndexes[index]] + tmp[neighborsIndexes[++index]] + tmp[neighborsIndexes[++index]]
+				+ tmp[neighborsIndexes[++index]] + tmp[neighborsIndexes[++index]] + tmp[neighborsIndexes[++index]]
+				+ tmp[neighborsIndexes[++index]] + tmp[neighborsIndexes[++index]];
 	}
 
 	@Override
@@ -220,19 +129,27 @@ public class CPUStreamPheromone extends AbstractPheromoneGrid<Float> {
 	}
 
 	/**
-	 * Adds <code>inc</code> to the current value of the cell with the corresponding index
+	 * Adds <code>inc</code> to the current value of the cell with the corresponding
+	 * index
 	 * 
-	 * @param index
-	 *           cell's index
-	 * @param inc
-	 *           how much to add
+	 * @param index cell's index
+	 * @param inc   how much to add
 	 */
 	public void incValue(int index, float inc) {
-		// inc += get(index);
-		// if (inc > maximum)
-		// setMaximum(inc);
-		// set(index, inc);
 		set(index, inc + get(index));
+	}
+
+	/**
+	 * Compute the maximum value in the grid
+	 */
+	@Override
+	public void updateMaxValue() {
+
+		double currentMax = IntStream.range(0, values.length).parallel().mapToDouble(i -> values[i]).max().getAsDouble();
+		if (currentMax > getMaxEncounteredValue()) {
+			setMaxEncounteredValue((float) currentMax);
+			setLogMaxValue(Math.log10((float) getMaxEncounteredValue() + 1) / 256);
+		}
 	}
 
 }

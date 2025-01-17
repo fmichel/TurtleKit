@@ -1,6 +1,5 @@
 plugins {
 	id 'buildlogic.turtlekit-common-conventions'
-	id 'application'
 	id 'maven-publish'
    	id 'signing'
    	id 'org.gradlex.java-module-testing'
@@ -11,14 +10,6 @@ plugins {
 group = 'io.github.fmichel'
 
 dependencies {
-}
-
-application {
-    mainClass = 'turtlekit.kernel.TutleKit4'
-    application.mainModule = 'turtlekit.base'
-}
-
-dependencies {
     implementation libs.picocli
     implementation libs.typetools
     
@@ -27,8 +18,6 @@ dependencies {
     testImplementation libs.slf4j
     testImplementation libs.assertJ
 
-	api 'io.github.fmichel:madkit:6.0.0-SNAPSHOT'
-	
     // JCuda dependencies are below
     def classifier = getOsString() + "-" + getArchString()
 
@@ -44,16 +33,10 @@ dependencies {
     
 }
 
-configurations.all {
-    // check for updates every build
-    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
-}
-
-jar {
-    manifest {
-    	attributes 'Main-Class': 'turtlekit.kernel.Turtlekit'
-	}
-}
+//configurations.all {
+//    // check for updates every build
+//    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+//}
 
 javaModuleTesting.whitebox(testing.suites.getByName("test")){
 	requires.add("org.testng")

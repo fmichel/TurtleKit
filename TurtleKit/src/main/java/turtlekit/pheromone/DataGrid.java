@@ -25,9 +25,9 @@ package turtlekit.pheromone;
  */
 public abstract class DataGrid<T> {
 
-	final private int width;
-	final private int height;
-	final private String name;
+	private final int width;
+	private final int height;
+	private final String name;
 	
 	
 	/**
@@ -84,11 +84,4 @@ public abstract class DataGrid<T> {
 	}
 	
 	
-	/**
-	 * makes this data structure evolve to its next state, e.g. diffusion and evaporation for pheromone
-	 */
-	public void applyDynamics() {
-	    
-	}
-
 }

@@ -20,6 +20,8 @@ package turtlekit.mle;
 import turtlekit.cuda.CudaGPUGradientsPhero;
 import turtlekit.cuda.CudaPheromone;
 import turtlekit.kernel.TKEnvironment;
+import turtlekit.pheromone.PheroColorModel;
+import turtlekit.pheromone.PheroColorModel.MainColor;
 import turtlekit.pheromone.Pheromone;
 
 public class MLEEnvironment extends TKEnvironment{
@@ -27,41 +29,53 @@ public class MLEEnvironment extends TKEnvironment{
 	@Override
 	protected void onActivation() {
 		super.onActivation();
-		getPheromone(AbstractMLEAgent.PRE+"0", 20, 60); 
-//		getPheromone(AbstractMLEAgent.ATT+"0", 0, 0); 
-//		getPheromone(AbstractMLEAgent.REP+"0", 0, 0);
+		Pheromone<?> p = getPheromone(MLEAgent.PRE + "0", 0.20f, 0.60f);
+		p.setColorModel(PheroColorModel.RED);
+//		p.setColorModel(new PheroColorModel(0, 0, 0, MainColor.RED));
 
-		getPheromone(AbstractMLEAgent.PRE+"1", 40, 50); 
-		getPheromone(AbstractMLEAgent.ATT+"1", 87, 60); 
-		getPheromone(AbstractMLEAgent.REP+"1",97, 60);
-		
-		getPheromone(AbstractMLEAgent.PRE+"2", 15, 60); 
-		getPheromone(AbstractMLEAgent.ATT+"2", 86, 60); 
-		getPheromone(AbstractMLEAgent.REP+"2",96, 60);
-		
-		getPheromone(AbstractMLEAgent.PRE+"3", 10, 100); 
-		getPheromone(AbstractMLEAgent.ATT+"3", 85, 100); 
-		getPheromone(AbstractMLEAgent.REP+"3", 92, 100);
-//		
-		getPheromone(AbstractMLEAgent.PRE+"4", 15, 100); 
-		getPheromone(AbstractMLEAgent.ATT+"4", 84, 100); 
-		getPheromone(AbstractMLEAgent.REP+"4",89, 100);
+		p = getPheromone(MLEAgent.PRE + "1", 0.40f, 0.50f);
+		p.setColorModel(new PheroColorModel(50, 50, 50, MainColor.GREEN));
+
+		p = getPheromone(MLEAgent.ATT + "1", 0.87f, 0.60f);
+		p.setColorModel(new PheroColorModel(50, 50, 50, MainColor.GREEN));
+
+		p = getPheromone(MLEAgent.REP + "1", 0.97f, 0.60f);
+		p.setColorModel(new PheroColorModel(100, 50, 50, MainColor.GREEN));
+
+		p = getPheromone(MLEAgent.PRE + "2", 0.15f, 0.60f);
+		p.setColorModel(new PheroColorModel(100, 100, 100, MainColor.RED));
+
+		p = getPheromone(MLEAgent.ATT + "2", 0.86f, 0.60f);
+		p.setColorModel(new PheroColorModel(100, 100, 100, MainColor.RED));
+
+		p = getPheromone(MLEAgent.REP + "2", 0.96f, 0.60f);
+		p.setColorModel(new PheroColorModel(100, 100, 100, MainColor.RED));
+
+		p = getPheromone(MLEAgent.PRE + "3", 0.10f, 1.00f);
+		p.setColorModel(new PheroColorModel(50, 50, 50, MainColor.BLUE));
+		p = getPheromone(MLEAgent.ATT + "3", 0.85f, 1.00f);
+		p.setColorModel(new PheroColorModel(50, 50, 50, MainColor.BLUE));
+
+		p = getPheromone(MLEAgent.REP + "3", 0.92f, 1.00f);
+		p.setColorModel(new PheroColorModel(100, 50, 50, MainColor.BLUE));
+
+		//
+		p = getPheromone(MLEAgent.PRE + "4", 0.15f, 1.00f);
+		p.setColorModel(new PheroColorModel(150, 50, 50, MainColor.RED));
+
+		p = getPheromone(MLEAgent.ATT + "4", 0.84f, 1.00f);
+		p.setColorModel(new PheroColorModel(150, 50, 50, MainColor.RED));
+
+		p = getPheromone(MLEAgent.REP + "4", 0.89f, 1.00f);
+		p.setColorModel(new PheroColorModel(150, 50, 50, MainColor.RED));
 
 	}
 	
-//	@Override
-//	protected void update() {
-//		super.update();
-//		for (Pheromone p : getPheromones()) {
-//			((CudaPheromoneV3) p).updateV3();
-//		}
-//	}
-	
-	protected Pheromone createCudaPheromone(String name, int evaporationPercentage, int diffusionPercentage){
-		if(GPU_GRADIENTS && ! name.contains("PRE"))
-			return new CudaGPUGradientsPhero(name, getWidth(), getHeight(), evaporationPercentage, diffusionPercentage);
-		return new CudaPheromone(name, getWidth(),	getHeight(), evaporationPercentage, diffusionPercentage);
+	protected Pheromone createCudaPheromone(String name, float evaporationCoefficient, float diffusionCoefficient) {
+		if (GPU_GRADIENTS && !name.contains("PRE")) {
+			return new CudaGPUGradientsPhero(name, this, evaporationCoefficient, diffusionCoefficient);
+		}
+		return new CudaPheromone(name, this, evaporationCoefficient, diffusionCoefficient);
 	}
-	
 
 }

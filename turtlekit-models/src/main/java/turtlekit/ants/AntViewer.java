@@ -6,9 +6,9 @@ import static javafx.scene.paint.Color.YELLOW;
 import java.util.Random;
 
 import turtlekit.kernel.Patch;
-import turtlekit.viewer.jfx.FXPheroViewer;
+import turtlekit.viewer.TKViewer;
 
-public class AntViewer extends FXPheroViewer {
+public class AntViewer extends TKViewer {
 	/**
 	 * Just to do some initialization work
 	 */
@@ -16,7 +16,7 @@ public class AntViewer extends FXPheroViewer {
 	protected void onActivation() {
 		Random random = new Random(1);
 		super.onActivation();
-		setSelectedPheromone("presence");
+//		setSelectedPheromone("presence");
 //		setSynchronousPainting(false);// fastest display mode
 		double densityRate = 0.01;
 		for (Patch patch : getPatchGrid()) {

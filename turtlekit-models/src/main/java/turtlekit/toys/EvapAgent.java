@@ -20,16 +20,13 @@ package turtlekit.toys;
 import static javafx.scene.paint.Color.BLUE;
 
 import madkit.gui.UIProperty;
-import madkit.simulation.EngineAgents;
 import turtlekit.kernel.DefaultTurtle;
 import turtlekit.pheromone.Pheromone;
-import turtlekit.viewer.jfx.FXPheroViewer;
 
-@EngineAgents(viewers = {FXPheroViewer.class})
 public class EvapAgent extends DefaultTurtle {
 
 	@UIProperty
-	private static int nbOfAgents = 10;
+	private static int nbOfAgents = 2;
 
 	private Pheromone<Float> pheromone;
 
@@ -37,7 +34,7 @@ public class EvapAgent extends DefaultTurtle {
 	protected void onActivation() {
 		super.onActivation();
 		setColor(BLUE);
-		pheromone = getEnvironment().getPheromone("test", 3, 29);
+		pheromone = getEnvironment().getPheromone("test", .03f, 0.29f);
 		changeNextBehavior("behavior");
 	}
 	
@@ -56,7 +53,7 @@ public class EvapAgent extends DefaultTurtle {
 	 */
 	public static void main(String[] args) {
 		executeThisTurtle(getNbOfAgents()
-				, "--cuda"
+//				, "--cuda"
 				);
 	}
 

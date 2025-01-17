@@ -4,7 +4,7 @@ import madkit.gui.SliderProperty;
 import madkit.gui.UIProperty;
 import turtlekit.kernel.DefaultTurtle;
 import turtlekit.viewer.TKViewer;
-import turtlekit.viewer.jfx.TurtlePopulationChartDrawer;
+import turtlekit.viewer.TurtlePopulationChartDrawer;
 
 public class Wiggle extends DefaultTurtle {
 
@@ -36,7 +36,7 @@ public class Wiggle extends DefaultTurtle {
 	public static void main(String[] args) {
 		executeThisTurtle(1
 				,"-v",TurtlePopulationChartDrawer.class.getName()
-				,"-v",TKViewer.class.getName()
+				, "-v", TKViewer.class.getName()
 //				,"--headless"
 				);
 	}

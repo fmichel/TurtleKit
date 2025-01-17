@@ -21,21 +21,21 @@ package turtlekit.digitalart;
 import java.util.logging.Level;
 
 import turtlekit.kernel.Patch;
-import turtlekit.viewer.jfx.FXPheroViewer;
+import turtlekit.pheromone.Pheromone;
+import turtlekit.viewer.TKViewer;
 
-public class BlackAndWhiteViewing extends FXPheroViewer {
+public class BlackAndWhiteViewing extends TKViewer {
 
 	@Override
 	protected void onActivation() {
-		getEnvironment().getPheromone("blackNwhite", 0, 33);
+		Pheromone<Float> p = getEnvironment().getPheromone("blackNwhite", 0, .33f);
+		p.incValue(getWidth() / 2, getHeight() / 2, 100000000);
 		super.onActivation();
-		setSelectedPheromone("blackNwhite");
-		getSelectedPheromone().incValue(getWidth()/2, getHeight()/2, 100000000);
 	}
 	
 	@Override
 	public void paintPatch(Patch p, int x, int y, int index) {
-		final int a = getSelectedPheromone().get(index).intValue()%256;
+		final int a = (int) (getSelectedPheros().get(0).get(index) % 256);
 		getGraphics().setFill(javafx.scene.paint.Color.rgb(a, a, a));
 		getGraphics().fillRect(x, y, getCellSize(), getCellSize());
 	}

@@ -253,21 +253,4 @@ public class AbstractBoid extends DefaultTurtle {
 		return a;
 	}
 
-	public static void main(String[] args) {
-		AbstractBoid a = new AbstractBoid();
-		a.setHeading(0);
-		System.err.println(a.differenceTwoAngles(a.getHeading(), 20) <= 30 / 2);
-		System.err.println(a.differenceTwoAngles(350, 0));
-		System.err.println(a.signedTwoAnglesDifference(0, 350));
-		System.err.println(a.signedTwoAnglesDifference(350, 0));
-		a.alignHeadingTo(50);
-		System.err.println(a);
-		a.alignHeadingTo(50);
-		System.err.println(a);
-		a.alignHeadingTo(50);
-		System.err.println(a);
-		a.alignHeadingTo(50);
-		System.err.println(a);
-	}
-
 }

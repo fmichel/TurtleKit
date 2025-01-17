@@ -17,14 +17,20 @@
  ******************************************************************************/
 package turtlekit.mle;
 
+import madkit.gui.UIProperty;
 import madkit.simulation.EngineAgents;
-import turtlekit.viewer.jfx.FXPheroViewer;
 
-@EngineAgents(environment = MLEEnvironment.class, viewers = { FXPheroViewer.class })
-public class Particule extends AbstractMLEAgent {
+@EngineAgents(environment = MLEEnvironment.class)
+public class Particule extends MLEAgent {
 
-	public Particule() {
-		super("vaccum");
+	@UIProperty
+	private static boolean test = false;
+
+	@Override
+	protected void onActivation() {
+		super.onActivation();
+		changeNextBehavior("vaccum");
+		updateAttributes();
 	}
 
 	@Override
@@ -169,7 +175,7 @@ public class Particule extends AbstractMLEAgent {
 //	}
 
 	public boolean mutate() {
-		if (MUTATION && getLastMutation() > 10 && getNrj() > NRJ_MUTATION) {
+		if (MUTATION && getLastMutation() > 10 && getNrj() > getNrjMutation()) {
 			if (prng().nextFloat() > .99 && (getLevel() * 4) == prng().nextInt(getLevel() * 4 + 1)) {
 				setLevel(level + 1);
 			}
@@ -192,17 +198,10 @@ public class Particule extends AbstractMLEAgent {
 	}
 	
 	public static void main(String[] args) {
-//		System.setProperty("sun.java2d.xrender", "true");
-//		String[] args2 = {"128","10","--GPU_gradients"};
-		String[] args2 = {"100","10","--test"};
-//		String[] args2 = {"150","110","--GPU_gradients"};
-		args = args2;
-		float percentage = Float.parseFloat(args[1])/100;
-		int size = Integer.parseInt(args[0]);
-		int nbAgents = (int) ((float) size * size * percentage);
-//		int nbAgents = 1;
-		executeThisTurtle(30000,
-				"--cuda"
+		executeThisTurtle(30000
+				, "--cuda"
+				, "--noLog"
+				, "--width", "400", "--height", "400"
 				);
 
 		
@@ -219,6 +218,14 @@ public class Particule extends AbstractMLEAgent {
 //				,Option.viewers.toString(),PheromoneViewer.class.getName()
 ////				,Option.viewers.toString(),"null"
 //				);
+	}
+
+	public static boolean isTest() {
+		return test;
+	}
+
+	public static void setTest(boolean test) {
+		Particule.test = test;
 	}
 
 }

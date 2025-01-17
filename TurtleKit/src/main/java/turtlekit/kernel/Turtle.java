@@ -64,15 +64,12 @@ public class Turtle<P extends Patch> extends SimuAgent {
 	private static DecimalFormat df = new DecimalFormat("0.#");
 
 	/**
-	 * package visibility : used by TK environment... Ugly in OOP but faster //TODO
-	 * is this true ?
 	 *
-	 * Max value is used to detect that default value is used @
+	 * Max value is used to detect that default value is used
 	 */
 	double x = Double.MAX_VALUE;
 	/**
-	 * package visibility : used by TK environment... Ugly in OOP but faster //TODO
-	 * is this true ?
+	 * Max value is used to detect that default value is used
 	 */
 	double y = Double.MAX_VALUE;
 
@@ -410,7 +407,7 @@ public class Turtle<P extends Patch> extends SimuAgent {
 	 */
 	public Pheromone<Float> getPheromone(String name) {
 		// System.exit(0);
-		return getEnvironment().getPheromone(name, 50, 50);
+		return getEnvironment().getPheromone(name);
 	}
 
 	public Collection<Pheromone<Float>> getPheromones() {

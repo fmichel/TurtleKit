@@ -19,7 +19,7 @@ package turtlekit.toys;
 
 import turtlekit.kernel.DefaultTurtle;
 import turtlekit.pheromone.Pheromone;
-import turtlekit.viewer.jfx.FXPheroViewer;
+import turtlekit.viewer.TKViewer;
 
 public class Homogeneization extends DefaultTurtle {
 	
@@ -30,7 +30,7 @@ public class Homogeneization extends DefaultTurtle {
 		super.onActivation();
 		changeNextBehavior("fly");
 		setColor(javafx.scene.paint.Color.rgb(((int) (prng().nextDouble() * 256)),(int) (prng().nextDouble() * 256), (int) (prng().nextDouble() * 256)));
-		pheromone = getEnvironment().getPheromone("test",1,7);
+		pheromone = getEnvironment().getPheromone("test", .01f, .7f);
 	}
 	
 	
@@ -48,7 +48,7 @@ public class Homogeneization extends DefaultTurtle {
 		executeThisTurtle(50
 				,"--width","500"
 				,"--height","500"
-				,"-v",FXPheroViewer.class.getName()
+				,"-v",TKViewer.class.getName()
 				);
 	}
 

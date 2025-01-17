@@ -3,151 +3,108 @@ package turtlekit.viewer;
 import java.util.ArrayList;
 import java.util.List;
 
-import javafx.geometry.Rectangle2D;
-import javafx.scene.paint.Color;
-import javafx.stage.Screen;
-import madkit.kernel.Probe;
-import madkit.simulation.viewer.Viewer2D;
-import turtlekit.agr.TKOrganization;
+import javafx.collections.ObservableList;
+import madkit.gui.FXExecutor;
 import turtlekit.kernel.Patch;
-import turtlekit.kernel.TKEnvironment;
-import turtlekit.kernel.TKGridModel;
-import turtlekit.kernel.Turtle;
-import turtlekit.kernel.TutleKit4;
-import turtlekit.kernel.Utils;
+import turtlekit.pheromone.Pheromone;
+import turtlekit.pheromone.PherosViewNode;
 
-public class TKViewer extends Viewer2D {
+/**
+ * TKViewer is the default viewer for TurtleKit simulations. It extends
+ * TurtleViewer and adds a view node for pheromones if there are any in the
+ * environment.
+ */
+public class TKViewer extends TurtleViewer {
 
-	private int cellSize = 7;
-	private int[] onScreeenCellXPosition;
-	private int[] onScreeenCellYPosition;
+	/**
+	 * need to keep a reference to the selected pheromones to avoid recomputing them
+	 * during the rendering
+	 */
+	private List<Pheromone<Float>> selectedPherosCache = new ArrayList<>();
+	private PherosViewNode pherosViewNode;
 
 	@Override
 	protected void onActivation() {
-		addProbe(new Probe(getModelGroup(), TKOrganization.TURTLE_ROLE));
 		super.onActivation();
-		Rectangle2D screenBounds = Screen.getPrimary().getBounds();
-		double screenW = screenBounds.getWidth();
-		double screenH = screenBounds.getHeight();
-		int width = getEnvironment().getWidth();
-		int height = getEnvironment().getHeight();
-		while ((width * cellSize > screenW - 300 || height * cellSize > screenH - 200) && cellSize > 1) {
-			cellSize--;
+		if (!getEnvironment().getPheromones().isEmpty()) {
+			FXExecutor.runAndWait(() -> getGUI().getMainPane().setLeft(pherosViewNode = new PherosViewNode(this)));
 		}
-		getGUI().setCanvasSize(width * cellSize, height * cellSize);
-		computeCellsOnScreenLocations(cellSize);
+	}
+
+	public void render() {
+		updateSelectedPherosCache();
+		super.render();
+	}
+
+	/**
+	 * Update selected pheromones from the view node.
+	 */
+	void updateSelectedPherosCache() {
+		if (pherosViewNode != null) {
+			ObservableList<String> l = pherosViewNode.getSelectedPheromones();
+			var pheromonesMap = getEnvironment().getPheromonesMap();
+			selectedPherosCache = pheromonesMap.keySet().stream().filter(l::contains).map(pheromonesMap::get).toList();
+		}
+	}
+
+	/**
+	 * Get the pheromone with the maximum intensity on the cell at the given index.
+	 * If no pheromone is selected, return null.
+	 * 
+	 * @param index the index of the current cell
+	 * @return the pheromone with the maximum intensity on the cell at the given
+	 *         index
+	 */
+	public Pheromone<?> getPheroWithMaxIntensity(int index) {
+		if (selectedPherosCache.isEmpty())
+			return null;
+		Pheromone<?> maxPhero = selectedPherosCache.get(0);
+		if (selectedPherosCache.size() > 1) {
+			float maxValue = (float) maxPhero.get(index);
+			float maxIntensity = maxPhero.getValueIntensity(maxValue);
+			for (Pheromone<?> phero : selectedPherosCache.subList(1, selectedPherosCache.size())) {
+				float value = (float) phero.get(index);
+//				if (value > 0.0001) {
+				float intensity = phero.getValueIntensity(value);
+				if (intensity > maxIntensity) {
+					maxPhero = phero;
+					maxIntensity = intensity;
+//					}
+				}
+			}
+		}
+		return maxPhero;
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public TKEnvironment<Patch> getEnvironment() {
-		return (TKEnvironment<Patch>) super.getEnvironment();
-	}
-
-	/**
-	 * 
-	 */
-	void computeCellsOnScreenLocations(int cellSize) {
-		this.cellSize = cellSize;
-		onScreeenCellXPosition = new int[getWidth()];
-		onScreeenCellYPosition = new int[getHeight()];
-		for (int i = 0; i < onScreeenCellXPosition.length; i++) {
-			onScreeenCellXPosition[i] = i * cellSize;
-		}
-		for (int i = 0; i < onScreeenCellYPosition.length; i++) {
-			onScreeenCellYPosition[i] = i * cellSize;
-		}
-	}
-
-	/**
-	 * 
-	 */
-	@Override
-	public void render() {
-		int index = 0;
-		Patch[] grid = getPatchGrid();
-		int w = getWidth();
-		clear();
-		for (int j = getHeight() - 1; j >= 0; j--) {
-			for (int i = 0; i < w; i++) {
-				Patch p = grid[index];
-				Turtle<?> t = null;
-				List<Turtle<?>> turtles = new ArrayList(p.getTurtles());
-				for (Turtle<?> tmp : turtles) {
-					if (tmp != null && tmp.isVisible()) {
-						t = tmp;
-						break;
-					}
-				}
-				if (t == null) {
-					paintPatch(p, onScreeenCellXPosition[i], onScreeenCellYPosition[j], index);
-				} else {
-					paintTurtle(t, onScreeenCellXPosition[i], onScreeenCellYPosition[j]);
-				}
-				index++;
+	public void paintPatch(Patch p, int x, int y, int index) {
+		Pheromone<Float> selectedPhero = pherosViewNode == null ? null
+				: (Pheromone<Float>) getPheroWithMaxIntensity(index);
+		if (selectedPhero != null) {
+			float value = selectedPhero.get(index);
+			if (value > 0.0001) {
+				getGraphics().setFill(selectedPhero.getValueColor(value));
+				getGraphics().fillRect(x, y, getCellSize(), getCellSize());
 			}
+		} else {
+			super.paintPatch(p, x, y, index);
 		}
 	}
 
-	public void paintTurtle(final Turtle<?> t, final int i, final int j) {
-		getGraphics().setFill(t.getColor());
-		getGraphics().fillRect(i, j, cellSize, cellSize);
-	}
-
-	public void paintPatch(final Patch p, final int x, final int y, int index) {
-		Color color = p.getColor();
-		if (color != Color.BLACK) {
-			getGraphics().setFill(color);
-			getGraphics().fillRect(x, y, cellSize, cellSize);
-		}
-	}
-
-	public void clear() {
-		getGraphics().setFill(Color.BLACK);
-		getGraphics().fillRect(0, 0, getWidth() * cellSize, getHeight() * cellSize);
-	}
-
-	public TKGridModel getGridModel() {
-		return getEnvironment().getGridModel();
-	}
-
-	public Patch[] getPatchGrid() {
-		return getGridModel().getPatchGrid();
+	/**
+	 * Get the selected pheromones.
+	 * 
+	 * @return the selected pheromones
+	 */
+	public List<Pheromone<Float>> getSelectedPheros() {
+		return selectedPherosCache;
 	}
 
 	/**
-	 * @return
+	 * Perform the selection of all pheromones in the view node.
 	 */
-	public int getHeight() {
-		return getEnvironment().getHeight();
+	public void selectAllPheros() {
+		pherosViewNode.selectAllPheros();
 	}
-
-	/**
-	 * @return
-	 */
-	public int getWidth() {
-		return getEnvironment().getWidth();
-	}
-
-	/**
-	 * @return the cellSize
-	 */
-	public int getCellSize() {
-		return cellSize;
-	}
-
-	/**
-	 * @param cellSize the cellSize to set
-	 */
-	public void setCellSize(int cellSize) {
-		this.cellSize = cellSize;
-	}
-
-	protected static void executeThisViewer(String... args) {
-		final List<String> arguments = new ArrayList<>(List.of(args));
-		String className = Utils.getClassFromMainStackTrace();
-		arguments.addAll(List.of("-v", className));
-		TutleKit4.main(arguments.toArray(new String[arguments.size()]));
-	}
-
 }

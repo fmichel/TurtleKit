@@ -17,9 +17,13 @@
  ******************************************************************************/
 package turtlekit.cuda;
 
+import java.util.stream.IntStream;
+
 import jcuda.Pointer;
 import jcuda.driver.CUdeviceptr;
+import turtlekit.kernel.TKEnvironment;
 import turtlekit.pheromone.AbstractPheromoneGrid;
+import turtlekit.pheromone.GradientsCalculator;
 import turtlekit.pheromone.Pheromone;
 
 public class CudaPheromone extends AbstractPheromoneGrid<Float> implements CudaObject,Pheromone<Float>{
@@ -42,23 +46,20 @@ public class CudaPheromone extends AbstractPheromoneGrid<Float> implements CudaO
 		return kernelConfiguration;
 	}
 
-	public CudaPheromone(String name, int width, int height, final int evapPercentage,
-			final int diffPercentage) {
-		this(name, width, height, evapPercentage / 100f, diffPercentage / 100f);
+	public CudaPheromone(String name, TKEnvironment<?> env, int evapPercentage, int diffPercentage) {
+		this(name, env, evapPercentage / 100f, diffPercentage / 100f);
 	}
 	
-	public CudaPheromone(String name, int width, int height, final float evapPercentage,
-			final float diffPercentage) {
-		super(name, width, height, evapPercentage, diffPercentage);
-		setMaximum(0f);
-		tmpDeviceDataGrid = createDeviceDataGrid(width * height, Float.class);
+	public CudaPheromone(String name, TKEnvironment<?> env, float evapPercentage, float diffPercentage) {
+		super(name, env, evapPercentage, diffPercentage);
+		setMaxEncounteredValue(Float.NEGATIVE_INFINITY);
+		tmpDeviceDataGrid = createDeviceDataGrid(getWidth() * getHeight(), Float.class);
 		tmpDeviceDataGridPtr = Pointer.to(tmpDeviceDataGrid);
 		values = new CudaFloatBuffer(this);
 		kernelConfiguration = createDefaultKernelConfiguration();
 		
-		NeighborsIndexes neighbors = new NeighborsIndexes(width, height);
+		NeighborsIndexes neighbors = new NeighborsIndexes(getWidth(), getHeight());
 		indexes = neighbors.getNeighborsIndexesPtr();
-		
 		
 		initKernels();
 	}
@@ -79,12 +80,10 @@ public class CudaPheromone extends AbstractPheromoneGrid<Float> implements CudaO
 
 	@Override
 	public void set(int index, Float value) {
-		if(value > getMaximum())
-			setMaximum(value);
 		values.put(index, value);
 	}
 
-	protected void diffuseValuesToTmpGridKernel(){
+	public void diffuseValuesToTmpGridKernel() {
 		diffusionToTmpKernel.run(
 				getWidthPointer(),
 				getHeightPointer(),
@@ -94,7 +93,7 @@ public class CudaPheromone extends AbstractPheromoneGrid<Float> implements CudaO
 	}
 	
 	@Override
-	protected void diffusionUpdateKernel() {
+	public void updateValuesFromTmpGridKernel() {
 		diffusionUpdateKernel.run(
 				getWidthPointer(),
 				getHeightPointer(),
@@ -139,109 +138,38 @@ public class CudaPheromone extends AbstractPheromoneGrid<Float> implements CudaO
 	 * @param inc how much to add
 	 */
 	public void incValue(int index, float inc) {
-//		inc += get(index);
-//		if (inc > maximum)
-//			setMaximum(inc);
-//		set(index, inc);
 		set(index, inc + get(index));
 	}
 
 
-public int getMaxDirection(int xcor, int ycor) {
-		float max = get(normeValue(xcor + 1, getWidth()), ycor);
-		int maxDir = 0;
-
-		float current = get(normeValue(xcor + 1, getWidth()), normeValue(ycor + 1, getHeight()));
-		if (current > max) {
-			max = current;
-			maxDir = 45;
-		}
-
-		current = get(xcor, normeValue(ycor + 1, getHeight()));
-		if (current > max) {
-			max = current;
-			maxDir = 90;
-		}
-
-		current = get(normeValue(xcor - 1, getWidth()), normeValue(ycor + 1, getHeight()));
-		if (current > max) {
-			max = current;
-			maxDir = 135;
-		}
-
-		current = get(normeValue(xcor - 1, getWidth()), ycor);
-		if (current > max) {
-			max = current;
-			maxDir = 180;
-		}
-
-		current = get(normeValue(xcor - 1, getWidth()), normeValue(ycor - 1, getHeight()));
-		if (current > max) {
-			max = current;
-			maxDir = 225;
-		}
-
-		current = get(xcor, normeValue(ycor - 1, getHeight()));
-		if (current > max) {
-			max = current;
-			maxDir = 270;
-		}
-
-		current = get(normeValue(xcor + 1, getWidth()), normeValue(ycor - 1, getHeight()));
-		if (current > max) {
-
-			max = current;
-			maxDir = 315;
-		}
-		return maxDir;
+	public int getMaxDirection(int xcor, int ycor) {
+		return getMaxDirectionNoRandom(xcor, ycor);
+//		return getMaxDirectionRandomWhenEquals(xcor, ycor);
 	}
 
-	public int getMinDirection(int i, int j) {
-		float min = get(normeValue(i + 1, getWidth()), j);
-		int minDir = 0;
+	public int getMinDirection(int xcor, int ycor) {
+		return getMinDirectionNoRandom(xcor, ycor);
+//		return getMinDirectionRandomWhenEquals(xcor, ycor);
+	}
 
-		float current = get(normeValue(i + 1, getWidth()), normeValue(j + 1, getHeight()));
-		if (current < min) {
-			min = current;
-			minDir = 45;
-		}
+	public int getMaxDirectionRandomWhenEquals(int xcor, int ycor) {
+		int index = get1DIndex(xcor, ycor) * 8;
+		return (int) GradientsCalculator.getMaxDirectionRandomWhenEquals(this, index);
+	}
 
-		current = get(i, normeValue(j + 1, getHeight()));
-		if (current < min) {
-			min = current;
-			minDir = 90;
-		}
+	public int getMaxDirectionNoRandom(int xcor, int ycor) {
+		int index = get1DIndex(xcor, ycor) * 8;
+		return (int) GradientsCalculator.getMaxDirectionNoRandom(this, index);
+	}
 
-		current = get(normeValue(i - 1, getWidth()), normeValue(j + 1, getHeight()));
-		if (current < min) {
-			min = current;
-			minDir = 135;
-		}
+	public int getMinDirectionRandomWhenEquals(int xcor, int ycor) {
+		int index = get1DIndex(xcor, ycor) * 8;
+		return (int) GradientsCalculator.getMinDirectionRandomWhenEquals(this, index);
+	}
 
-		current = get(normeValue(i - 1, getWidth()), j);
-		if (current < min) {
-			min = current;
-			minDir = 180;
-		}
-
-		current = get(normeValue(i - 1, getWidth()), normeValue(j - 1, getHeight()));
-		if (current < min) {
-			min = current;
-			minDir = 225;
-		}
-
-		current = get(i, normeValue(j - 1, getHeight()));
-		if (current < min) {
-			min = current;
-			minDir = 270;
-		}
-
-		current = get(normeValue(i + 1, getWidth()), normeValue(j - 1, getHeight()));
-		if (current < min) {
-			min = current;
-			minDir = 315;
-		}
-		return minDir;
+	public int getMinDirectionNoRandom(int xcor, int ycor) {
+		int index = get1DIndex(xcor, ycor) * 8;
+		return (int) GradientsCalculator.getMinDirectionNoRandom(this, index);
 	}
 
 	
@@ -255,6 +183,15 @@ public int getMaxDirection(int xcor, int ycor) {
 	@Override
 	public String toString() {
 		return super.getName();
+	}
+
+	@Override
+	public void updateMaxValue() {
+		double currentMax = IntStream.range(0, values.size()).parallel().mapToDouble(this::get).max().getAsDouble();
+		if (currentMax > getMaxEncounteredValue()) {
+			setMaxEncounteredValue((float) currentMax);
+		}
+		setLogMaxValue(Math.log10((float) getMaxEncounteredValue() + 1) / 256);
 	}
 
 }

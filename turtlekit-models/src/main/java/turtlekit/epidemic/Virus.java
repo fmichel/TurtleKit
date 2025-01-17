@@ -43,7 +43,7 @@ import madkit.gui.UIProperty;
 import madkit.simulation.EngineAgents;
 import turtlekit.kernel.DefaultTurtle;
 import turtlekit.viewer.TKViewer;
-import turtlekit.viewer.jfx.TurtlePopulationChartDrawer;
+import turtlekit.viewer.TurtlePopulationChartDrawer;
 
 /**
  * An infected turtle transmits virus, but not by sending a message, just by

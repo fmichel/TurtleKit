@@ -21,6 +21,7 @@ import java.nio.IntBuffer;
 
 import jcuda.Pointer;
 import jcuda.driver.CUdeviceptr;
+import turtlekit.kernel.TKEnvironment;
 
 public class CudaGPUGradientsPhero extends CudaPheromone{
 	
@@ -31,8 +32,8 @@ public class CudaGPUGradientsPhero extends CudaPheromone{
 	private CudaKernel diffusionUpdateAndEvaporationAndFieldMaxDirKernel;
 	private Pointer fieldMaxDirDataGridPtr;
 
-	public CudaGPUGradientsPhero(String name, int width, int height, final float evapCoeff, final float diffCoeff) {
-		super(name, width, height, evapCoeff, diffCoeff);
+	public CudaGPUGradientsPhero(String name, TKEnvironment<?> env, float evapCoeff, float diffCoeff) {
+		super(name, env, evapCoeff, diffCoeff);
 		fieldMaxDirPtr = new CUdeviceptr();
 		maxPinnedMemory = new Pointer();
 		fieldMaxDir = (IntBuffer) getUnifiedBufferBetweenPointer(maxPinnedMemory, fieldMaxDirPtr, Integer.class);

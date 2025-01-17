@@ -19,29 +19,31 @@ package turtlekit.pheromone;
 
 import java.util.stream.IntStream;
 
+import turtlekit.kernel.TKEnvironment;
+
 public class CPU_SobelPheromone extends CPUStreamPheromone {
 
 	final double[] sobelGradientValues;
 
-	public CPU_SobelPheromone(String name, int width, int height, float evaporationCoeff, float diffusionCoeff, int[] neighborsIndexes2) {
-		super(name, width, height, evaporationCoeff, diffusionCoeff, neighborsIndexes2);
-		sobelGradientValues = new double[width * height];
+	public CPU_SobelPheromone(String name, TKEnvironment<?> env, float evaporationCoeff, float diffusionCoeff, int[] neighborsIndexes2) {
+		super(name, env, evaporationCoeff, diffusionCoeff);
+		sobelGradientValues = new double[getWidth() * getHeight()];
 	}
 
-	private void computeSobel(int x, int y) {
-		float eValue = get(normeValue(x + 1, getWidth()), y);
-		float neValue = get(normeValue(x + 1, getWidth()), normeValue(y + 1, getHeight()));
-		float nValue = get(x, normeValue(y + 1, getHeight()));
-		float nwValue = get(normeValue(x - 1, getWidth()), normeValue(y - 1, getHeight()));
-		float wValue = get(normeValue(x - 1, getWidth()), y);
-		float swValue = get(normeValue(x - 1, getWidth()), normeValue(y - 1, getHeight()));
-		float sValue = get(x, normeValue(y - 1, getHeight()));
-		float seValue = get(normeValue(x + 1, getWidth()), normeValue(y - 1, getHeight()));
-		sobelGradientValues[get1DIndex(x, y)] = Math.toDegrees(Math.atan2(nwValue + 2 * nValue + neValue - seValue - 2 * sValue - swValue, // filter
-																																														// Y
-				neValue + 2 * eValue + seValue - swValue - 2 * wValue - nwValue // filter X
-		));
-	}
+//	private void computeSobel(int x, int y) {
+//		float eValue = get(normeValue(x + 1, getWidth()), y);
+//		float neValue = get(normeValue(x + 1, getWidth()), normeValue(y + 1, getHeight()));
+//		float nValue = get(x, normeValue(y + 1, getHeight()));
+//		float nwValue = get(normeValue(x - 1, getWidth()), normeValue(y - 1, getHeight()));
+//		float wValue = get(normeValue(x - 1, getWidth()), y);
+//		float swValue = get(normeValue(x - 1, getWidth()), normeValue(y - 1, getHeight()));
+//		float sValue = get(x, normeValue(y - 1, getHeight()));
+//		float seValue = get(normeValue(x + 1, getWidth()), normeValue(y - 1, getHeight()));
+//		sobelGradientValues[get1DIndex(x, y)] = Math.toDegrees(Math.atan2(nwValue + 2 * nValue + neValue - seValue - 2 * sValue - swValue, // filter
+//																																														// Y
+//				neValue + 2 * eValue + seValue - swValue - 2 * wValue - nwValue // filter X
+//		));
+//	}
 
 	@Override
 	public int getMaxDirection(int xcor, int ycor) {
@@ -54,10 +56,26 @@ public class CPU_SobelPheromone extends CPUStreamPheromone {
 	}
 
 	@Override
-	public void diffusionAndEvaporation() {
-		super.diffusionAndEvaporation();
-		IntStream.range(0, getWidth()).parallel().forEach(
-				i -> IntStream.range(0, getHeight()).parallel().forEach(j -> computeSobel(i, j)));
+	public void applyDynamics() {
+		super.applyDynamics();
+		IntStream.range(0, sobelGradientValues.length).parallel().forEach(this::computeSobel);
+	}
+
+	private void computeSobel(int i) {
+		int index = i * 8;
+		float eValue = get(neighborsIndexes[index++]);
+		float neValue = get(neighborsIndexes[index++]);
+		float nValue = get(neighborsIndexes[index++]);
+		float nwValue = get(neighborsIndexes[index++]);
+		float wValue = get(neighborsIndexes[index++]);
+		float swValue = get(neighborsIndexes[index++]);
+		float sValue = get(neighborsIndexes[index++]);
+		float seValue = get(neighborsIndexes[index]);
+		sobelGradientValues[i] = Math
+				.toDegrees(Math.atan2(nwValue + 2 * nValue + neValue - seValue - 2 * sValue - swValue, // filter
+																																	// Y
+						neValue + 2 * eValue + seValue - swValue - 2 * wValue - nwValue // filter X
+				));
 	}
 
 }

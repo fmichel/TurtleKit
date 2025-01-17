@@ -33,6 +33,8 @@ public class LangtonAnt extends DefaultTurtle {
 	executeThisTurtle(1
 			,"--width","500"
 			,"--height","500"
+			, "--kernelLogLevel", "ALL"
+			, "--madkitLogLevel", "ALL"
 			);
 
 //		Option.envDimension.toString(), "1000,1000", 

@@ -17,14 +17,16 @@
  ******************************************************************************/
 package turtlekit.cuda;
 
+import turtlekit.kernel.TKEnvironment;
+
 public class GPUSobelGradientsPhero extends CudaPheromone {
 
 	private CudaKernel sobel, sobel2;
 
 	private CudaIntBuffer cudaIntBuffer;
 
-	public GPUSobelGradientsPhero(String name, int width, int height, final float evapCoeff, final float diffCoeff) {
-		super(name, width, height, evapCoeff, diffCoeff);
+	public GPUSobelGradientsPhero(String name, TKEnvironment<?> env, final float evapCoeff, final float diffCoeff) {
+		super(name, env, evapCoeff, diffCoeff);
 //	sobel = getCudaKernel("SOBEL", "/turtlekit/cuda/kernels/SobelGradient_2D.cu", getKernelConfiguration());
 		sobel2 = createKernel("DIFFUSION_UPDATE_AND_SOBEL_THEN_EVAPORATION", "/cuda/SobelGradient_2D.cu");
 		cudaIntBuffer = new CudaIntBuffer(this);

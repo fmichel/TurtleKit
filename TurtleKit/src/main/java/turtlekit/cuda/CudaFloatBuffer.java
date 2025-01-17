@@ -20,4 +20,12 @@ public class CudaFloatBuffer extends CudaUnifiedBuffer {
 		values.put(index, value);
 	}
 
+	public FloatBuffer getValues() {
+		return values;
+	}
+
+	public int size() {
+		return values.capacity();
+	}
+
 }

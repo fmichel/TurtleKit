@@ -20,7 +20,7 @@ package turtlekit.toys;
 import javafx.scene.paint.Color;
 import turtlekit.kernel.DefaultTurtle;
 import turtlekit.pheromone.Pheromone;
-import turtlekit.viewer.jfx.FXPheroViewer;
+import turtlekit.viewer.TKViewer;
 
 public class UFO extends DefaultTurtle {
 
@@ -33,8 +33,8 @@ public class UFO extends DefaultTurtle {
 		changeNextBehavior("fly");
 		home();
 		setColor(new Color(prng().nextDouble(), (prng().nextDouble()), (prng().nextDouble()), 1));
-		pheromone = getEnvironment().getPheromone("test", 30, 30);
-		pheromone2 = getEnvironment().getPheromone("other", 30, 60);
+		pheromone = getEnvironment().getPheromone("test", .3f, .3f);
+		pheromone2 = getEnvironment().getPheromone("other", .3f, 60);
 	}
 
 	private void fly() {
@@ -52,7 +52,7 @@ public class UFO extends DefaultTurtle {
 	 */
 	public static void main(String[] args) {
 		executeThisTurtle(1000 
-				,"-v",FXPheroViewer.class.getName()
+				,"-v",TKViewer.class.getName()
 				,"--width","150"
 				,"--height","150"
 //				,"--cuda"

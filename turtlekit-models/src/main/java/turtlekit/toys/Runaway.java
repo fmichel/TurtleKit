@@ -21,7 +21,7 @@ import static javafx.scene.paint.Color.BLUE;
 
 import turtlekit.kernel.DefaultTurtle;
 import turtlekit.pheromone.Pheromone;
-import turtlekit.viewer.jfx.FXPheroViewer;
+import turtlekit.viewer.TKViewer;
 
 public class Runaway extends DefaultTurtle {
 	
@@ -38,7 +38,7 @@ public class Runaway extends DefaultTurtle {
 		randomHeading();
 		randomLocation();
 		setColor(BLUE);
-		pheromone = getEnvironment().getPheromone("test",30,30);
+		pheromone = getEnvironment().getPheromone("test", .30f, .30f);
 	}
 	
 	
@@ -53,7 +53,7 @@ public class Runaway extends DefaultTurtle {
 	 */
 	public static void main(String[] args) {
 		executeThisTurtle(10
-				,"-v",FXPheroViewer.class.getName()
+				,"-v",TKViewer.class.getName()
 				,"--width","500"
 				,"--height","500"
 //				,Option.noCuda.toString()

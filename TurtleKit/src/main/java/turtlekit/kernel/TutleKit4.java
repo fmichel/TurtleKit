@@ -8,7 +8,7 @@ import madkit.kernel.Madkit;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Mixin;
 
-@Command(name = "TutleKit4", version = "4.0", description = "Lightweight ALife platform: Multi-Agent Systems as artificial organizations")
+@Command(name = "TutleKit4", description = "Lightweight ALife platform: Multi-Agent Systems as artificial organizations")
 public class TutleKit4 extends Madkit {
 	
 	@Mixin
@@ -20,7 +20,7 @@ public class TutleKit4 extends Madkit {
 
 	public TutleKit4(String... args) {
 		super(args);
-		initLogging();
+		initializeLogging();
 	}
 
 	public static void main(String[] args) {
@@ -31,7 +31,7 @@ public class TutleKit4 extends Madkit {
 		new TutleKit4(arguments.toArray(new String[arguments.size()]));
 	}
 
-	private void initLogging() {
+	private void initializeLogging() {
 		tkLogger = Logger.getLogger("[TK] ");
 		tkLogger.setParent(TK_LOGGER);
 		tkLogger.setLevel(tkOptions.tkLogLevel);

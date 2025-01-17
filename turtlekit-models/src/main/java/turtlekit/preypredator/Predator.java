@@ -20,7 +20,7 @@ package turtlekit.preypredator;
 import madkit.gui.SliderProperty;
 import madkit.gui.UIProperty;
 import turtlekit.kernel.DefaultTurtle;
-import turtlekit.viewer.jfx.TurtlePopulationChartDrawer;
+import turtlekit.viewer.TurtlePopulationChartDrawer;
 
 public class Predator extends DefaultTurtle {
 

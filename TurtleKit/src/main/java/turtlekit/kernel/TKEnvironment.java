@@ -149,21 +149,26 @@ public class TKEnvironment<P extends Patch> extends Environment2D {
 		neighborsIndexes = new int[getWidth() * getHeight() * 8];
 		for (int i = 0; i < getWidth(); i++) {
 			for (int j = 0; j < getHeight(); j++) {
-				final int retrieveIndex = retrieveIndex(i, j);
-				int k = retrieveIndex * 8;
-				neighborsIndexes[k] = get1DIndex(i, normalizeCoordinate(j - 1, getHeight()));// TODO not used and thus
-				// useless (check that)
-				neighborsIndexes[++k] = get1DIndex(i, normalizeCoordinate(j + 1, getHeight()));
-				neighborsIndexes[++k] = get1DIndex(normalizeCoordinate(i - 1, getWidth()),
-						normalizeCoordinate(j - 1, getHeight()));
-				neighborsIndexes[++k] = get1DIndex(normalizeCoordinate(i - 1, getWidth()), j);
-				neighborsIndexes[++k] = get1DIndex(normalizeCoordinate(i - 1, getWidth()),
+				int index = (j * getWidth() + i) * 8;
+				neighborsIndexes[index] = get1DIndex(normalizeCoordinate(i + 1, getWidth()), j);
+
+				neighborsIndexes[++index] = get1DIndex(normalizeCoordinate(i + 1, getWidth()),
 						normalizeCoordinate(j + 1, getHeight()));
-				neighborsIndexes[++k] = get1DIndex(normalizeCoordinate(i + 1, getWidth()),
-						normalizeCoordinate(j - 1, getHeight()));
-				neighborsIndexes[++k] = get1DIndex(normalizeCoordinate(i + 1, getWidth()), j);
-				neighborsIndexes[++k] = get1DIndex(normalizeCoordinate(i + 1, getWidth()),
+
+				neighborsIndexes[++index] = get1DIndex(i, normalizeCoordinate(j + 1, getHeight()));
+
+				neighborsIndexes[++index] = get1DIndex(normalizeCoordinate(i - 1, getWidth()),
 						normalizeCoordinate(j + 1, getHeight()));
+
+				neighborsIndexes[++index] = get1DIndex(normalizeCoordinate(i - 1, getWidth()), j);
+
+				neighborsIndexes[++index] = get1DIndex(normalizeCoordinate(i - 1, getWidth()),
+						normalizeCoordinate(j - 1, getHeight()));
+				neighborsIndexes[++index] = get1DIndex(i, normalizeCoordinate(j - 1, getHeight()));
+
+
+				neighborsIndexes[++index] = get1DIndex(normalizeCoordinate(i + 1, getWidth()),
+						normalizeCoordinate(j - 1, getHeight()));
 			}
 		}
 	}
@@ -206,6 +211,18 @@ public class TKEnvironment<P extends Patch> extends Environment2D {
 	// }
 	// }
 	// }
+
+	/**
+	 * @param xcor
+	 *           absolute
+	 * @param ycor
+	 *           absolute
+	 * @return the absolute index in a 1D data grid representing a 2D grid of width,height size. This should be used with
+	 *         {@link DefaultTurtle#xcor()} and {@link DefaultTurtle#ycor()}. Its purpose is to be used on a Pheromone
+	 */
+	public int get1DIndex(int xcor, int ycor) {
+		return normalizeCoordinate(xcor, getWidth()) + normalizeCoordinate(ycor, getHeight()) * getWidth();
+	}
 
 	private int retrieveIndex(int u, int v) {
 		return v * getWidth() + u;
@@ -284,19 +301,8 @@ public class TKEnvironment<P extends Patch> extends Environment2D {
 		return normalizeCoordinate(y, getHeight());
 	}
 
-	/**
-	 * @param xcor
-	 *           absolute
-	 * @param ycor
-	 *           absolute
-	 * @return the absolute index in a 1D data grid representing a 2D grid of width,height size. This should be used with
-	 *         {@link DefaultTurtle#xcor()} and {@link DefaultTurtle#ycor()}. Its purpose is to be used on a Pheromone
-	 */
-	public int get1DIndex(int xcor, int ycor) {
-		return normalizeCoordinate(xcor, getWidth()) + normalizeCoordinate(ycor, getHeight()) * getWidth();
-	}
-
 	protected void update() {
+		getLogger().finer(() -> "Applying environmental dynamics");
 		if (! pheromones.isEmpty()) {
 			// executePheromonesSequentialy();
 			executePheromonesInParallel();
@@ -308,7 +314,7 @@ public class TKEnvironment<P extends Patch> extends Environment2D {
 	 *
 	 */
 	public void executePheromonesSequentialy() {
-		getPheromones().stream().forEach(Pheromone::diffusionAndEvaporation);
+		getPheromones().stream().forEach(Pheromone::applyDynamics);
 		if (CudaPlatform.isCudaAvailable()) {
 			CudaEngine.cuCtxSynchronizeAll();
 		}
@@ -345,7 +351,8 @@ public class TKEnvironment<P extends Patch> extends Environment2D {
 	}
 
 	public void executePheromonesInParallel() {
-		getPheromones().parallelStream().forEach(Pheromone::diffusionAndEvaporation);
+		getPheromone("PRE0").applyDynamics();
+		getPheromones().parallelStream().forEach(Pheromone::applyDynamics);
 		// final Collection<Pheromone<Float>> pheromonesList = getPheromones();
 		// if (!pheromonesList.isEmpty()) {
 		// final ArrayList<Callable<Void>> workers = new
@@ -371,15 +378,6 @@ public class TKEnvironment<P extends Patch> extends Environment2D {
 		// }
 	}
 
-	/**
-	 * reset max values for rendering purposes
-	 */
-	protected void resetPheroMaxValues() {
-		for (Pheromone<Float> phero : pheromones.values()) {
-			phero.setMaximum(0f);
-		}
-	}
-
 	float smell(String pheromone, int x, int y) {
 		return getPheromone(pheromone).get(x, y);
 	}
@@ -398,33 +396,18 @@ public class TKEnvironment<P extends Patch> extends Environment2D {
 	 * @return the pheromone
 	 */
 	public Pheromone<Float> getPheromone(String name) {
-		return getPheromone(name, 50, 50);
+		return getPheromone(name, .5f, .5f);
 	}
 
-	/**
-	 * Gets the corresponding pheromone or create a new one using the parameters if
-	 * available: The first float is the evaporation rate and the second is the
-	 * diffusion rate.
-	 *
-	 * @param name                  the pheromone's name the first float is the
-	 *                              evaporation rate and the second is the diffusion
-	 *                              rate.
-	 * @param evaporationPercentage the evaporation rate
-	 * @param diffusionPercentage   the diffusion rate
-	 * @return the pheromone created
-	 */
-	public Pheromone<Float> getPheromone(String name, int evaporationPercentage, int diffusionPercentage) {
-		return getPheromone(name, evaporationPercentage / 100f, diffusionPercentage / 100f);
-	}
 
-	public Pheromone<Float> getCudaPheromoneWithBlock(String name, int evaporationPercentage, int diffusionPercentage) {
+	public Pheromone<Float> getCudaPheromoneWithBlock(String name, float evaporationCoefficient, float diffusionCoefficient) {
 		Pheromone<Float> phero = pheromones.get(name);
 		if (phero == null) {
 			synchronized (pheromones) {
 				phero = pheromones.get(name);
 				if (phero == null) {
-					phero = new CudaPheromoneWithBlock(name, getWidth(), getHeight(), evaporationPercentage / 100f,
-							diffusionPercentage / 100f);
+					phero = new CudaPheromoneWithBlock(name, this, evaporationCoefficient,
+							diffusionCoefficient);
 				}
 				pheromones.put(name, phero);
 			}
@@ -437,38 +420,34 @@ public class TKEnvironment<P extends Patch> extends Environment2D {
 	 * available: The first float is the evaporation rate and the second is the
 	 * diffusion rate.
 	 *
-	 * @param name                  the pheromone's name the first float is the
-	 *                              evaporation rate and the second is the diffusion
-	 *                              rate.
-	 * @param evaporationPercentage the evaporation rate
-	 * @param diffusionPercentage   the diffusion rate
+	 * @param name                   the pheromone's name
+	 * @param evaporationCoefficient the evaporation rate
+	 * @param diffusionCoefficient   the diffusion rate
 	 * @return the pheromone created
 	 */
-	public Pheromone<Float> getPheromone(String name, float evaporationPercentage, float diffusionPercentage) {
-		return pheromones.computeIfAbsent(name, k ->{
+	public Pheromone<Float> getPheromone(String name, float evaporationCoefficient, float diffusionCoefficient) {
+		return pheromones.computeIfAbsent(name, _ -> {
 			if (CudaPlatform.isCudaAvailable()) {
-				return createCudaPheromone(name, evaporationPercentage, diffusionPercentage);
+				return createCudaPheromone(name, evaporationCoefficient, diffusionCoefficient);
 			}
 			else {
-				return new CPUStreamPheromone(name, getWidth(), getHeight(), evaporationPercentage, diffusionPercentage,
-						neighborsIndexes);
+				return new CPUStreamPheromone(name, this, evaporationCoefficient, diffusionCoefficient);
 			}
 		});
 	}
 
-	public Pheromone<Float> getSobelPheromone(String name, float evaporationPercentage, float diffusionPercentage) {
+	public Pheromone<Float> getSobelPheromone(String name, float evaporationCoefficient, float diffusionCoefficient) {
 		Pheromone<Float> phero = pheromones.get(name);
 		if (phero == null) {
 			synchronized (pheromones) {
 				phero = pheromones.get(name);
 				if (phero == null) {
 					if (CudaPlatform.isCudaAvailable()) {
-						phero = new GPUSobelGradientsPhero(name, getWidth(), getHeight(), evaporationPercentage,
-								diffusionPercentage);
+						phero = new GPUSobelGradientsPhero(name, this, evaporationCoefficient, diffusionCoefficient);
 					}
 					else {
-						phero = new CPU_SobelPheromone(name, getWidth(), getHeight(), evaporationPercentage,
-								diffusionPercentage, neighborsIndexes);
+						phero = new CPU_SobelPheromone(name, this, evaporationCoefficient, diffusionCoefficient,
+								neighborsIndexes);
 					}
 					pheromones.put(name, phero);
 				}
@@ -477,10 +456,10 @@ public class TKEnvironment<P extends Patch> extends Environment2D {
 		return phero;
 	}
 
-	protected Pheromone<Float> createCudaPheromone(String name, float evaporationPercentage, float diffusionPercentage) {
+	protected Pheromone<Float> createCudaPheromone(String name, float evaporationCoefficient, float diffusionCoefficient) {
 		if (GPU_GRADIENTS)
-			return new CudaGPUGradientsPhero(name, getWidth(), getHeight(), evaporationPercentage, diffusionPercentage);
-		return new CudaPheromone(name, getWidth(), getHeight(), evaporationPercentage, diffusionPercentage);
+			return new CudaGPUGradientsPhero(name, this, evaporationCoefficient, diffusionCoefficient);
+		return new CudaPheromone(name, this, evaporationCoefficient, diffusionCoefficient);
 	}
 
 	/**
@@ -620,5 +599,8 @@ public class TKEnvironment<P extends Patch> extends Environment2D {
 		agent.getPatch().removeAgent(agent);
 	}
 
+	public int[] getNeighborsIndexes() {
+		return neighborsIndexes;
+	}
 	
 }

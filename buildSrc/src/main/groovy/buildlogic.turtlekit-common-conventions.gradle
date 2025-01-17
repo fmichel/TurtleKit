@@ -11,6 +11,7 @@ repositories {
 }
 
 dependencies {
+	api 'io.github.fmichel:madkit:6.0.1-SNAPSHOT'
     // JCuda dependencies are below
     def classifier = getOsString() + "-" + getArchString()
 

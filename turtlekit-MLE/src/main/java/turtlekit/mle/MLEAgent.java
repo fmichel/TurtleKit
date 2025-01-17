@@ -24,7 +24,7 @@ import turtlekit.kernel.DefaultTurtle;
 import turtlekit.kernel.Turtle;
 import turtlekit.pheromone.Pheromone;
 
-public class AbstractMLEAgent extends DefaultTurtle {
+public class MLEAgent extends DefaultTurtle {
 
 	public static final int SPEED_UNIT = 1;
 
@@ -37,7 +37,7 @@ public class AbstractMLEAgent extends DefaultTurtle {
 	
 	@SliderProperty(minValue = 1, maxValue = 200, scrollPrecision = 1)
 	@UIProperty(category = "Environment")
-	public static double NRJ_MUTATION = 30;
+	public static double nrjMutation = 30;
 
 	@SliderProperty(minValue = 10000, maxValue = 1_000_000, scrollPrecision = 10000)
 	@UIProperty(category = "Environment")
@@ -65,10 +65,6 @@ public class AbstractMLEAgent extends DefaultTurtle {
 
 	private int TEST_TIME = 0;
 
-	public AbstractMLEAgent(String initMethod) {
-		changeNextBehavior(initMethod);
-	}
-
 	public void setLevel(int level) {
 		if (level < 0)
 			level = 0;
@@ -80,6 +76,12 @@ public class AbstractMLEAgent extends DefaultTurtle {
 		// speed = 3 * level;
 		// speed = speed == 0 ? 1 : speed;
 		initAttributes();
+	}
+
+	@Override
+	protected void onActivation() {
+		super.onActivation();
+		setLevel(0);
 	}
 
 	/**
@@ -96,8 +98,14 @@ public class AbstractMLEAgent extends DefaultTurtle {
 
 	public void updatePheromones() {
 		upperAttraction = getPheromone(ATT + (level + 1));
+//		upperAttraction.setEvaporationCoefficient(.87);
+//		upperAttraction.setDiffusionCoefficient(.5);
 		upperRepulsion = getPheromone(REP + (level + 1));
+//		upperRepulsion.setEvaporationCoefficient(.97);
+//		upperRepulsion.setDiffusionCoefficient(.5);
 		presence = getPheromone(PRE + level);
+//		presence.setEvaporationCoefficient(.2);
+//		presence.setDiffusionCoefficient(.5);
 		if (getLevel() != 0) {
 			lowerPresence = getPheromone(ATT + (level - 1));
 			attraction = getPheromone(ATT + (level));
@@ -128,18 +136,6 @@ public class AbstractMLEAgent extends DefaultTurtle {
 
 	}
 
-	@Override
-	protected void activate() {
-		super.activate();
-//		System.err.println(getMyRoles(getCommunity(), TKOrganization.TURTLES_GROUP));
-//		randomHeading();
-//		randomLocation();
-//		setLevel(generator.nextInt(4));
-//		home();
-		initAttributes();
-//		setLevel(0);
-	}
-
 	public int getLevel() {
 		return level;
 	}
@@ -153,7 +149,7 @@ public class AbstractMLEAgent extends DefaultTurtle {
 			attraction.incValue(code, attractQty);
 			repulsion
 					.incValue(code, (float) (attractQty * Math.pow(
-							AbstractMLEAgent.repulsionFactor,
+							MLEAgent.repulsionFactor,
 							(level))));
 		}
 	}
@@ -231,7 +227,7 @@ public class AbstractMLEAgent extends DefaultTurtle {
 	public boolean nextPatchIsOccupied(int code){
 		boolean occupied = false;
 		for (Turtle<?> t : getPatchOtherTurtles()) {
-				AbstractMLEAgent mle = (AbstractMLEAgent) t;
+				MLEAgent mle = (MLEAgent) t;
 				if (mle.level == level) {
 					occupied = true;
 					if (getNrj() >= mle.getNrj()) {
@@ -268,7 +264,7 @@ public class AbstractMLEAgent extends DefaultTurtle {
 //	}
 
 	public boolean mutate() {
-		if (MUTATION && getLastMutation() > 50 && getNrj() > NRJ_MUTATION) {
+		if (MUTATION && getLastMutation() > 50 && getNrj() > nrjMutation) {
 			if (prng().nextFloat() > .5) {
 				setLevel(getLevel() + 1);
 			}
@@ -317,14 +313,14 @@ public class AbstractMLEAgent extends DefaultTurtle {
 	 * @return the nRJ_MUTATION
 	 */
 	public static double getNRJ_MUTATION() {
-		return NRJ_MUTATION;
+		return nrjMutation;
 	}
 
 	/**
 	 * @param nRJ_MUTATION the nRJ_MUTATION to set
 	 */
 	public static void setNRJ_MUTATION(double nRJ_MUTATION) {
-		NRJ_MUTATION = nRJ_MUTATION;
+		nrjMutation = nRJ_MUTATION;
 	}
 
 	/**
@@ -352,7 +348,7 @@ public class AbstractMLEAgent extends DefaultTurtle {
 	 * @param repulsionFactor the repulsionFactor to set
 	 */
 	public static void setRepulsionFactor(double repulsionFactor) {
-		AbstractMLEAgent.repulsionFactor = repulsionFactor;
+		MLEAgent.repulsionFactor = repulsionFactor;
 	}
 
 	/**
@@ -366,7 +362,15 @@ public class AbstractMLEAgent extends DefaultTurtle {
 	 * @param speedFactor the speedFactor to set
 	 */
 	public static void setSpeedFactor(double speedFactor) {
-		AbstractMLEAgent.speedFactor = speedFactor;
+		MLEAgent.speedFactor = speedFactor;
+	}
+
+	public static double getNrjMutation() {
+		return nrjMutation;
+	}
+
+	public static void setNrjMutation(double nrjMutation) {
+		MLEAgent.nrjMutation = nrjMutation;
 	}
 
 }

@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import turtlekit.kernel.Patch;
 import turtlekit.kernel.DefaultTurtle;
 import turtlekit.pheromone.Pheromone;
-import turtlekit.viewer.jfx.FXPheroViewer;
+import turtlekit.viewer.TKViewer;
 import madkit.simulation.EngineAgents;
 
 /**

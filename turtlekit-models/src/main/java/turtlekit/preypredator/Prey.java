@@ -41,7 +41,7 @@ import java.util.List;
 
 import turtlekit.kernel.DefaultTurtle;
 import turtlekit.viewer.TKViewer;
-import turtlekit.viewer.jfx.TurtlePopulationChartDrawer;
+import turtlekit.viewer.TurtlePopulationChartDrawer;
 
 public class Prey extends DefaultTurtle {
 
@@ -86,7 +86,7 @@ public class Prey extends DefaultTurtle {
 				,"--width","500"
 				,"--height","500"
 				,"-v",TurtlePopulationChartDrawer.class.getName()
-				,"-v",TKViewer.class.getName()
+				, "-v", TKViewer.class.getName()
 				);
 	}
 
